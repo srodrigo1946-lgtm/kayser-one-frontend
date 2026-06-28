@@ -1,7 +1,10 @@
 "use client";
 
-import { Bell, Moon, Sun, Search } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Bell, Moon, Sun, Search, AlertCircle, Clock } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
+import { useAlerts } from "@/hooks/use-alerts";
 
 interface HeaderProps {
   title: string;
@@ -10,10 +13,22 @@ interface HeaderProps {
 
 export function Header({ title, subtitle }: HeaderProps) {
   const { theme, toggle } = useTheme();
+  const router = useRouter();
+  const { data: alerts } = useAlerts();
+  const [open, setOpen] = useState(false);
+
+  const semAtendimento = alerts?.semAtendimento ?? [];
+  const semContato = alerts?.semContato ?? [];
+  const count = semAtendimento.length + semContato.length;
+
+  const goToLead = () => {
+    setOpen(false);
+    router.push("/leads");
+  };
 
   return (
     <header
-      className="h-16 flex items-center justify-between px-6 border-b sticky top-0 z-10"
+      className="h-16 flex items-center justify-between px-6 border-b sticky top-0 z-20"
       style={{ background: "var(--card)", borderColor: "var(--border)" }}
     >
       <div>
@@ -28,37 +43,86 @@ export function Header({ title, subtitle }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        {/* Search */}
-        <div
-          className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm"
-          style={{
-            background: "var(--secondary)",
-            color: "var(--muted-foreground)",
-          }}
+        <button
+          onClick={() => window.dispatchEvent(new Event("kayser:open-search"))}
+          className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors"
+          style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}
         >
           <Search size={16} />
           <span>Buscar...</span>
-          <kbd
-            className="text-xs px-1.5 py-0.5 rounded"
-            style={{ background: "var(--border)" }}
-          >
-            ⌘K
-          </kbd>
-        </div>
-
-        {/* Notifications */}
-        <button
-          className="relative w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
-          style={{ background: "var(--secondary)", color: "var(--foreground)" }}
-        >
-          <Bell size={18} />
-          <span
-            className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
-            style={{ background: "var(--danger)" }}
-          />
+          <kbd className="text-xs px-1.5 py-0.5 rounded" style={{ background: "var(--border)" }}>⌘K</kbd>
         </button>
 
-        {/* Theme Toggle */}
+        {/* Notificações */}
+        <div className="relative">
+          <button
+            onClick={() => setOpen((o) => !o)}
+            className="relative w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+            style={{ background: "var(--secondary)", color: "var(--foreground)" }}
+          >
+            <Bell size={18} />
+            {count > 0 && (
+              <span
+                className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold flex items-center justify-center"
+                style={{ background: "var(--danger, #ef4444)", color: "white" }}
+              >
+                {count > 9 ? "9+" : count}
+              </span>
+            )}
+          </button>
+
+          {open && (
+            <>
+              <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+              <div
+                className="absolute right-0 mt-2 w-80 rounded-2xl border shadow-lg z-40 overflow-hidden"
+                style={{ background: "var(--card)", borderColor: "var(--border)" }}
+              >
+                <div className="p-3 border-b" style={{ borderColor: "var(--border)" }}>
+                  <span className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>
+                    Notificações
+                  </span>
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  {count === 0 && (
+                    <div className="p-6 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
+                      Tudo em dia! Nenhum alerta. 🎉
+                    </div>
+                  )}
+                  {semAtendimento.map((lead) => (
+                    <AlertRow
+                      key={`sa-${lead.id}`}
+                      icon={<AlertCircle size={14} style={{ color: "#ef4444" }} />}
+                      name={lead.name}
+                      reason="Sem atendimento"
+                      onClick={goToLead}
+                    />
+                  ))}
+                  {semContato.map((lead) => (
+                    <AlertRow
+                      key={`sc-${lead.id}`}
+                      icon={<Clock size={14} style={{ color: "#f97316" }} />}
+                      name={lead.name}
+                      reason="+3 dias sem contato"
+                      onClick={goToLead}
+                    />
+                  ))}
+                </div>
+                {count > 0 && (
+                  <button
+                    onClick={goToLead}
+                    className="w-full p-3 text-sm font-medium border-t"
+                    style={{ borderColor: "var(--border)", color: "var(--primary)" }}
+                  >
+                    Ver leads
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Tema */}
         <button
           onClick={toggle}
           className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
@@ -68,5 +132,33 @@ export function Header({ title, subtitle }: HeaderProps) {
         </button>
       </div>
     </header>
+  );
+}
+
+function AlertRow({
+  icon,
+  name,
+  reason,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  name: string;
+  reason: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 p-3 text-left border-b transition-colors hover:opacity-80"
+      style={{ borderColor: "var(--border)" }}
+    >
+      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "var(--secondary)" }}>
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>{name}</div>
+        <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>{reason}</div>
+      </div>
+    </button>
   );
 }

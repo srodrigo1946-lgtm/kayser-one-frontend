@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/layout/header";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { getApiErrorMessage } from "@/lib/api";
@@ -75,6 +75,12 @@ export default function LeadsPage() {
   const [feedback, setFeedback] = useState<string>("");
   const [detailLead, setDetailLead] = useState<Lead | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Inicializa a busca a partir de ?q= (vindo da busca global ⌘K).
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q");
+    if (q) setSearch(q);
+  }, []);
 
   const { data, isLoading, isError } = useLeads({ search, status: filterStatus });
   const createLead = useCreateLead();

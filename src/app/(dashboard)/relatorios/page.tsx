@@ -2,7 +2,7 @@
 
 import { Header } from "@/components/layout/header";
 import { SalesChart, ConversionChart } from "@/components/dashboard/sales-chart";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Download } from "lucide-react";
 import {
   useDashboardMetrics,
   useMonthlyData,
@@ -25,6 +25,16 @@ export default function RelatoriosPage() {
     <div>
       <Header title="Relatórios" subtitle="Análise completa do desempenho comercial" />
       <div className="p-6 space-y-6">
+        <div className="flex justify-end no-print">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium"
+            style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+          >
+            <Download size={16} />
+            Exportar PDF
+          </button>
+        </div>
         <div className="grid lg:grid-cols-4 gap-4">
           {cards.map((m) => (
             <div key={m.label} className="rounded-2xl border p-5" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
