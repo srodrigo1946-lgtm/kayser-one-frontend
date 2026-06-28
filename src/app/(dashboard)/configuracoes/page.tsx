@@ -7,7 +7,7 @@ import { useRef } from "react";
 import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
-import { useUpdateProfile } from "@/hooks/use-profile";
+import { useUpdateProfile, useUploadAvatar, avatarUrl } from "@/hooks/use-profile";
 import { useKnowledge, useCreateKnowledge, useDeleteKnowledge, useUploadKnowledge } from "@/hooks/use-knowledge";
 import { useUsers, useCreateUser, useDeactivateUser } from "@/hooks/use-users";
 import type { UserRole } from "@/types";
@@ -82,39 +82,36 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 function ProfileForm() {
   const stored = getStoredUser();
   const update = useUpdateProfile();
+  const uploadAvatar = useUploadAvatar();
   const fileRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(stored?.name ?? "");
   const [phone, setPhone] = useState(stored?.phone ?? "");
   const [whatsapp, setWhatsapp] = useState(stored?.whatsapp ?? "");
-  const [avatar, setAvatar] = useState<string | undefined>(stored?.avatar);
+  const [hasAvatar, setHasAvatar] = useState<boolean>(!!stored?.avatar);
+  const [version, setVersion] = useState<number>(0);
   const [feedback, setFeedback] = useState("");
 
-  // Redimensiona a imagem para no máx. 256px e devolve um data URI leve.
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Envia a foto real (arquivo de imagem) para o servidor.
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const max = 256;
-        const scale = Math.min(1, max / Math.max(img.width, img.height));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        const ctx = canvas.getContext("2d");
-        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-        setAvatar(canvas.toDataURL("image/jpeg", 0.85));
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
+    setFeedback("");
+    try {
+      await uploadAvatar.mutateAsync(file);
+      setHasAvatar(true);
+      setVersion(Date.now()); // cache-bust para recarregar a imagem
+      setFeedback("Foto atualizada.");
+    } catch (err) {
+      setFeedback(getApiErrorMessage(err, "Falha ao enviar a foto."));
+    } finally {
+      if (fileRef.current) fileRef.current.value = "";
+    }
   };
 
   const save = async () => {
     setFeedback("");
     try {
-      await update.mutateAsync({ name, phone, whatsapp, avatar });
+      await update.mutateAsync({ name, phone, whatsapp });
       setFeedback("Perfil atualizado.");
     } catch (err) {
       setFeedback(getApiErrorMessage(err, "Falha ao salvar o perfil."));
@@ -125,19 +122,20 @@ function ProfileForm() {
     <Card title="Informações do Perfil">
       <div className="flex items-center gap-4 mb-6">
         <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold overflow-hidden" style={{ background: "var(--primary)", color: "white" }}>
-          {avatar ? (
+          {hasAvatar ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatar} alt="avatar" className="w-full h-full object-cover" />
+            <img src={avatarUrl(stored?.id, version)} alt="avatar" className="w-full h-full object-cover" />
           ) : (
             (stored?.name ?? "?").split(" ").map((n) => n[0]).slice(0, 2).join("")
           )}
         </div>
         <div>
           <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
-          <button onClick={() => fileRef.current?.click()} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: "var(--primary)", color: "white" }}>
+          <button onClick={() => fileRef.current?.click()} disabled={uploadAvatar.isPending} className="px-4 py-2 rounded-xl text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60" style={{ background: "var(--primary)", color: "white" }}>
+            {uploadAvatar.isPending && <Loader2 size={16} className="animate-spin" />}
             Alterar foto
           </button>
-          <p className="text-xs mt-2" style={{ color: "var(--muted-foreground)" }}>JPG ou PNG — redimensionada automaticamente.</p>
+          <p className="text-xs mt-2" style={{ color: "var(--muted-foreground)" }}>Envie uma imagem (JPG ou PNG).</p>
         </div>
       </div>
 
