@@ -43,14 +43,15 @@ export function Header({ title, subtitle }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        <div
-          className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm"
+        <button
+          onClick={() => window.dispatchEvent(new Event("kayser:open-search"))}
+          className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors"
           style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}
         >
           <Search size={16} />
           <span>Buscar...</span>
           <kbd className="text-xs px-1.5 py-0.5 rounded" style={{ background: "var(--border)" }}>⌘K</kbd>
-        </div>
+        </button>
 
         {/* Notificações */}
         <div className="relative">

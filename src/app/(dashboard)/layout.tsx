@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
+import { CommandPalette } from "@/components/command-palette";
 import { isAuthenticated } from "@/lib/auth";
 
 export default function DashboardLayout({
@@ -36,6 +37,7 @@ export default function DashboardLayout({
     <div className="flex h-screen overflow-hidden" style={{ background: "var(--background)" }}>
       <Sidebar />
       <main className="flex-1 overflow-y-auto">{children}</main>
+      <CommandPalette />
     </div>
   );
 }
