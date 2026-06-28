@@ -232,10 +232,10 @@ function KnowledgeManager() {
   return (
     <Card title="Base de Conhecimento">
       <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
-        Adicione textos ou envie arquivos (PDF, Word, Excel, CSV, TXT). A IA usa apenas estas informações.
+        Adicione textos ou envie arquivos (PDF, Word, PowerPoint, Excel, CSV, TXT). A IA usa apenas estas informações.
       </p>
 
-      <input ref={fileRef} type="file" accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.md" onChange={handleUpload} className="hidden" />
+      <input ref={fileRef} type="file" accept=".pdf,.docx,.doc,.pptx,.xlsx,.xls,.csv,.txt,.md" onChange={handleUpload} className="hidden" />
       <button
         onClick={() => fileRef.current?.click()}
         disabled={upload.isPending}
