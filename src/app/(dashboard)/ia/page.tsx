@@ -3,28 +3,43 @@
 import { useState } from "react";
 import { Header } from "@/components/layout/header";
 import { Bot, Send, Upload, FileText, Settings, Zap, RefreshCw } from "lucide-react";
+import { useAiChat, type AiChatMessage } from "@/hooks/use-ai";
+import { getApiErrorMessage } from "@/lib/api";
 
-const mockConvo = [
-  { role: "assistant", content: "Olá! Sou a **Kayser One AI**. Estou aqui para ajudar na qualificação e atendimento dos seus leads. Como posso te ajudar hoje?" },
-  { role: "user", content: "Quais leads estão sem atendimento há mais de 3 dias?" },
-  { role: "assistant", content: "📊 Identifiquei **11 leads** sem contato há mais de 3 dias:\n\n• **Roberto Alves** — Curitiba • Score 95 — última interação há 6 dias\n• **Fernanda Lima** — BH • Score 60 — nunca foi contatada\n• E mais 9 leads...\n\nDeseja que eu envie automaticamente mensagens de follow-up para todos eles?" },
+const initialConvo: AiChatMessage[] = [
+  {
+    role: "assistant",
+    content:
+      "Olá! Sou a Kayser One AI. Estou aqui para ajudar na qualificação e atendimento dos seus leads. Como posso te ajudar hoje?",
+  },
 ];
 
 export default function IAPage() {
-  const [messages, setMessages] = useState(mockConvo);
+  const [messages, setMessages] = useState<AiChatMessage[]>(initialConvo);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const aiChat = useAiChat();
+  const loading = aiChat.isPending;
 
   const send = async () => {
-    if (!input.trim()) return;
-    const userMsg = input;
+    if (!input.trim() || loading) return;
+    const userMsg: AiChatMessage = { role: "user", content: input.trim() };
+    const history = [...messages, userMsg];
     setInput("");
-    setMessages((m) => [...m, { role: "user", content: userMsg }]);
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setMessages((m) => [...m, { role: "assistant", content: "Entendido! Estou processando sua solicitação e em breve trarei as informações necessárias. 🤖" }]);
-    setLoading(false);
+    setMessages(history);
+    try {
+      // Envia apenas as mensagens user/assistant (sem a saudação inicial fixa)
+      const payload = history.filter((_, i) => i > 0);
+      const res = await aiChat.mutateAsync(payload);
+      setMessages((m) => [...m, { role: "assistant", content: res.content || "(sem resposta)" }]);
+    } catch (err) {
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", content: `⚠️ ${getApiErrorMessage(err, "Não foi possível falar com a IA. Verifique a API Key em Configurações.")}` },
+      ]);
+    }
   };
+
+  const clear = () => setMessages(initialConvo);
 
   return (
     <div className="flex flex-col h-screen">
@@ -59,6 +74,7 @@ export default function IAPage() {
             </div>
             <div className="flex gap-2">
               <button
+                onClick={clear}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border"
                 style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}
               >

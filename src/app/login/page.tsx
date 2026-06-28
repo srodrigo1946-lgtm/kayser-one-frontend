@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Moon, Sun, Building2, Lock, Mail } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
+import { login } from "@/lib/auth";
+import { getApiErrorMessage } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,16 +19,21 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
-    await new Promise((r) => setTimeout(r, 800));
-
-    if (email && password) {
-      router.push("/dashboard");
-    } else {
+    if (!email || !password) {
       setError("E-mail e senha são obrigatórios.");
+      return;
     }
-    setLoading(false);
+
+    setLoading(true);
+    try {
+      const { firstLogin } = await login(email, password);
+      router.push(firstLogin ? "/trocar-senha" : "/dashboard");
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Credenciais inválidas."));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
