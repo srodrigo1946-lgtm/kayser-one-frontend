@@ -19,7 +19,7 @@ import {
   Crown,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
-import { mockUser } from "@/lib/mock-data";
+import { getStoredUser, logout } from "@/lib/auth";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -43,6 +43,7 @@ const roleLabels: Record<string, string> = {
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const user = getStoredUser() ?? { name: "Usuário", role: "corretor" };
 
   return (
     <aside
@@ -112,7 +113,7 @@ export function Sidebar() {
             className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
             style={{ background: "var(--primary)", color: "white" }}
           >
-            {getInitials(mockUser.name)}
+            {getInitials(user.name)}
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
@@ -120,18 +121,19 @@ export function Sidebar() {
                 className="text-sm font-medium truncate"
                 style={{ color: "var(--sidebar-foreground)" }}
               >
-                {mockUser.name}
+                {user.name}
               </div>
               <div className="flex items-center gap-1">
                 <Crown size={10} style={{ color: "var(--warning)" }} />
                 <span className="text-xs" style={{ color: "var(--sidebar-muted)" }}>
-                  {roleLabels[mockUser.role]}
+                  {roleLabels[user.role] ?? user.role}
                 </span>
               </div>
             </div>
           )}
           {!collapsed && (
             <button
+              onClick={() => logout()}
               className="p-1 rounded-lg transition-colors"
               style={{ color: "var(--sidebar-muted)" }}
               title="Sair"

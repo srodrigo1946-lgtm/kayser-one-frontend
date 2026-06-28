@@ -12,9 +12,9 @@ import {
   Bar,
   Legend,
 } from "recharts";
-import { mockSalesData } from "@/lib/mock-data";
+import type { SaleData } from "@/types";
 
-export function SalesChart() {
+export function SalesChart({ data = [] }: { data?: SaleData[] }) {
   return (
     <div
       className="rounded-2xl p-5 border"
@@ -42,7 +42,7 @@ export function SalesChart() {
         </select>
       </div>
       <ResponsiveContainer width="100%" height={240}>
-        <AreaChart data={mockSalesData}>
+        <AreaChart data={data}>
           <defs>
             <linearGradient id="leads" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15} />
