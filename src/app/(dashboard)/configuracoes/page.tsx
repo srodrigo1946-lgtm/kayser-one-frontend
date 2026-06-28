@@ -7,6 +7,7 @@ import { useRef } from "react";
 import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
+import { useUpdateProfile } from "@/hooks/use-profile";
 import { useKnowledge, useCreateKnowledge, useDeleteKnowledge, useUploadKnowledge } from "@/hooks/use-knowledge";
 import { useUsers, useCreateUser, useDeactivateUser } from "@/hooks/use-users";
 import type { UserRole } from "@/types";
@@ -27,8 +28,7 @@ const roleLabels: Record<string, string> = {
 };
 
 export default function ConfiguracoesPage() {
-  const [activeTab, setActiveTab] = useState("ia");
-  const user = getStoredUser();
+  const [activeTab, setActiveTab] = useState("perfil");
 
   return (
     <div>
@@ -52,16 +52,7 @@ export default function ConfiguracoesPage() {
         </div>
 
         <div className="flex-1 space-y-4">
-          {activeTab === "perfil" && (
-            <Card title="Informações do Perfil">
-              <div className="grid grid-cols-2 gap-4">
-                <Info label="Nome" value={user?.name ?? "—"} />
-                <Info label="E-mail" value={user?.email ?? "—"} />
-                <Info label="Cargo" value={roleLabels[user?.role ?? ""] ?? "—"} />
-                <Info label="Status" value={user?.active ? "Ativo" : "Inativo"} />
-              </div>
-            </Card>
-          )}
+          {activeTab === "perfil" && <ProfileForm />}
 
           {activeTab === "ia" && <IaSettings />}
           {activeTab === "usuarios" && <UsersManager />}
@@ -88,13 +79,99 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   );
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function ProfileForm() {
+  const stored = getStoredUser();
+  const update = useUpdateProfile();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [name, setName] = useState(stored?.name ?? "");
+  const [phone, setPhone] = useState(stored?.phone ?? "");
+  const [whatsapp, setWhatsapp] = useState(stored?.whatsapp ?? "");
+  const [avatar, setAvatar] = useState<string | undefined>(stored?.avatar);
+  const [feedback, setFeedback] = useState("");
+
+  // Redimensiona a imagem para no máx. 256px e devolve um data URI leve.
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 256;
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        setAvatar(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const save = async () => {
+    setFeedback("");
+    try {
+      await update.mutateAsync({ name, phone, whatsapp, avatar });
+      setFeedback("Perfil atualizado.");
+    } catch (err) {
+      setFeedback(getApiErrorMessage(err, "Falha ao salvar o perfil."));
+    }
+  };
+
+  return (
+    <Card title="Informações do Perfil">
+      <div className="flex items-center gap-4 mb-6">
+        <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold overflow-hidden" style={{ background: "var(--primary)", color: "white" }}>
+          {avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatar} alt="avatar" className="w-full h-full object-cover" />
+          ) : (
+            (stored?.name ?? "?").split(" ").map((n) => n[0]).slice(0, 2).join("")
+          )}
+        </div>
+        <div>
+          <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
+          <button onClick={() => fileRef.current?.click()} className="px-4 py-2 rounded-xl text-sm font-medium" style={{ background: "var(--primary)", color: "white" }}>
+            Alterar foto
+          </button>
+          <p className="text-xs mt-2" style={{ color: "var(--muted-foreground)" }}>JPG ou PNG — redimensionada automaticamente.</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Nome" value={name} onChange={setName} />
+        <Field label="Telefone" value={phone} onChange={setPhone} />
+        <Field label="WhatsApp" value={whatsapp} onChange={setWhatsapp} />
+        <div>
+          <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>Cargo</label>
+          <div className="px-3 py-2.5 rounded-xl border text-sm" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
+            {roleLabels[stored?.role ?? ""] ?? "—"}
+          </div>
+        </div>
+      </div>
+
+      {feedback && <p className="text-sm mt-4" style={{ color: "var(--muted-foreground)" }}>{feedback}</p>}
+      <button onClick={save} disabled={update.isPending} className="mt-6 px-6 py-2.5 rounded-xl text-sm font-medium disabled:opacity-60 inline-flex items-center gap-2" style={{ background: "var(--primary)", color: "white" }}>
+        {update.isPending && <Loader2 size={16} className="animate-spin" />}
+        Salvar alterações
+      </button>
+    </Card>
+  );
+}
+
+function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>{label}</label>
-      <div className="px-3 py-2.5 rounded-xl border text-sm" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}>
-        {value}
-      </div>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none"
+        style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+      />
     </div>
   );
 }
