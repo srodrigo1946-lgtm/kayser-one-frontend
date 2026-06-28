@@ -11,6 +11,7 @@ import {
   Calendar,
   Bot,
   BarChart3,
+  Target,
   Settings,
   Building2,
   ChevronLeft,
@@ -28,6 +29,7 @@ const navItems = [
   { href: "/whatsapp", label: "WhatsApp", icon: MessageSquare },
   { href: "/agenda", label: "Agenda", icon: Calendar },
   { href: "/ia", label: "IA Agente", icon: Bot },
+  { href: "/metas", label: "Metas", icon: Target },
   { href: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { href: "/configuracoes", label: "Configurações", icon: Settings },
 ];
