@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { getStoredUser, logout } from "@/lib/auth";
+import { avatarUrl } from "@/hooks/use-profile";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -112,10 +113,15 @@ export function Sidebar() {
           )}
         >
           <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 overflow-hidden"
             style={{ background: "var(--primary)", color: "white" }}
           >
-            {getInitials(user.name)}
+            {(user as any).avatar && (user as any).id ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarUrl((user as any).id)} alt="avatar" className="w-full h-full object-cover" />
+            ) : (
+              getInitials(user.name)
+            )}
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
