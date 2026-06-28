@@ -33,6 +33,21 @@ export function useCreateKnowledge() {
   });
 }
 
+export function useUploadKnowledge() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const form = new FormData();
+      form.append("file", file);
+      const { data } = await api.post("/knowledge/upload", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["knowledge"] }),
+  });
+}
+
 export function useDeleteKnowledge() {
   const qc = useQueryClient();
   return useMutation({

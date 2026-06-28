@@ -2,11 +2,12 @@
 
 import { Header } from "@/components/layout/header";
 import { useEffect, useState } from "react";
-import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2 } from "lucide-react";
+import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2, Upload } from "lucide-react";
+import { useRef } from "react";
 import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
-import { useKnowledge, useCreateKnowledge, useDeleteKnowledge } from "@/hooks/use-knowledge";
+import { useKnowledge, useCreateKnowledge, useDeleteKnowledge, useUploadKnowledge } from "@/hooks/use-knowledge";
 import { useUsers, useCreateUser, useDeactivateUser } from "@/hooks/use-users";
 import type { UserRole } from "@/types";
 
@@ -201,8 +202,11 @@ function KnowledgeManager() {
   const { data: items } = useKnowledge();
   const create = useCreateKnowledge();
   const remove = useDeleteKnowledge();
+  const upload = useUploadKnowledge();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [uploadMsg, setUploadMsg] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const add = async () => {
     if (!title.trim() || !content.trim()) return;
@@ -211,11 +215,38 @@ function KnowledgeManager() {
     setContent("");
   };
 
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadMsg("");
+    try {
+      await upload.mutateAsync(file);
+      setUploadMsg(`"${file.name}" processado e adicionado à base.`);
+    } catch (err) {
+      setUploadMsg(getApiErrorMessage(err, "Falha ao processar o arquivo."));
+    } finally {
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
   return (
     <Card title="Base de Conhecimento">
       <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
-        Adicione textos (FAQ, scripts, empreendimentos, tabelas). A IA usa apenas estas informações.
+        Adicione textos ou envie arquivos (PDF, Word, Excel, CSV, TXT). A IA usa apenas estas informações.
       </p>
+
+      <input ref={fileRef} type="file" accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.md" onChange={handleUpload} className="hidden" />
+      <button
+        onClick={() => fileRef.current?.click()}
+        disabled={upload.isPending}
+        className="w-full mb-4 flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed text-sm font-medium disabled:opacity-60"
+        style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}
+      >
+        {upload.isPending ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+        Enviar documento para treinar a IA
+      </button>
+      {uploadMsg && <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>{uploadMsg}</p>}
+
       <div className="space-y-2 mb-4">
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título (ex: FAQ Financiamento)" className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
         <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={3} placeholder="Conteúdo..." className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />

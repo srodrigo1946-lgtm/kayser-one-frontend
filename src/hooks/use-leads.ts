@@ -32,6 +32,26 @@ export function useLeads(filter: LeadsFilter = {}) {
   });
 }
 
+export interface LeadHistoryEntry {
+  id: string;
+  type: string;
+  description: string;
+  fromStatus?: string;
+  toStatus?: string;
+  createdAt: string;
+}
+
+export function useLeadHistory(leadId: string | null) {
+  return useQuery({
+    queryKey: ["leads", leadId, "history"],
+    enabled: !!leadId,
+    queryFn: async () => {
+      const { data } = await api.get<LeadHistoryEntry[]>(`/leads/${leadId}/history`);
+      return data;
+    },
+  });
+}
+
 export function useCreateLead() {
   const qc = useQueryClient();
   return useMutation({
