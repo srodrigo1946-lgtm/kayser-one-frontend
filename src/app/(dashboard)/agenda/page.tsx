@@ -1,13 +1,17 @@
 "use client";
 
 import { Header } from "@/components/layout/header";
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, Calendar as CalendarIcon, Download } from "lucide-react";
 import { useState } from "react";
 import { getApiErrorMessage } from "@/lib/api";
 import {
   useAppointments,
   useCreateAppointment,
   useDeleteAppointment,
+  googleCalendarUrl,
+  outlookCalendarUrl,
+  downloadIcs,
+  type Appointment,
 } from "@/hooks/use-appointments";
 
 const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -110,16 +114,19 @@ export default function AgendaPage() {
 
           <div className="space-y-2">
             {events.map((evt) => (
-              <div key={evt.id} className="flex items-center gap-3 p-3 rounded-xl border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-                <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: typeColors[evt.type] || "#3b82f6" }} />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>{evt.title}</div>
-                  <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-                    {new Date(evt.scheduledAt).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
-                    {evt.lead?.name ? ` • ${evt.lead.name}` : ""}
+              <div key={evt.id} className="p-3 rounded-xl border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: typeColors[evt.type] || "#3b82f6" }} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>{evt.title}</div>
+                    <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+                      {new Date(evt.scheduledAt).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                      {evt.lead?.name ? ` • ${evt.lead.name}` : ""}
+                    </div>
                   </div>
+                  <button onClick={() => remove.mutate(evt.id)} style={{ color: "#ef4444" }} title="Remover"><Trash2 size={14} /></button>
                 </div>
-                <button onClick={() => remove.mutate(evt.id)} style={{ color: "#ef4444" }} title="Remover"><Trash2 size={14} /></button>
+                <CalendarActions appointment={evt} />
               </div>
             ))}
             {events.length === 0 && (
@@ -128,6 +135,45 @@ export default function AgendaPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function CalendarActions({ appointment }: { appointment: Appointment }) {
+  const linkStyle = {
+    color: "var(--muted-foreground)",
+    borderColor: "var(--border)",
+  } as React.CSSProperties;
+  return (
+    <div className="flex items-center gap-2 mt-2 pl-4">
+      <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+        <CalendarIcon size={11} className="inline mr-1" />Adicionar:
+      </span>
+      <a
+        href={googleCalendarUrl(appointment)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs px-2 py-0.5 rounded-lg border"
+        style={linkStyle}
+      >
+        Google
+      </a>
+      <a
+        href={outlookCalendarUrl(appointment)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs px-2 py-0.5 rounded-lg border"
+        style={linkStyle}
+      >
+        Outlook
+      </a>
+      <button
+        onClick={() => downloadIcs(appointment.id)}
+        className="text-xs px-2 py-0.5 rounded-lg border inline-flex items-center gap-1"
+        style={linkStyle}
+      >
+        <Download size={11} /> .ics
+      </button>
     </div>
   );
 }
