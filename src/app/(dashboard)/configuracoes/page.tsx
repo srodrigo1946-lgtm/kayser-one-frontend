@@ -356,17 +356,27 @@ function UsersManager() {
   const create = useCreateUser();
   const deactivate = useDeactivateUser();
   const [feedback, setFeedback] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<UserRole>("corretor" as UserRole);
+  const [managerId, setManagerId] = useState("");
+
+  const resetForm = () => {
+    setName(""); setEmail(""); setRole("corretor" as UserRole); setManagerId("");
+  };
 
   const addUser = async () => {
-    const name = window.prompt("Nome do usuário:");
-    if (!name) return;
-    const email = window.prompt("E-mail:");
-    if (!email) return;
-    const role = (window.prompt("Cargo (diretor, superintendente, gerente_geral, gerente, corretor):", "corretor") || "corretor") as UserRole;
+    if (!name.trim() || !email.trim()) {
+      setFeedback("Preencha nome e e-mail.");
+      return;
+    }
     setFeedback("");
     try {
-      await create.mutateAsync({ name, email, role });
+      await create.mutateAsync({ name: name.trim(), email: email.trim(), role, managerId: managerId || undefined });
       setFeedback("Usuário criado. Senha padrão: 123456789");
+      resetForm();
+      setShowForm(false);
     } catch (err) {
       setFeedback(getApiErrorMessage(err, "Falha ao criar usuário."));
     }
@@ -376,10 +386,56 @@ function UsersManager() {
     <Card title="Gerenciar Usuários">
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>Equipe e hierarquia</p>
-        <button onClick={addUser} className="px-4 py-2 rounded-xl text-sm font-medium inline-flex items-center gap-2" style={{ background: "var(--primary)", color: "white" }}>
+        <button onClick={() => setShowForm((v) => !v)} className="px-4 py-2 rounded-xl text-sm font-medium inline-flex items-center gap-2" style={{ background: "var(--primary)", color: "white" }}>
           <Plus size={16} /> Novo usuário
         </button>
       </div>
+
+      {showForm && (
+        <div className="rounded-xl border p-4 mb-4 space-y-3" style={{ borderColor: "var(--border)", background: "var(--secondary)" }}>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>Nome</label>
+              <input value={name} onChange={(e) => setName(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }} />
+            </div>
+            <div>
+              <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>E-mail</label>
+              <input value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }} />
+            </div>
+            <div>
+              <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>Cargo</label>
+              <select value={role} onChange={(e) => setRole(e.target.value as UserRole)} className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}>
+                <option value="diretor">Diretor</option>
+                <option value="superintendente">Superintendente</option>
+                <option value="gerente_geral">Gerente Geral</option>
+                <option value="gerente">Gerente</option>
+                <option value="corretor">Corretor</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>Gestor (a quem responde)</label>
+              <select value={managerId} onChange={(e) => setManagerId(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}>
+                <option value="">Sem gestor (topo)</option>
+                {(users ?? []).map((u) => (
+                  <option key={u.id} value={u.id}>{u.name} — {roleLabels[u.role] ?? u.role}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+            O gestor define a hierarquia: quem vê os dados deste usuário. Ex.: um Corretor responde a um Gerente.
+          </p>
+          <div className="flex gap-2">
+            <button onClick={addUser} disabled={create.isPending} className="px-4 py-2 rounded-xl text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60" style={{ background: "var(--primary)", color: "white" }}>
+              {create.isPending && <Loader2 size={16} className="animate-spin" />} Criar usuário
+            </button>
+            <button onClick={() => { setShowForm(false); resetForm(); }} className="px-4 py-2 rounded-xl text-sm font-medium border" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
       {feedback && <p className="text-sm mb-3" style={{ color: "var(--muted-foreground)" }}>{feedback}</p>}
       <div className="space-y-3">
         {(users ?? []).map((u) => (
