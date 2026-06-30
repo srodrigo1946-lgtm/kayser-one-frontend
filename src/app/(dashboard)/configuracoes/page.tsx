@@ -185,6 +185,7 @@ function IaSettings() {
   const [followupEnabled, setFollowupEnabled] = useState(true);
   const [followupDays, setFollowupDays] = useState(3);
   const [aiAutoReply, setAiAutoReply] = useState(true);
+  const [aiReplyGroups, setAiReplyGroups] = useState(false);
   const [feedback, setFeedback] = useState("");
 
   useEffect(() => {
@@ -195,13 +196,14 @@ function IaSettings() {
       setFollowupEnabled(settings.followupEnabled);
       setFollowupDays(settings.followupDays);
       setAiAutoReply(settings.aiAutoReply);
+      setAiReplyGroups(settings.aiReplyGroups);
     }
   }, [settings]);
 
   const save = async () => {
     setFeedback("");
     try {
-      const payload: any = { aiProvider: provider, aiModel: model, masterPrompt, followupEnabled, followupDays, aiAutoReply };
+      const payload: any = { aiProvider: provider, aiModel: model, masterPrompt, followupEnabled, followupDays, aiAutoReply, aiReplyGroups };
       if (apiKey) payload.aiApiKey = apiKey;
       await update.mutateAsync(payload);
       setApiKey("");
@@ -238,8 +240,9 @@ function IaSettings() {
           <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>Prompt mestre (opcional — sobrescreve o padrão)</label>
           <textarea value={masterPrompt} onChange={(e) => setMasterPrompt(e.target.value)} rows={5} className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
         </div>
-        <div className="grid grid-cols-3 gap-4 mt-4 items-end">
+        <div className="grid grid-cols-4 gap-4 mt-4 items-end">
           <Toggle label="Resposta automática" checked={aiAutoReply} onChange={setAiAutoReply} />
+          <Toggle label="IA responde em grupos" checked={aiReplyGroups} onChange={setAiReplyGroups} />
           <Toggle label="Follow-up automático" checked={followupEnabled} onChange={setFollowupEnabled} />
           <div>
             <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>Dias p/ follow-up</label>

@@ -11,6 +11,7 @@ export interface AppSettings {
   followupEnabled: boolean;
   followupDays: number;
   aiAutoReply: boolean;
+  aiReplyGroups: boolean;
   hasApiKey: boolean;
 }
 
