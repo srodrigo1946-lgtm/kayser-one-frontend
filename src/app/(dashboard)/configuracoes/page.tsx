@@ -2,14 +2,14 @@
 
 import { Header } from "@/components/layout/header";
 import { useEffect, useState } from "react";
-import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2, Upload } from "lucide-react";
+import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2, Upload, Check, X } from "lucide-react";
 import { useRef } from "react";
 import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useUpdateProfile, useUploadAvatar, avatarUrl } from "@/hooks/use-profile";
 import { useKnowledge, useCreateKnowledge, useDeleteKnowledge, useUploadKnowledge } from "@/hooks/use-knowledge";
-import { useUsers, useCreateUser, useDeactivateUser } from "@/hooks/use-users";
+import { useUsers, useCreateUser, useDeactivateUser, usePendingUsers, useApproveUser, useRejectUser } from "@/hooks/use-users";
 import type { UserRole } from "@/types";
 
 const tabs = [
@@ -55,7 +55,12 @@ export default function ConfiguracoesPage() {
           {activeTab === "perfil" && <ProfileForm />}
 
           {activeTab === "ia" && <IaSettings />}
-          {activeTab === "usuarios" && <UsersManager />}
+          {activeTab === "usuarios" && (
+            <>
+              <PendingApprovals />
+              <UsersManager />
+            </>
+          )}
 
           {activeTab === "empresa" && (
             <Card title="Empresa">
@@ -345,6 +350,43 @@ function KnowledgeManager() {
         {(items ?? []).length === 0 && (
           <p className="text-sm text-center py-4" style={{ color: "var(--muted-foreground)" }}>Nenhum item ainda.</p>
         )}
+      </div>
+    </Card>
+  );
+}
+
+/* ---------------- Aprovações pendentes ---------------- */
+function PendingApprovals() {
+  const { data: pending } = usePendingUsers();
+  const approve = useApproveUser();
+  const reject = useRejectUser();
+
+  if (!pending || pending.length === 0) return null;
+
+  return (
+    <Card title={`Cadastros pendentes (${pending.length})`}>
+      <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
+        Estas pessoas se cadastraram e escolheram você (ou sua equipe) como gestor. Aprove para liberar o acesso.
+      </p>
+      <div className="space-y-3">
+        {pending.map((u) => (
+          <div key={u.id} className="flex items-center gap-4 p-4 rounded-xl" style={{ background: "var(--secondary)" }}>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: "#f59e0b", color: "white" }}>
+              {u.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-sm" style={{ color: "var(--foreground)" }}>{u.name}</div>
+              <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>{u.email}</div>
+            </div>
+            <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: "var(--card)", color: "var(--primary)" }}>{roleLabels[u.role] ?? u.role}</span>
+            <button onClick={() => approve.mutate(u.id)} disabled={approve.isPending} className="w-8 h-8 rounded-xl flex items-center justify-center disabled:opacity-50" style={{ background: "#22c55e18", color: "#22c55e" }} title="Aprovar">
+              <Check size={16} />
+            </button>
+            <button onClick={() => { if (window.confirm(`Recusar o cadastro de ${u.name}?`)) reject.mutate(u.id); }} disabled={reject.isPending} className="w-8 h-8 rounded-xl flex items-center justify-center disabled:opacity-50" style={{ color: "#ef4444" }} title="Recusar">
+              <X size={16} />
+            </button>
+          </div>
+        ))}
       </div>
     </Card>
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Building2, Eye, EyeOff } from "lucide-react";
 import { register } from "@/lib/auth";
@@ -42,6 +41,7 @@ export default function RegisterPage() {
   const [managerSearch, setManagerSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // Carrega os possíveis gestores (nível acima) sempre que o cargo muda.
   useEffect(() => {
@@ -74,8 +74,8 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      await register({ name, email, password, role, managerId });
-      router.push("/dashboard");
+      const res = await register({ name, email, password, role, managerId });
+      setSuccess(res.message || "Cadastro enviado! Aguarde a aprovação do seu gestor para acessar.");
     } catch (err) {
       setError(getApiErrorMessage(err, "Falha ao cadastrar."));
     } finally {
@@ -98,6 +98,16 @@ export default function RegisterPage() {
           Cadastre-se e selecione seu gestor
         </p>
 
+        {success ? (
+          <div className="space-y-4">
+            <div className="text-sm p-4 rounded-xl" style={{ background: "#dcfce7", color: "#16a34a" }}>
+              {success}
+            </div>
+            <Link href="/login" className="block text-center py-3 rounded-xl font-semibold text-sm" style={{ background: "var(--primary)", color: "white" }}>
+              Ir para o login
+            </Link>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           <Field label="Nome completo" value={name} onChange={setName} placeholder="Seu nome" />
           <Field label="E-mail" value={email} onChange={setEmail} placeholder="seu@email.com" type="email" />
@@ -175,6 +185,7 @@ export default function RegisterPage() {
             {loading ? "Cadastrando..." : "Cadastrar"}
           </button>
         </form>
+        )}
 
         <p className="mt-6 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
           Já tem conta?{" "}

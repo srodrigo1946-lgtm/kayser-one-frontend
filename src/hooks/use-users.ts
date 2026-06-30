@@ -40,3 +40,35 @@ export function useDeactivateUser() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["users"] }),
   });
 }
+
+export function usePendingUsers() {
+  return useQuery({
+    queryKey: ["users", "pending"],
+    queryFn: async () => {
+      const { data } = await api.get<User[]>("/users/pending");
+      return data;
+    },
+  });
+}
+
+export function useApproveUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post(`/users/${id}/approve`);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["users"] }),
+  });
+}
+
+export function useRejectUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post(`/users/${id}/reject`);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["users"] }),
+  });
+}

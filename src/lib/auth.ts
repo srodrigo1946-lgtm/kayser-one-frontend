@@ -24,10 +24,14 @@ export interface RegisterPayload {
   managerId: string;
 }
 
-export async function register(payload: RegisterPayload): Promise<LoginResponse> {
-  const { data } = await api.post<LoginResponse>("/auth/register", payload);
-  localStorage.setItem(TOKEN_KEY, data.accessToken);
-  localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+export interface RegisterResult {
+  pending?: boolean;
+  message?: string;
+}
+
+export async function register(payload: RegisterPayload): Promise<RegisterResult> {
+  // O cadastro fica pendente de aprovação do gestor — não retorna token.
+  const { data } = await api.post<RegisterResult>("/auth/register", payload);
   return data;
 }
 
