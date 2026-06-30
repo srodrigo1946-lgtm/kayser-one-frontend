@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Eye, EyeOff, Moon, Sun, Building2, Lock, Mail } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { login } from "@/lib/auth";
@@ -236,6 +237,11 @@ export default function LoginPage() {
             <br />
             Use a senha padrão <code className="font-mono">123456789</code>. Você será solicitado a criar uma nova senha.
           </div>
+
+          <p className="mt-6 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
+            Não tem conta?{" "}
+            <Link href="/register" style={{ color: "var(--primary)" }}>Cadastre-se</Link>
+          </p>
         </div>
       </div>
     </div>

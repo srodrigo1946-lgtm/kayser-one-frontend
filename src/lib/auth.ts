@@ -16,6 +16,21 @@ export async function login(email: string, password: string): Promise<LoginRespo
   return data;
 }
 
+export interface RegisterPayload {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+  managerId: string;
+}
+
+export async function register(payload: RegisterPayload): Promise<LoginResponse> {
+  const { data } = await api.post<LoginResponse>("/auth/register", payload);
+  localStorage.setItem(TOKEN_KEY, data.accessToken);
+  localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+  return data;
+}
+
 export async function changePassword(currentPassword: string, newPassword: string) {
   const { data } = await api.put("/auth/change-password", { currentPassword, newPassword });
   // Após trocar a senha, atualiza o usuário em cache (firstLogin = false)
