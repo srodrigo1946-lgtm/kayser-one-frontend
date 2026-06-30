@@ -48,3 +48,14 @@ export function useUpsertGoal() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["goals"] }),
   });
 }
+
+export function useDeleteGoal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.delete(`/goals/${id}`);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["goals"] }),
+  });
+}

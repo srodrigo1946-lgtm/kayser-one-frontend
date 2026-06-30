@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { Header } from "@/components/layout/header";
-import { ChevronLeft, ChevronRight, Target, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Target, Plus, Trash2 } from "lucide-react";
 import { getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
-import { useGoalsProgress, useUpsertGoal } from "@/hooks/use-goals";
+import { useGoalsProgress, useUpsertGoal, useDeleteGoal } from "@/hooks/use-goals";
 import { useUsers } from "@/hooks/use-users";
 
 const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -17,7 +17,19 @@ export default function MetasPage() {
   const { data: progress } = useGoalsProgress(month, year);
   const { data: users } = useUsers();
   const upsert = useUpsertGoal();
+  const deleteGoal = useDeleteGoal();
   const [feedback, setFeedback] = useState("");
+
+  const removeGoal = async (id: string, name?: string) => {
+    if (!window.confirm(`Excluir a meta de ${name ?? "este usuário"} em ${months[month - 1]} ${year}?`)) return;
+    setFeedback("");
+    try {
+      await deleteGoal.mutateAsync(id);
+      setFeedback("Meta excluída.");
+    } catch (err) {
+      setFeedback(getApiErrorMessage(err, "Falha ao excluir meta."));
+    }
+  };
 
   const user = getStoredUser();
   const canManage = user && user.role !== "corretor";
@@ -76,10 +88,21 @@ export default function MetasPage() {
                 <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "var(--primary)18", color: "var(--primary)" }}>
                   <Target size={18} />
                 </div>
-                <div>
+                <div className="flex-1">
                   <div className="font-semibold" style={{ color: "var(--foreground)" }}>{p.goal.user?.name ?? "—"}</div>
                   <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>{months[month - 1]} {year}</div>
                 </div>
+                {canManage && (
+                  <button
+                    onClick={() => removeGoal(p.goal.id, p.goal.user?.name)}
+                    disabled={deleteGoal.isPending}
+                    className="w-8 h-8 rounded-xl flex items-center justify-center disabled:opacity-50"
+                    style={{ color: "#ef4444" }}
+                    title="Excluir meta"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
               </div>
 
               <ProgressBar label="Vendas" achieved={p.achievedSales} target={p.goal.targetSales} pct={p.salesPct} color="#22c55e" />
