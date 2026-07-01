@@ -10,6 +10,8 @@ export interface ConversationItem {
   remoteJid?: string;
   leadId?: string;
   lead?: Lead | null;
+  assignedToId?: string | null;
+  assignedTo?: { id: string; name: string; role?: string; avatar?: string | null } | null;
   lastMessage?: string;
   lastMessageAt?: string;
   unreadCount: number;
@@ -52,6 +54,17 @@ export function useSendWhatsapp() {
   return useMutation({
     mutationFn: async ({ to, text }: { to: string; text: string }) => {
       const { data } = await api.post("/whatsapp/send", { to, text });
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["conversations"] }),
+  });
+}
+
+export function useAssignConversation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ conversationId, userId }: { conversationId: string; userId: string | null }) => {
+      const { data } = await api.patch(`/conversations/${conversationId}/assign`, { userId });
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["conversations"] }),

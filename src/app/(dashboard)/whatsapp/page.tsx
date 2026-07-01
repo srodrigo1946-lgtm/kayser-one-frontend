@@ -8,8 +8,10 @@ import {
   useConversations,
   useMessages,
   useSendWhatsapp,
+  useAssignConversation,
   type ConversationItem,
 } from "@/hooks/use-conversations";
+import { useUsers } from "@/hooks/use-users";
 
 function initials(name?: string) {
   if (!name) return "?";
@@ -21,6 +23,8 @@ export default function WhatsAppPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data: thread } = useMessages(selectedId);
   const send = useSendWhatsapp();
+  const assign = useAssignConversation();
+  const { data: teamUsers } = useUsers();
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
   const [qr, setQr] = useState<string | null>(null);
@@ -120,7 +124,26 @@ export default function WhatsAppPage() {
               <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: "var(--primary)", color: "white" }}>
                 {initials(selected.lead?.name || selected.remoteJid)}
               </div>
-              <div className="font-medium text-sm" style={{ color: "var(--foreground)" }}>{selected.lead?.name || selected.remoteJid}</div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-sm truncate" style={{ color: "var(--foreground)" }}>{selected.lead?.name || selected.remoteJid}</div>
+                <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>
+                  Atendente: {selected.assignedTo?.name ?? "não atribuído"}
+                </div>
+              </div>
+              {(teamUsers ?? []).length > 0 && (
+                <select
+                  value={selected.assignedToId ?? ""}
+                  onChange={(e) => assign.mutate({ conversationId: selected.id, userId: e.target.value || null })}
+                  className="text-xs px-2 py-1.5 rounded-lg border outline-none flex-shrink-0"
+                  style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+                  title="Atribuir atendente"
+                >
+                  <option value="">Sem atendente</option>
+                  {(teamUsers ?? []).map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ background: "var(--background)" }}>
