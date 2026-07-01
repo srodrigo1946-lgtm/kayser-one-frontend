@@ -9,7 +9,7 @@ import { getApiErrorMessage } from "@/lib/api";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useUpdateProfile, useUploadAvatar, avatarUrl } from "@/hooks/use-profile";
 import { useKnowledge, useCreateKnowledge, useDeleteKnowledge, useUploadKnowledge } from "@/hooks/use-knowledge";
-import { useUsers, useCreateUser, useDeactivateUser, usePendingUsers, useApproveUser, useRejectUser } from "@/hooks/use-users";
+import { useUsers, useCreateUser, useDeactivateUser, useActivateUser, usePendingUsers, useApproveUser, useRejectUser } from "@/hooks/use-users";
 import type { UserRole } from "@/types";
 
 const tabs = [
@@ -29,6 +29,12 @@ const roleLabels: Record<string, string> = {
 
 export default function ConfiguracoesPage() {
   const [activeTab, setActiveTab] = useState("perfil");
+
+  // Permite abrir direto numa aba via ?tab= (ex.: notificação de novo cadastro → Usuários).
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    if (tab && tabs.some((t) => t.id === tab)) setActiveTab(tab);
+  }, []);
 
   return (
     <div>
@@ -397,6 +403,7 @@ function UsersManager() {
   const { data: users } = useUsers();
   const create = useCreateUser();
   const deactivate = useDeactivateUser();
+  const activate = useActivateUser();
   const [feedback, setFeedback] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
@@ -493,8 +500,26 @@ function UsersManager() {
             <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: u.active ? "#22c55e18" : "var(--border)", color: u.active ? "#22c55e" : "var(--muted-foreground)" }}>
               {u.active ? "Ativo" : "Inativo"}
             </span>
-            {u.active && (
-              <button onClick={() => deactivate.mutate(u.id)} style={{ color: "#ef4444" }} title="Desativar"><Trash2 size={16} /></button>
+            {u.active ? (
+              <button
+                onClick={() => { if (window.confirm(`Desativar ${u.name}? Ela perde o acesso, mas o histórico é mantido.`)) deactivate.mutate(u.id); }}
+                disabled={deactivate.isPending}
+                className="text-xs px-3 py-1.5 rounded-lg font-medium inline-flex items-center gap-1.5 disabled:opacity-50"
+                style={{ background: "#ef444418", color: "#ef4444" }}
+                title="Desativar"
+              >
+                <Trash2 size={14} /> Desativar
+              </button>
+            ) : (
+              <button
+                onClick={() => activate.mutate(u.id)}
+                disabled={activate.isPending}
+                className="text-xs px-3 py-1.5 rounded-lg font-medium inline-flex items-center gap-1.5 disabled:opacity-50"
+                style={{ background: "#22c55e18", color: "#22c55e" }}
+                title="Ativar"
+              >
+                <Check size={14} /> Ativar
+              </button>
             )}
           </div>
         ))}

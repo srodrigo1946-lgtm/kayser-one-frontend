@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Moon, Sun, Search, AlertCircle, Clock } from "lucide-react";
+import { Bell, Moon, Sun, Search, AlertCircle, Clock, UserPlus } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { useAlerts } from "@/hooks/use-alerts";
+import { usePendingUsers } from "@/hooks/use-users";
 
 interface HeaderProps {
   title: string;
@@ -15,15 +16,22 @@ export function Header({ title, subtitle }: HeaderProps) {
   const { theme, toggle } = useTheme();
   const router = useRouter();
   const { data: alerts } = useAlerts();
+  const { data: pending } = usePendingUsers();
   const [open, setOpen] = useState(false);
 
   const semAtendimento = alerts?.semAtendimento ?? [];
   const semContato = alerts?.semContato ?? [];
-  const count = semAtendimento.length + semContato.length;
+  const pendentes = pending ?? [];
+  const count = semAtendimento.length + semContato.length + pendentes.length;
 
   const goToLead = () => {
     setOpen(false);
     router.push("/leads");
+  };
+
+  const goToApprovals = () => {
+    setOpen(false);
+    router.push("/configuracoes?tab=usuarios");
   };
 
   return (
@@ -89,6 +97,15 @@ export function Header({ title, subtitle }: HeaderProps) {
                       Tudo em dia! Nenhum alerta. 🎉
                     </div>
                   )}
+                  {pendentes.map((u) => (
+                    <AlertRow
+                      key={`pend-${u.id}`}
+                      icon={<UserPlus size={14} style={{ color: "#f59e0b" }} />}
+                      name={u.name}
+                      reason="Novo cadastro • aguardando aprovação"
+                      onClick={goToApprovals}
+                    />
+                  ))}
                   {semAtendimento.map((lead) => (
                     <AlertRow
                       key={`sa-${lead.id}`}
@@ -108,7 +125,16 @@ export function Header({ title, subtitle }: HeaderProps) {
                     />
                   ))}
                 </div>
-                {count > 0 && (
+                {pendentes.length > 0 && (
+                  <button
+                    onClick={goToApprovals}
+                    className="w-full p-3 text-sm font-medium border-t"
+                    style={{ borderColor: "var(--border)", color: "var(--primary)" }}
+                  >
+                    Aprovar cadastros
+                  </button>
+                )}
+                {semAtendimento.length + semContato.length > 0 && (
                   <button
                     onClick={goToLead}
                     className="w-full p-3 text-sm font-medium border-t"

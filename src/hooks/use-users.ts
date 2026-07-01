@@ -41,6 +41,17 @@ export function useDeactivateUser() {
   });
 }
 
+export function useActivateUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post(`/users/${id}/activate`);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["users"] }),
+  });
+}
+
 export function usePendingUsers() {
   return useQuery({
     queryKey: ["users", "pending"],
