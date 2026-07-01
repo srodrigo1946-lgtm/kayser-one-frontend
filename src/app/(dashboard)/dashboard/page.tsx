@@ -22,7 +22,8 @@ const statusLabels: Record<string, string> = {
   visita_realizada: "Visita Realizada",
   simulacao: "Simulação",
   subida_pasta: "Subida de Pasta",
-  assinatura: "Assinatura",
+  aprovacao: "Aprovação",
+  reprovacao: "Reprovação",
   venda_ganha: "Venda Ganha",
   venda_perdida: "Venda Perdida",
 };

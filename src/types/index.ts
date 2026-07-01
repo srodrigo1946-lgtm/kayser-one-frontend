@@ -23,7 +23,8 @@ export type LeadStatus =
   | "visita_realizada"
   | "simulacao"
   | "subida_pasta"
-  | "assinatura"
+  | "aprovacao"
+  | "reprovacao"
   | "venda_ganha"
   | "venda_perdida";
 

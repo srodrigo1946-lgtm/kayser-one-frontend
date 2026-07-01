@@ -36,7 +36,8 @@ const statusLabels: Record<LeadStatus, string> = {
   visita_realizada: "Visita Realizada",
   simulacao: "Simulação",
   subida_pasta: "Subida de Pasta",
-  assinatura: "Assinatura",
+  aprovacao: "Aprovação",
+  reprovacao: "Reprovação",
   venda_ganha: "Venda Ganha",
   venda_perdida: "Venda Perdida",
 };
@@ -51,8 +52,9 @@ const statusColors: Record<LeadStatus, string> = {
   visita_realizada: "#84cc16",
   simulacao: "#f97316",
   subida_pasta: "#ec4899",
-  assinatura: "#14b8a6",
-  venda_ganha: "#22c55e",
+  aprovacao: "#22c55e",
+  reprovacao: "#f97316",
+  venda_ganha: "#16a34a",
   venda_perdida: "#ef4444",
 };
 
