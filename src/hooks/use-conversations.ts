@@ -79,6 +79,12 @@ export function useSetEtiquetas() {
       const { data } = await api.patch(`/conversations/${conversationId}/etiquetas`, { etiquetas });
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["conversations"] }),
+    onSuccess: () => {
+      // A etiqueta pode mover o lead no Kanban e criar compromisso na Agenda.
+      qc.invalidateQueries({ queryKey: ["conversations"] });
+      qc.invalidateQueries({ queryKey: ["leads"] });
+      qc.invalidateQueries({ queryKey: ["appointments"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
   });
 }
