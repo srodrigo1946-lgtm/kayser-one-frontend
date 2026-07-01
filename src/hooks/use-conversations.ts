@@ -12,6 +12,7 @@ export interface ConversationItem {
   lead?: Lead | null;
   assignedToId?: string | null;
   assignedTo?: { id: string; name: string; role?: string; avatar?: string | null } | null;
+  etiquetas?: string[] | null;
   lastMessage?: string;
   lastMessageAt?: string;
   unreadCount: number;
@@ -65,6 +66,17 @@ export function useAssignConversation() {
   return useMutation({
     mutationFn: async ({ conversationId, userId }: { conversationId: string; userId: string | null }) => {
       const { data } = await api.patch(`/conversations/${conversationId}/assign`, { userId });
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["conversations"] }),
+  });
+}
+
+export function useSetEtiquetas() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ conversationId, etiquetas }: { conversationId: string; etiquetas: string[] }) => {
+      const { data } = await api.patch(`/conversations/${conversationId}/etiquetas`, { etiquetas });
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["conversations"] }),

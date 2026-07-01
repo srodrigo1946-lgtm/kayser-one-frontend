@@ -9,6 +9,7 @@ import {
   useMessages,
   useSendWhatsapp,
   useAssignConversation,
+  useSetEtiquetas,
   type ConversationItem,
 } from "@/hooks/use-conversations";
 import { useUsers } from "@/hooks/use-users";
@@ -18,14 +19,31 @@ function initials(name?: string) {
   return name.split(" ").map((n) => n[0]).slice(0, 2).join("");
 }
 
+// Etiquetas pré-definidas do funil (chave estável + rótulo + cor).
+const ETIQUETAS: { key: string; label: string; color: string }[] = [
+  { key: "agendamento", label: "Agendamento", color: "#3b82f6" },
+  { key: "visita_realizada", label: "Visita realizada", color: "#8b5cf6" },
+  { key: "subida_pastas", label: "Subida de pastas", color: "#f59e0b" },
+  { key: "aprovacao", label: "Aprovação", color: "#22c55e" },
+  { key: "reprovacao", label: "Reprovação", color: "#ef4444" },
+  { key: "venda_ganha", label: "Venda ganha", color: "#10b981" },
+];
+
 export default function WhatsAppPage() {
   const { data: conversations } = useConversations();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data: thread } = useMessages(selectedId);
   const send = useSendWhatsapp();
   const assign = useAssignConversation();
+  const setEtiquetas = useSetEtiquetas();
   const { data: teamUsers } = useUsers();
   const [message, setMessage] = useState("");
+
+  const toggleEtiqueta = (conv: ConversationItem, key: string) => {
+    const atual = conv.etiquetas ?? [];
+    const novas = atual.includes(key) ? atual.filter((e) => e !== key) : [...atual, key];
+    setEtiquetas.mutate({ conversationId: conv.id, etiquetas: novas });
+  };
   const [search, setSearch] = useState("");
   const [qr, setQr] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
@@ -98,6 +116,14 @@ export default function WhatsAppPage() {
                     {conv.lead?.name || conv.remoteJid}
                   </div>
                   <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>{conv.lastMessage}</div>
+                  {(conv.etiquetas ?? []).length > 0 && (
+                    <div className="flex gap-1 mt-1">
+                      {(conv.etiquetas ?? []).map((k) => {
+                        const et = ETIQUETAS.find((e) => e.key === k);
+                        return et ? <span key={k} className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: et.color }} title={et.label} /> : null;
+                      })}
+                    </div>
+                  )}
                 </div>
               </button>
             ))}
@@ -144,6 +170,29 @@ export default function WhatsAppPage() {
                   ))}
                 </select>
               )}
+            </div>
+
+            {/* Etiquetas do funil (clique para marcar/desmarcar) */}
+            <div className="flex items-center gap-1.5 px-4 py-2 border-b overflow-x-auto" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+              <span className="text-xs mr-1 flex-shrink-0" style={{ color: "var(--muted-foreground)" }}>Etiquetas:</span>
+              {ETIQUETAS.map((et) => {
+                const ativa = (selected.etiquetas ?? []).includes(et.key);
+                return (
+                  <button
+                    key={et.key}
+                    onClick={() => toggleEtiqueta(selected, et.key)}
+                    disabled={setEtiquetas.isPending}
+                    className="text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap flex-shrink-0 border transition-colors disabled:opacity-50"
+                    style={{
+                      background: ativa ? et.color : "transparent",
+                      borderColor: et.color,
+                      color: ativa ? "white" : et.color,
+                    }}
+                  >
+                    {et.label}
+                  </button>
+                );
+              })}
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ background: "var(--background)" }}>
