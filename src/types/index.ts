@@ -52,7 +52,8 @@ export interface Lead {
 }
 
 export interface KanbanColumn {
-  id: LeadStatus;
+  id: string; // chave/status da coluna (pode ser customizada)
+  columnId?: string; // id no banco (para editar/remover)
   title: string;
   emoji: string;
   color: string;
