@@ -39,10 +39,9 @@ export default function WhatsAppPage() {
   const { data: teamUsers } = useUsers();
   const [message, setMessage] = useState("");
 
-  const toggleEtiqueta = (conv: ConversationItem, key: string) => {
-    const atual = conv.etiquetas ?? [];
-    const novas = atual.includes(key) ? atual.filter((e) => e !== key) : [...atual, key];
-    setEtiquetas.mutate({ conversationId: conv.id, etiquetas: novas });
+  // Lista suspensa: a etiqueta representa o estágio atual do funil (single-select).
+  const setEtiqueta = (conv: ConversationItem, key: string) => {
+    setEtiquetas.mutate({ conversationId: conv.id, etiquetas: key ? [key] : [] });
   };
   const [search, setSearch] = useState("");
   const [qr, setQr] = useState<string | null>(null);
@@ -172,27 +171,29 @@ export default function WhatsAppPage() {
               )}
             </div>
 
-            {/* Etiquetas do funil (clique para marcar/desmarcar) */}
-            <div className="flex items-center gap-1.5 px-4 py-2 border-b overflow-x-auto" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-              <span className="text-xs mr-1 flex-shrink-0" style={{ color: "var(--muted-foreground)" }}>Etiquetas:</span>
-              {ETIQUETAS.map((et) => {
-                const ativa = (selected.etiquetas ?? []).includes(et.key);
-                return (
-                  <button
-                    key={et.key}
-                    onClick={() => toggleEtiqueta(selected, et.key)}
-                    disabled={setEtiquetas.isPending}
-                    className="text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap flex-shrink-0 border transition-colors disabled:opacity-50"
-                    style={{
-                      background: ativa ? et.color : "transparent",
-                      borderColor: et.color,
-                      color: ativa ? "white" : et.color,
-                    }}
-                  >
-                    {et.label}
-                  </button>
-                );
-              })}
+            {/* Etiqueta = estágio do funil (lista suspensa). Move o card no Kanban. */}
+            <div className="flex items-center gap-2 px-4 py-2 border-b" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+              <span className="text-xs flex-shrink-0" style={{ color: "var(--muted-foreground)" }}>Etiqueta:</span>
+              <select
+                value={(selected.etiquetas ?? [])[0] ?? ""}
+                onChange={(e) => setEtiqueta(selected, e.target.value)}
+                disabled={setEtiquetas.isPending}
+                className="text-sm px-2 py-1.5 rounded-lg border outline-none disabled:opacity-50"
+                style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+              >
+                <option value="">— Sem etiqueta —</option>
+                {ETIQUETAS.map((et) => (
+                  <option key={et.key} value={et.key}>{et.label}</option>
+                ))}
+              </select>
+              {(() => {
+                const atual = ETIQUETAS.find((e) => e.key === (selected.etiquetas ?? [])[0]);
+                return atual ? (
+                  <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: atual.color, color: "white" }}>
+                    {atual.label}
+                  </span>
+                ) : null;
+              })()}
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ background: "var(--background)" }}>
