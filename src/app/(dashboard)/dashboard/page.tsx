@@ -10,6 +10,7 @@ import {
   useRanking,
   useRecentLeads,
 } from "@/hooks/use-dashboard";
+import { useKanbanBoard } from "@/hooks/use-kanban";
 import type { DashboardMetrics } from "@/types";
 
 const statusLabels: Record<string, string> = {
@@ -49,6 +50,14 @@ export default function DashboardPage() {
   const { data: monthly } = useMonthlyData();
   const { data: ranking } = useRanking();
   const { data: recentLeads } = useRecentLeads();
+  const { data: board } = useKanbanBoard();
+
+  // Funil segue as colunas do Kanban (contagem real de leads por etapa)
+  const funnel = (board ?? []).map((col) => ({
+    label: col.title,
+    value: col.leads?.length ?? 0,
+    color: col.color,
+  }));
 
   // Adapta a resposta do backend para o formato esperado pelos StatsCards
   const statsMetrics: DashboardMetrics = {
@@ -74,7 +83,7 @@ export default function DashboardPage() {
           <div className="lg:col-span-2">
             <SalesChart data={monthly ?? []} />
           </div>
-          <ConversionChart />
+          <ConversionChart data={funnel} />
         </div>
 
         {/* Recent Leads */}

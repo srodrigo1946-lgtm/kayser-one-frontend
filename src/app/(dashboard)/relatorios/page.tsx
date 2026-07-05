@@ -8,11 +8,20 @@ import {
   useMonthlyData,
   useRanking,
 } from "@/hooks/use-dashboard";
+import { useKanbanBoard } from "@/hooks/use-kanban";
 
 export default function RelatoriosPage() {
   const { data: metrics } = useDashboardMetrics();
   const { data: monthly } = useMonthlyData();
   const { data: ranking } = useRanking();
+  const { data: board } = useKanbanBoard();
+
+  // Funil segue as colunas do Kanban (contagem real de leads por etapa)
+  const funnel = (board ?? []).map((col) => ({
+    label: col.title,
+    value: col.leads?.length ?? 0,
+    color: col.color,
+  }));
 
   const cards = [
     { label: "Leads no Mês", value: metrics?.leadsMes ?? 0, color: "#3b82f6" },
@@ -46,7 +55,7 @@ export default function RelatoriosPage() {
 
         <div className="grid lg:grid-cols-2 gap-4">
           <SalesChart data={monthly ?? []} />
-          <ConversionChart />
+          <ConversionChart data={funnel} />
         </div>
 
         <div className="rounded-2xl border p-5" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
