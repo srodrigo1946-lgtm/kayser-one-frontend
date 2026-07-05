@@ -8,8 +8,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
   Legend,
 } from "recharts";
 import type { SaleData } from "@/types";
@@ -74,46 +72,76 @@ export function SalesChart({ data = [] }: { data?: SaleData[] }) {
   );
 }
 
-export function ConversionChart() {
+interface FunnelStage {
+  label: string;
+  value: number;
+  color?: string;
+}
+
+const FUNNEL_PALETTE = ["#3b82f6", "#22c55e", "#f97316", "#ef4444", "#eab308", "#06b6d4"];
+
+export function ConversionChart({ data }: { data?: FunnelStage[] }) {
+  const base: FunnelStage[] =
+    data && data.length
+      ? data
+      : [
+          { label: "Leads", value: 324 },
+          { label: "Contato", value: 287 },
+          { label: "Visita", value: 145 },
+          { label: "Simulação", value: 89 },
+          { label: "Subida de Pasta", value: 52 },
+          { label: "Venda", value: 18 },
+        ];
+
+  const stages = base.map((s, i) => ({ ...s, color: s.color ?? FUNNEL_PALETTE[i % FUNNEL_PALETTE.length] }));
+  const topValue = stages[0]?.value || 1;
+  const max = Math.max(...stages.map((s) => s.value), 1);
+  const minW = 24; // largura mínima (%) para caber o texto no funil
+  const widthOf = (v: number) => minW + (v / max) * (100 - minW);
+
   return (
-    <div
-      className="rounded-2xl p-5 border"
-      style={{ background: "var(--card)", borderColor: "var(--border)" }}
-    >
-      <div className="mb-6">
+    <div className="rounded-2xl p-5 border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+      <div className="mb-5">
         <h3 className="font-semibold" style={{ color: "var(--foreground)" }}>
-          Funil de Conversão
+          Funil de Vendas
         </h3>
         <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-          Por etapa do Kanban
+          Etapas do funil comercial
         </p>
       </div>
-      <ResponsiveContainer width="100%" height={240}>
-        <BarChart
-          data={[
-            { stage: "Leads", value: 324 },
-            { stage: "Contato", value: 287 },
-            { stage: "Visita", value: 145 },
-            { stage: "Simulação", value: 89 },
-            { stage: "Pasta", value: 52 },
-            { stage: "Venda", value: 18 },
-          ]}
-          layout="vertical"
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-          <XAxis type="number" tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} axisLine={false} tickLine={false} />
-          <YAxis type="category" dataKey="stage" tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} axisLine={false} tickLine={false} width={60} />
-          <Tooltip
-            contentStyle={{
-              background: "var(--card)",
-              border: "1px solid var(--border)",
-              borderRadius: "12px",
-              color: "var(--foreground)",
-            }}
-          />
-          <Bar dataKey="value" name="Quantidade" fill="#3b82f6" radius={[0, 6, 6, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
+
+      <div className="space-y-1.5">
+        {stages.map((s, i) => {
+          const topW = widthOf(s.value);
+          const botW = widthOf(stages[i + 1]?.value ?? s.value * 0.5);
+          const lt = (100 - topW) / 2;
+          const rt = (100 + topW) / 2;
+          const lb = (100 - botW) / 2;
+          const rb = (100 + botW) / 2;
+          const pct = Math.round((s.value / topValue) * 100);
+          return (
+            <div key={s.label} className="flex items-center gap-3">
+              <div className="w-24 text-right text-xs font-medium flex-shrink-0 truncate" style={{ color: "var(--muted-foreground)" }}>
+                {s.label}
+              </div>
+              <div className="flex-1" style={{ height: 46 }}>
+                <div
+                  className="h-full w-full flex items-center justify-center text-white"
+                  style={{
+                    clipPath: `polygon(${lt}% 0, ${rt}% 0, ${rb}% 100%, ${lb}% 100%)`,
+                    background: `linear-gradient(180deg, rgba(255,255,255,0.40), rgba(255,255,255,0) 45%, rgba(0,0,0,0.20)), ${s.color}`,
+                  }}
+                >
+                  <span className="text-sm font-bold drop-shadow-sm">
+                    {s.value}
+                    <span className="text-xs font-medium opacity-90"> · {pct}%</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
