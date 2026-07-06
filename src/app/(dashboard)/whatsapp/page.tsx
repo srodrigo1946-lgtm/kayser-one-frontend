@@ -13,21 +13,12 @@ import {
   type ConversationItem,
 } from "@/hooks/use-conversations";
 import { useUsers } from "@/hooks/use-users";
+import { useKanbanBoard } from "@/hooks/use-kanban";
 
 function initials(name?: string) {
   if (!name) return "?";
   return name.split(" ").map((n) => n[0]).slice(0, 2).join("");
 }
-
-// Etiquetas pré-definidas do funil (chave estável + rótulo + cor).
-const ETIQUETAS: { key: string; label: string; color: string }[] = [
-  { key: "agendamento", label: "Agendamento", color: "#3b82f6" },
-  { key: "visita_realizada", label: "Visita realizada", color: "#8b5cf6" },
-  { key: "subida_pastas", label: "Subida de pastas", color: "#f59e0b" },
-  { key: "aprovacao", label: "Aprovação", color: "#22c55e" },
-  { key: "reprovacao", label: "Reprovação", color: "#ef4444" },
-  { key: "venda_ganha", label: "Venda ganha", color: "#10b981" },
-];
 
 export default function WhatsAppPage() {
   const { data: conversations } = useConversations();
@@ -37,7 +28,17 @@ export default function WhatsAppPage() {
   const assign = useAssignConversation();
   const setEtiquetas = useSetEtiquetas();
   const { data: teamUsers } = useUsers();
+  const { data: board } = useKanbanBoard();
   const [message, setMessage] = useState("");
+
+  // Etiquetas = colunas reais do Kanban. A key da coluna é o próprio status do lead,
+  // então escolher a etiqueta move o card direto para a coluna correspondente.
+  const etiquetas = (board ?? []).map((col) => ({
+    key: col.id,
+    label: col.title,
+    color: col.color,
+    emoji: col.emoji,
+  }));
 
   // Lista suspensa: a etiqueta representa o estágio atual do funil (single-select).
   const setEtiqueta = (conv: ConversationItem, key: string) => {
@@ -118,7 +119,7 @@ export default function WhatsAppPage() {
                   {(conv.etiquetas ?? []).length > 0 && (
                     <div className="flex gap-1 mt-1">
                       {(conv.etiquetas ?? []).map((k) => {
-                        const et = ETIQUETAS.find((e) => e.key === k);
+                        const et = etiquetas.find((e) => e.key === k);
                         return et ? <span key={k} className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: et.color }} title={et.label} /> : null;
                       })}
                     </div>
@@ -182,15 +183,15 @@ export default function WhatsAppPage() {
                 style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
               >
                 <option value="">— Sem etiqueta —</option>
-                {ETIQUETAS.map((et) => (
-                  <option key={et.key} value={et.key}>{et.label}</option>
+                {etiquetas.map((et) => (
+                  <option key={et.key} value={et.key}>{et.emoji ? `${et.emoji} ` : ""}{et.label}</option>
                 ))}
               </select>
               {(() => {
-                const atual = ETIQUETAS.find((e) => e.key === (selected.etiquetas ?? [])[0]);
+                const atual = etiquetas.find((e) => e.key === (selected.etiquetas ?? [])[0]);
                 return atual ? (
                   <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: atual.color, color: "white" }}>
-                    {atual.label}
+                    {atual.emoji ? `${atual.emoji} ` : ""}{atual.label}
                   </span>
                 ) : null;
               })()}

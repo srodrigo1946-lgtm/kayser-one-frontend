@@ -82,6 +82,7 @@ export function useSetEtiquetas() {
     onSuccess: () => {
       // A etiqueta pode mover o lead no Kanban e criar compromisso na Agenda.
       qc.invalidateQueries({ queryKey: ["conversations"] });
+      qc.invalidateQueries({ queryKey: ["kanban"] });
       qc.invalidateQueries({ queryKey: ["leads"] });
       qc.invalidateQueries({ queryKey: ["appointments"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
