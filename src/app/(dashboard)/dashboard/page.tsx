@@ -3,41 +3,13 @@
 import { Header } from "@/components/layout/header";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { SalesChart, ConversionChart } from "@/components/dashboard/sales-chart";
-import { formatDate } from "@/lib/utils";
 import {
   useDashboardMetrics,
   useMonthlyData,
   useRanking,
-  useRecentLeads,
 } from "@/hooks/use-dashboard";
 import { useKanbanBoard } from "@/hooks/use-kanban";
 import type { DashboardMetrics } from "@/types";
-
-const statusLabels: Record<string, string> = {
-  novo_lead: "Novo Lead",
-  primeiro_contato: "Primeiro Contato",
-  em_atendimento: "Em Atendimento",
-  documentacao: "Documentação",
-  agendamento: "Agendamento",
-  visita_agendada: "Visita Agendada",
-  visita_realizada: "Visita Realizada",
-  simulacao: "Simulação",
-  subida_pasta: "Subida de Pasta",
-  aprovacao: "Aprovação",
-  reprovacao: "Reprovação",
-  venda_ganha: "Venda Ganha",
-  venda_perdida: "Venda Perdida",
-};
-
-const statusColors: Record<string, string> = {
-  novo_lead: "#6366f1",
-  primeiro_contato: "#8b5cf6",
-  em_atendimento: "#3b82f6",
-  visita_agendada: "#f59e0b",
-  simulacao: "#f97316",
-  venda_ganha: "#22c55e",
-  venda_perdida: "#ef4444",
-};
 
 export default function DashboardPage() {
   const today = new Date().toLocaleDateString("pt-BR", {
@@ -49,7 +21,6 @@ export default function DashboardPage() {
   const { data: metrics } = useDashboardMetrics();
   const { data: monthly } = useMonthlyData();
   const { data: ranking } = useRanking();
-  const { data: recentLeads } = useRecentLeads();
   const { data: board } = useKanbanBoard();
 
   // Funil segue as colunas do Kanban (contagem real de leads por etapa)
@@ -84,64 +55,6 @@ export default function DashboardPage() {
             <SalesChart data={monthly ?? []} />
           </div>
           <ConversionChart data={funnel} />
-        </div>
-
-        {/* Recent Leads */}
-        <div
-          className="rounded-2xl border"
-          style={{ background: "var(--card)", borderColor: "var(--border)" }}
-        >
-          <div className="p-5 border-b flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
-            <div>
-              <h3 className="font-semibold" style={{ color: "var(--foreground)" }}>
-                Leads Recentes
-              </h3>
-              <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-                Últimas captações do sistema
-              </p>
-            </div>
-            <a href="/leads" className="text-sm font-medium" style={{ color: "var(--primary)" }}>
-              Ver todos →
-            </a>
-          </div>
-
-          <div className="divide-y" style={{ borderColor: "var(--border)" }}>
-            {(recentLeads ?? []).map((lead) => (
-              <div key={lead.id} className="flex items-center gap-4 p-4">
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                  style={{ background: "var(--primary)", color: "white" }}
-                >
-                  {lead.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm truncate" style={{ color: "var(--foreground)" }}>
-                    {lead.name}
-                  </div>
-                  <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-                    {lead.empreendimento || "—"} • {lead.responsavel?.name || "Sem responsável"}
-                  </div>
-                </div>
-                <div className="hidden sm:block text-xs" style={{ color: "var(--muted-foreground)" }}>
-                  {formatDate(lead.createdAt)}
-                </div>
-                <span
-                  className="text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0"
-                  style={{
-                    background: `${statusColors[lead.status] || "#6366f1"}18`,
-                    color: statusColors[lead.status] || "#6366f1",
-                  }}
-                >
-                  {statusLabels[lead.status]}
-                </span>
-              </div>
-            ))}
-            {(recentLeads ?? []).length === 0 && (
-              <div className="py-10 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
-                Nenhum lead ainda. Importe uma planilha ou cadastre o primeiro lead.
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Ranking */}
