@@ -8,6 +8,8 @@ export interface ConversationItem {
   id: string;
   channel: string;
   remoteJid?: string;
+  contactName?: string | null;
+  contactAvatar?: string | null;
   leadId?: string;
   lead?: Lead | null;
   assignedToId?: string | null;

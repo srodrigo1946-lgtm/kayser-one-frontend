@@ -20,6 +20,11 @@ function initials(name?: string) {
   return name.split(" ").map((n) => n[0]).slice(0, 2).join("");
 }
 
+// Nome exibido: lead cadastrado > nome do WhatsApp (pushName) > número.
+function displayName(conv: ConversationItem) {
+  return conv.lead?.name || conv.contactName || conv.remoteJid || "Contato";
+}
+
 export default function WhatsAppPage() {
   const { data: conversations } = useConversations();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -49,7 +54,7 @@ export default function WhatsAppPage() {
   const [connecting, setConnecting] = useState(false);
 
   const list = (conversations ?? []).filter((c) =>
-    (c.lead?.name || c.remoteJid || "").toLowerCase().includes(search.toLowerCase())
+    (c.lead?.name || c.contactName || c.remoteJid || "").toLowerCase().includes(search.toLowerCase())
   );
   const selected: ConversationItem | undefined = list.find((c) => c.id === selectedId) ?? thread?.conversation;
 
@@ -104,16 +109,20 @@ export default function WhatsAppPage() {
             {list.map((conv) => (
               <button key={conv.id} onClick={() => setSelectedId(conv.id)} className="w-full flex items-center gap-3 p-3 text-left border-b" style={{ background: selectedId === conv.id ? "var(--secondary)" : "transparent", borderColor: "var(--border)" }}>
                 <div className="relative flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: "var(--primary)", color: "white" }}>
-                    {initials(conv.lead?.name || conv.remoteJid)}
-                  </div>
+                  {conv.contactAvatar ? (
+                    <img src={conv.contactAvatar} alt="" className="w-10 h-10 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: "var(--primary)", color: "white" }}>
+                      {initials(displayName(conv))}
+                    </div>
+                  )}
                   {conv.unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-xs flex items-center justify-center" style={{ background: "#22c55e", color: "white" }}>{conv.unreadCount}</span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
-                    {conv.lead?.name || conv.remoteJid}
+                    {displayName(conv)}
                   </div>
                   <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>{conv.lastMessage}</div>
                   {(conv.etiquetas ?? []).length > 0 && (
@@ -147,11 +156,15 @@ export default function WhatsAppPage() {
         ) : selected ? (
           <div className="flex-1 flex flex-col">
             <div className="h-16 flex items-center gap-3 px-4 border-b" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: "var(--primary)", color: "white" }}>
-                {initials(selected.lead?.name || selected.remoteJid)}
-              </div>
+              {selected.contactAvatar ? (
+                <img src={selected.contactAvatar} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+              ) : (
+                <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0" style={{ background: "var(--primary)", color: "white" }}>
+                  {initials(displayName(selected))}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm truncate" style={{ color: "var(--foreground)" }}>{selected.lead?.name || selected.remoteJid}</div>
+                <div className="font-medium text-sm truncate" style={{ color: "var(--foreground)" }}>{displayName(selected)}</div>
                 <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>
                   Atendente: {selected.assignedTo?.name ?? "não atribuído"}
                 </div>
