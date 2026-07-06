@@ -16,22 +16,36 @@ interface StatCardProps {
 function StatCard({ title, value, subtitle, icon, trend, color, danger }: StatCardProps) {
   return (
     <div
-      className="rounded-2xl p-5 border"
-      style={{ background: "var(--card)", borderColor: "var(--border)" }}
+      className="rounded-2xl p-5 border relative overflow-hidden"
+      style={{
+        // sheen no topo (dá o brilho 3D do vidro) sobre a cor do card
+        background: "linear-gradient(157deg, rgba(255,255,255,0.08), rgba(255,255,255,0) 42%), var(--card)",
+        borderColor: "var(--border)",
+      }}
     >
-      <div className="flex items-start justify-between mb-4">
+      {/* brilho colorido no canto — profundidade */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full"
+        style={{ background: `radial-gradient(circle, ${color}40, transparent 70%)` }}
+      />
+      <div className="relative flex items-start justify-between mb-4">
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center"
-          style={{ background: `${color}18`, color }}
+          className="w-11 h-11 rounded-xl flex items-center justify-center text-white"
+          style={{
+            // tile do ícone em gradiente + glow da cor + highlight interno
+            background: `linear-gradient(135deg, ${color}, ${color}b0)`,
+            boxShadow: `0 10px 22px -6px ${color}80, inset 0 1px 0 rgba(255,255,255,0.4)`,
+          }}
         >
           {icon}
         </div>
         {trend !== undefined && (
           <span
-            className="text-xs font-medium px-2 py-1 rounded-full"
+            className="text-xs font-semibold px-2 py-1 rounded-full"
             style={{
-              background: trend >= 0 ? "#16a34a18" : "#dc262618",
-              color: trend >= 0 ? "#16a34a" : "#dc2626",
+              background: trend >= 0 ? "#16a34a22" : "#dc262622",
+              color: trend >= 0 ? "#22c55e" : "#f87171",
             }}
           >
             {trend >= 0 ? "+" : ""}{trend}%
@@ -41,14 +55,14 @@ function StatCard({ title, value, subtitle, icon, trend, color, danger }: StatCa
           <AlertCircle size={16} style={{ color: "var(--danger)" }} />
         )}
       </div>
-      <div className="text-2xl font-bold mb-1" style={{ color: danger ? "var(--danger)" : "var(--foreground)" }}>
+      <div className="relative text-3xl font-bold mb-1 tracking-tight" style={{ color: danger ? "var(--danger)" : "var(--foreground)" }}>
         {value}
       </div>
-      <div className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+      <div className="relative text-sm font-medium" style={{ color: "var(--foreground)" }}>
         {title}
       </div>
       {subtitle && (
-        <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>
+        <div className="relative text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>
           {subtitle}
         </div>
       )}
