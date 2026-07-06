@@ -18,6 +18,7 @@ export interface DashboardMetricsResponse {
 export interface RankingItem {
   responsavelId: string | null;
   nome: string | null;
+  role?: string | null;
   vendas: string | number;
   leads: string | number;
 }

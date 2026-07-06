@@ -11,6 +11,14 @@ import {
 import { useKanbanBoard } from "@/hooks/use-kanban";
 import type { DashboardMetrics } from "@/types";
 
+const roleLabels: Record<string, string> = {
+  superintendente: "Superintendente",
+  gerente_geral: "Gerente Geral",
+  gerente: "Gerente",
+  corretor: "Corretor",
+  diretor: "Diretor",
+};
+
 export default function DashboardPage() {
   const today = new Date().toLocaleDateString("pt-BR", {
     weekday: "long",
@@ -83,8 +91,16 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                      <span className="text-sm font-medium flex items-center gap-2" style={{ color: "var(--foreground)" }}>
                         {c.nome || "Sem responsável"}
+                        {c.role && (
+                          <span
+                            className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                            style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}
+                          >
+                            {roleLabels[c.role] || c.role}
+                          </span>
+                        )}
                       </span>
                       <span className="text-sm" style={{ color: "var(--muted-foreground)" }}>
                         {vendas} venda(s) / {leads} lead(s)

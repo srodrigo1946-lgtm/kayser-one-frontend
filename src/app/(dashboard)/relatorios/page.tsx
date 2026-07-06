@@ -10,6 +10,14 @@ import {
 } from "@/hooks/use-dashboard";
 import { useKanbanBoard } from "@/hooks/use-kanban";
 
+const roleLabels: Record<string, string> = {
+  superintendente: "Superintendente",
+  gerente_geral: "Gerente Geral",
+  gerente: "Gerente",
+  corretor: "Corretor",
+  diretor: "Diretor",
+};
+
 export default function RelatoriosPage() {
   const { data: metrics } = useDashboardMetrics();
   const { data: monthly } = useMonthlyData();
@@ -76,7 +84,14 @@ export default function RelatoriosPage() {
                   const conv = leads > 0 ? ((vendas / leads) * 100).toFixed(1) : "0.0";
                   return (
                     <tr key={r.responsavelId ?? i} style={{ borderBottom: "1px solid var(--border)" }}>
-                      <td className="px-4 py-3 text-sm font-medium" style={{ color: "var(--foreground)" }}>{r.nome || "Sem responsável"}</td>
+                      <td className="px-4 py-3 text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                        {r.nome || "Sem responsável"}
+                        {r.role && (
+                          <span className="ml-2 text-xs font-normal" style={{ color: "var(--muted-foreground)" }}>
+                            · {roleLabels[r.role] || r.role}
+                          </span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-sm" style={{ color: "var(--foreground)" }}>{leads}</td>
                       <td className="px-4 py-3 text-sm" style={{ color: "var(--foreground)" }}>{vendas}</td>
                       <td className="px-4 py-3 text-sm" style={{ color: "#22c55e" }}>
