@@ -13,8 +13,17 @@ import {
   useReorderColumns,
 } from "@/hooks/use-kanban";
 import { getStoredUser } from "@/lib/auth";
+import { LeadDetailDrawer } from "@/components/leads/lead-detail-drawer";
 
-function LeadCard({ lead, onDragStart }: { lead: Lead; onDragStart: (lead: Lead) => void }) {
+function LeadCard({
+  lead,
+  onDragStart,
+  onOpen,
+}: {
+  lead: Lead;
+  onDragStart: (lead: Lead) => void;
+  onOpen: (lead: Lead) => void;
+}) {
   const score = lead.score || 0;
   const scoreColor = score >= 80 ? "#22c55e" : score >= 60 ? "#f59e0b" : "#ef4444";
 
@@ -22,8 +31,10 @@ function LeadCard({ lead, onDragStart }: { lead: Lead; onDragStart: (lead: Lead)
     <div
       draggable
       onDragStart={() => onDragStart(lead)}
-      className="rounded-xl p-3 border cursor-grab active:cursor-grabbing"
+      onClick={() => onOpen(lead)}
+      className="rounded-xl p-3 border cursor-pointer active:cursor-grabbing"
       style={{ background: "var(--card)", borderColor: "var(--border)" }}
+      title="Ver dados do cliente"
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
@@ -141,6 +152,7 @@ export default function KanbanPage() {
   const reorder = useReorderColumns();
   const [dragging, setDragging] = useState<Lead | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const [detailLead, setDetailLead] = useState<Lead | null>(null);
 
   const user = getStoredUser();
   const isDiretor = user?.role === "diretor";
@@ -227,7 +239,7 @@ export default function KanbanPage() {
 
               <div className="flex-1 p-2 space-y-2 overflow-y-auto">
                 {col.leads.map((lead) => (
-                  <LeadCard key={lead.id} lead={lead} onDragStart={setDragging} />
+                  <LeadCard key={lead.id} lead={lead} onDragStart={setDragging} onOpen={setDetailLead} />
                 ))}
                 {col.leads.length === 0 && (
                   <div className="text-xs text-center py-8 rounded-xl border-2 border-dashed" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
@@ -249,6 +261,8 @@ export default function KanbanPage() {
           )}
         </div>
       </div>
+
+      {detailLead && <LeadDetailDrawer lead={detailLead} onClose={() => setDetailLead(null)} />}
     </div>
   );
 }
