@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Pencil, Loader2 } from "lucide-react";
+import { X, Pencil, Loader2, Search } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { getApiErrorMessage } from "@/lib/api";
 import { useLeadHistory, useUpdateLead } from "@/hooks/use-leads";
@@ -102,6 +102,8 @@ function LeadEditForm({
   const { data: teamUsers } = useUsers();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [respOpen, setRespOpen] = useState(false);
+  const [respQuery, setRespQuery] = useState("");
 
   const [form, setForm] = useState({
     name: lead.name ?? "",
@@ -125,6 +127,17 @@ function LeadEditForm({
   const pickProperty = (id: string) => {
     const p = (properties ?? []).find((x) => x.id === id);
     setForm((s) => ({ ...s, propertyId: id, empreendimento: p?.name ?? (id ? s.empreendimento : "") }));
+  };
+
+  // Busca de responsável (lupa) — filtra os corretores pelo nome.
+  const filteredUsers = (teamUsers ?? []).filter((u) =>
+    (u.name || "").toLowerCase().includes(respQuery.toLowerCase())
+  );
+  const selectedRespName = (teamUsers ?? []).find((u) => u.id === form.responsavelId)?.name;
+  const pickResp = (id: string) => {
+    set("responsavelId", id);
+    setRespOpen(false);
+    setRespQuery("");
   };
 
   const save = async () => {
@@ -174,12 +187,49 @@ function LeadEditForm({
       <Field label="E-mail"><input value={form.email} onChange={(e) => set("email", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
 
       <Field label="Responsável (corretor/atendente)">
-        <select value={form.responsavelId} onChange={(e) => set("responsavelId", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle}>
-          <option value="">— Sem responsável —</option>
-          {(teamUsers ?? []).map((u) => (
-            <option key={u.id} value={u.id}>{u.name}{u.role ? ` · ${u.role}` : ""}</option>
-          ))}
-        </select>
+        <div className="relative">
+          {respOpen ? (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border" style={inputStyle}>
+              <Search size={14} style={{ color: "var(--muted-foreground)" }} />
+              <input
+                autoFocus
+                value={respQuery}
+                onChange={(e) => setRespQuery(e.target.value)}
+                onBlur={() => setTimeout(() => setRespOpen(false), 150)}
+                placeholder="Buscar corretor pelo nome..."
+                className="flex-1 bg-transparent outline-none text-sm"
+                style={{ color: "var(--foreground)" }}
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { setRespOpen(true); setRespQuery(""); }}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-sm"
+              style={inputStyle}
+            >
+              <Search size={14} style={{ color: "var(--muted-foreground)" }} />
+              <span className="flex-1 text-left" style={{ color: selectedRespName ? "var(--foreground)" : "var(--muted-foreground)" }}>
+                {selectedRespName || "— Sem responsável —"}
+              </span>
+            </button>
+          )}
+          {respOpen && (
+            <div className="absolute z-20 left-0 right-0 mt-1 rounded-lg border max-h-52 overflow-y-auto" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+              <button type="button" onMouseDown={() => pickResp("")} className="w-full text-left px-3 py-2 text-sm" style={{ color: "var(--muted-foreground)" }}>
+                — Sem responsável —
+              </button>
+              {filteredUsers.map((u) => (
+                <button key={u.id} type="button" onMouseDown={() => pickResp(u.id)} className="w-full text-left px-3 py-2 text-sm" style={{ color: "var(--foreground)" }}>
+                  {u.name}{u.role ? ` · ${u.role}` : ""}
+                </button>
+              ))}
+              {filteredUsers.length === 0 && (
+                <div className="px-3 py-2 text-sm" style={{ color: "var(--muted-foreground)" }}>Nenhum corretor encontrado.</div>
+              )}
+            </div>
+          )}
+        </div>
         <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>Ao fechar a venda, ela é contada para o responsável no ranking.</div>
       </Field>
 
