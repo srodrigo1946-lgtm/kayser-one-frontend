@@ -12,6 +12,7 @@ import {
   Bot,
   BarChart3,
   Target,
+  Trophy,
   Settings,
   Building2,
   Building,
@@ -33,6 +34,7 @@ const navItems = [
   { href: "/agenda", label: "Agenda", icon: Calendar },
   { href: "/ia", label: "IA Agente", icon: Bot },
   { href: "/metas", label: "Metas", icon: Target },
+  { href: "/ranking", label: "Ranking", icon: Trophy },
   { href: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { href: "/configuracoes", label: "Configurações", icon: Settings },
 ];

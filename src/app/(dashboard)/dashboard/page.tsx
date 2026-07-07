@@ -70,9 +70,14 @@ export default function DashboardPage() {
           className="rounded-2xl border p-5"
           style={{ background: "var(--card)", borderColor: "var(--border)" }}
         >
-          <h3 className="font-semibold mb-4" style={{ color: "var(--foreground)" }}>
-            🏆 Ranking de Corretores
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold" style={{ color: "var(--foreground)" }}>
+              🏆 Ranking de Corretores
+            </h3>
+            <a href="/ranking" className="text-sm font-medium" style={{ color: "var(--primary)" }}>
+              Ver pódio →
+            </a>
+          </div>
           <div className="space-y-3">
             {(ranking ?? []).map((c, i) => {
               const vendas = Number(c.vendas) || 0;

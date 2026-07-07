@@ -19,6 +19,8 @@ export interface RankingItem {
   responsavelId: string | null;
   nome: string | null;
   role?: string | null;
+  hasAvatar?: boolean;
+  meta?: number;
   vendas: string | number;
   leads: string | number;
 }
