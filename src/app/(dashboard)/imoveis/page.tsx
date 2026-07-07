@@ -274,6 +274,7 @@ function PropertyForm({
   const updateP = useUpdateProperty();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
 
   const [form, setForm] = useState<Record<string, string>>(() => {
     const f: Record<string, string> = {};
@@ -293,6 +294,31 @@ function PropertyForm({
   const [photos, setPhotos] = useState<string[]>(initial?.photos ?? []);
 
   const set = (k: string, v: string) => setForm((s) => ({ ...s, [k]: v }));
+
+  // Ao completar 8 dígitos no CEP, busca o endereço no ViaCEP e preenche os campos.
+  const onCepChange = async (v: string) => {
+    setForm((s) => ({ ...s, cep: v }));
+    const digits = v.replace(/\D/g, "");
+    if (digits.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+      if (!data.erro) {
+        setForm((s) => ({
+          ...s,
+          address: data.logradouro || s.address,
+          bairro: data.bairro || s.bairro,
+          cidade: data.localidade || s.cidade,
+          estado: data.uf || s.estado,
+        }));
+      }
+    } catch {
+      /* silencioso — CEP inválido ou sem internet, o usuário preenche à mão */
+    } finally {
+      setCepLoading(false);
+    }
+  };
 
   const addPhotos = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -378,7 +404,7 @@ function PropertyForm({
           {/* Localização */}
           <div className="text-xs font-semibold pt-1" style={{ color: "var(--muted-foreground)" }}>LOCALIZAÇÃO</div>
           <div className="grid grid-cols-3 gap-3">
-            <Field label="CEP"><input value={form.cep} onChange={(e) => set("cep", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
+            <Field label={cepLoading ? "CEP · buscando…" : "CEP"}><input value={form.cep} onChange={(e) => onCepChange(e.target.value)} placeholder="00000-000" className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
             <Field label="Cidade"><input value={form.cidade} onChange={(e) => set("cidade", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
             <Field label="Estado"><input value={form.estado} onChange={(e) => set("estado", e.target.value)} maxLength={2} className="w-full px-3 py-2 rounded-lg border text-sm outline-none uppercase" style={inputStyle} /></Field>
           </div>
