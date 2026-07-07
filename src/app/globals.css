@@ -1,26 +1,26 @@
 @import "tailwindcss";
 
-/* ============ Tema claro (glassmorphism) ============ */
+/* ============ Tema claro (premium / dourado) ============ */
 :root {
-  --background: #e9eef7;
-  --foreground: #0f172a;
-  --card: rgba(255, 255, 255, 0.72);
-  --card-foreground: #0f172a;
-  --primary: #3b82f6;
+  --background: #f4f2ea;
+  --foreground: #1c1913;
+  --card: rgba(255, 255, 255, 0.75);
+  --card-foreground: #1c1913;
+  --primary: #8c6d1c;
   --primary-foreground: #ffffff;
-  --secondary: rgba(241, 245, 249, 0.66);
-  --secondary-foreground: #334155;
-  --muted: rgba(241, 245, 249, 0.7);
-  --muted-foreground: #64748b;
-  --accent: rgba(241, 245, 249, 0.7);
-  --accent-foreground: #0f172a;
-  --border: rgba(15, 23, 42, 0.08);
-  --input: rgba(15, 23, 42, 0.1);
-  --ring: #3b82f6;
-  --sidebar: rgba(20, 27, 45, 0.82);
-  --sidebar-foreground: #f8fafc;
-  --sidebar-muted: #94a3b8;
-  --sidebar-active: #3b82f6;
+  --secondary: rgba(245, 242, 233, 0.7);
+  --secondary-foreground: #4a4636;
+  --muted: rgba(245, 242, 233, 0.75);
+  --muted-foreground: #6b6553;
+  --accent: rgba(245, 242, 233, 0.75);
+  --accent-foreground: #1c1913;
+  --border: rgba(120, 100, 50, 0.12);
+  --input: rgba(120, 100, 50, 0.16);
+  --ring: #8c6d1c;
+  --sidebar: rgba(18, 18, 22, 0.85);
+  --sidebar-foreground: #f2efe8;
+  --sidebar-muted: #9a9384;
+  --sidebar-active: #8c6d1c;
   --sidebar-active-foreground: #ffffff;
   --success: #16a34a;
   --warning: #d97706;
@@ -29,31 +29,31 @@
   --glass-blur: 16px;
   --shadow-card: 0 8px 30px -12px rgba(2, 6, 23, 0.18), 0 2px 8px -4px rgba(2, 6, 23, 0.1);
   --shadow-hover: 0 18px 45px -14px rgba(2, 6, 23, 0.28), 0 6px 16px -6px rgba(2, 6, 23, 0.16);
-  --glow: 0 0 0 1px rgba(59, 130, 246, 0.25), 0 8px 28px -8px rgba(59, 130, 246, 0.45);
+  --glow: 0 0 0 1px rgba(140, 109, 28, 0.25), 0 8px 28px -8px rgba(201, 162, 39, 0.4);
   --edge: inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
-/* ============ Tema escuro (glassmorphism) ============ */
+/* ============ Tema escuro (premium grafite + dourado) ============ */
 .dark {
-  --background: #080d1a;
-  --foreground: #f1f5f9;
-  --card: rgba(22, 31, 51, 0.72);
-  --card-foreground: #f1f5f9;
-  --primary: #4f8bff;
+  --background: #0f1218;
+  --foreground: #f2efe8;
+  --card: rgba(23, 27, 35, 0.72);
+  --card-foreground: #f2efe8;
+  --primary: #8c6d1c;
   --primary-foreground: #ffffff;
-  --secondary: rgba(33, 45, 71, 0.6);
-  --secondary-foreground: #cbd5e1;
-  --muted: rgba(33, 45, 71, 0.55);
-  --muted-foreground: #94a3b8;
-  --accent: rgba(33, 45, 71, 0.6);
-  --accent-foreground: #f8fafc;
-  --border: rgba(148, 163, 184, 0.16);
-  --input: rgba(148, 163, 184, 0.18);
-  --ring: #4f8bff;
-  --sidebar: rgba(10, 15, 28, 0.72);
-  --sidebar-foreground: #f8fafc;
-  --sidebar-muted: #7c8aa5;
-  --sidebar-active: #4f8bff;
+  --secondary: rgba(34, 37, 46, 0.6);
+  --secondary-foreground: #d6d1c4;
+  --muted: rgba(34, 37, 46, 0.55);
+  --muted-foreground: #98917f;
+  --accent: rgba(34, 37, 46, 0.6);
+  --accent-foreground: #f2efe8;
+  --border: rgba(199, 174, 116, 0.15);
+  --input: rgba(199, 174, 116, 0.2);
+  --ring: #c9a227;
+  --sidebar: rgba(13, 16, 22, 0.78);
+  --sidebar-foreground: #f2efe8;
+  --sidebar-muted: #8a8574;
+  --sidebar-active: #8c6d1c;
   --sidebar-active-foreground: #ffffff;
   --success: #22c55e;
   --warning: #f59e0b;
@@ -62,8 +62,8 @@
   --glass-blur: 18px;
   --shadow-card: 0 10px 34px -14px rgba(0, 0, 0, 0.6), 0 2px 10px -4px rgba(0, 0, 0, 0.5);
   --shadow-hover: 0 22px 55px -16px rgba(0, 0, 0, 0.7), 0 8px 20px -8px rgba(0, 0, 0, 0.6);
-  --glow: 0 0 0 1px rgba(79, 139, 255, 0.35), 0 10px 34px -8px rgba(79, 139, 255, 0.55);
-  --edge: inset 0 1px 0 rgba(255, 255, 255, 0.13);
+  --glow: 0 0 0 1px rgba(201, 162, 39, 0.35), 0 10px 34px -8px rgba(201, 162, 39, 0.5);
+  --edge: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 @theme inline {
@@ -96,9 +96,9 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   background-color: var(--background);
   background-image:
-    radial-gradient(1200px 640px at 8% -12%, rgba(79, 139, 255, 0.20), transparent 60%),
-    radial-gradient(1000px 520px at 100% 0%, rgba(139, 92, 246, 0.16), transparent 55%),
-    radial-gradient(900px 720px at 50% 120%, rgba(16, 185, 129, 0.10), transparent 60%);
+    radial-gradient(1200px 640px at 8% -12%, rgba(201, 162, 39, 0.16), transparent 60%),
+    radial-gradient(1000px 520px at 100% 0%, rgba(150, 120, 50, 0.12), transparent 55%),
+    radial-gradient(900px 720px at 50% 120%, rgba(201, 162, 39, 0.06), transparent 60%);
   background-attachment: fixed;
 }
 
