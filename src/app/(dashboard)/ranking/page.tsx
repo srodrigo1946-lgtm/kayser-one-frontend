@@ -123,7 +123,8 @@ export default function RankingPage() {
 
   const top3 = rows.slice(0, 3);
   const podiumOrder = [top3[1], top3[0], top3[2]].filter(Boolean); // 2º, 1º, 3º
-  const heights = [96, 132, 74];
+  // altura do degrau por colocação (1º mais alto)
+  const heights = [132, 96, 74];
 
   const mes = new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
