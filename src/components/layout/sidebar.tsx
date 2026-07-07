@@ -14,6 +14,7 @@ import {
   Target,
   Settings,
   Building2,
+  Building,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -26,6 +27,7 @@ import { avatarUrl } from "@/hooks/use-profile";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/leads", label: "Leads / CRM", icon: Users },
+  { href: "/imoveis", label: "Imóveis", icon: Building },
   { href: "/kanban", label: "Kanban", icon: Kanban },
   { href: "/whatsapp", label: "WhatsApp", icon: MessageSquare },
   { href: "/agenda", label: "Agenda", icon: Calendar },
