@@ -163,7 +163,9 @@ function LeadEditForm({
     };
     try {
       await updateLead.mutateAsync({ id: lead.id, ...payload });
-      onSaved(payload);
+      const respUser = (teamUsers ?? []).find((u) => u.id === form.responsavelId);
+      const responsavel = form.responsavelId ? (respUser ? { id: respUser.id, name: respUser.name } : undefined) : null;
+      onSaved({ ...payload, responsavel });
     } catch (err) {
       setError(getApiErrorMessage(err, "Falha ao salvar o lead."));
     } finally {
@@ -216,11 +218,11 @@ function LeadEditForm({
           )}
           {respOpen && (
             <div className="absolute z-20 left-0 right-0 mt-1 rounded-lg border max-h-52 overflow-y-auto" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-              <button type="button" onMouseDown={() => pickResp("")} className="w-full text-left px-3 py-2 text-sm" style={{ color: "var(--muted-foreground)" }}>
+              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pickResp("")} className="w-full text-left px-3 py-2 text-sm" style={{ color: "var(--muted-foreground)" }}>
                 — Sem responsável —
               </button>
               {filteredUsers.map((u) => (
-                <button key={u.id} type="button" onMouseDown={() => pickResp(u.id)} className="w-full text-left px-3 py-2 text-sm" style={{ color: "var(--foreground)" }}>
+                <button key={u.id} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pickResp(u.id)} className="w-full text-left px-3 py-2 text-sm" style={{ color: "var(--foreground)" }}>
                   {u.name}{u.role ? ` · ${u.role}` : ""}
                 </button>
               ))}
