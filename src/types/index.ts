@@ -35,6 +35,7 @@ export interface Lead {
   whatsapp?: string;
   email?: string;
   empreendimento?: string;
+  propertyId?: string | null;
   origem?: string;
   campanha?: string;
   responsavel?: { id: string; name: string } | null;
