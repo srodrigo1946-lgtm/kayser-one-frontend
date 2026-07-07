@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/utils";
 import { getApiErrorMessage } from "@/lib/api";
 import { useLeadHistory, useUpdateLead } from "@/hooks/use-leads";
 import { useProperties } from "@/hooks/use-properties";
+import { useUsers } from "@/hooks/use-users";
 import type { Lead } from "@/types";
 
 export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () => void }) {
@@ -98,6 +99,7 @@ function LeadEditForm({
 }) {
   const updateLead = useUpdateLead();
   const { data: properties } = useProperties();
+  const { data: teamUsers } = useUsers();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -106,6 +108,7 @@ function LeadEditForm({
     phone: lead.phone ?? "",
     whatsapp: lead.whatsapp ?? "",
     email: lead.email ?? "",
+    responsavelId: lead.responsavelId ?? lead.responsavel?.id ?? "",
     propertyId: lead.propertyId ?? "",
     empreendimento: lead.empreendimento ?? "",
     origem: lead.origem ?? "",
@@ -143,6 +146,7 @@ function LeadEditForm({
       renda: form.renda !== "" ? Number(form.renda) : undefined,
       fgts: form.fgts !== "" ? Number(form.fgts) : undefined,
       observacoes: form.observacoes.trim() || undefined,
+      responsavelId: form.responsavelId || undefined,
     };
     try {
       await updateLead.mutateAsync({ id: lead.id, ...payload });
@@ -168,6 +172,16 @@ function LeadEditForm({
         <Field label="WhatsApp"><input value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
       </div>
       <Field label="E-mail"><input value={form.email} onChange={(e) => set("email", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
+
+      <Field label="Responsável (corretor/atendente)">
+        <select value={form.responsavelId} onChange={(e) => set("responsavelId", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle}>
+          <option value="">— Sem responsável —</option>
+          {(teamUsers ?? []).map((u) => (
+            <option key={u.id} value={u.id}>{u.name}{u.role ? ` · ${u.role}` : ""}</option>
+          ))}
+        </select>
+        <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>Ao fechar a venda, ela é contada para o responsável no ranking.</div>
+      </Field>
 
       <Field label="Empreendimento (imóvel)">
         <select value={form.propertyId} onChange={(e) => pickProperty(e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle}>
