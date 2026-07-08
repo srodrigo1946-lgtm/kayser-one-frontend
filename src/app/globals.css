@@ -1,69 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-/* ============ Tema claro (premium / dourado) ============ */
+/* ============ Tema A — Confiança (teal claro, limpo) ============ */
 :root {
-  --background: #f4f2ea;
-  --foreground: #1c1913;
-  --card: rgba(255, 255, 255, 0.75);
-  --card-foreground: #1c1913;
-  --primary: #8c6d1c;
+  --background: #eef6f4;
+  --foreground: #123330;
+  --card: #ffffff;
+  --card-foreground: #123330;
+  --primary: #0f766e;
   --primary-foreground: #ffffff;
-  --secondary: rgba(245, 242, 233, 0.7);
-  --secondary-foreground: #4a4636;
-  --muted: rgba(245, 242, 233, 0.75);
-  --muted-foreground: #6b6553;
-  --accent: rgba(245, 242, 233, 0.75);
-  --accent-foreground: #1c1913;
-  --border: rgba(120, 100, 50, 0.12);
-  --input: rgba(120, 100, 50, 0.16);
-  --ring: #8c6d1c;
-  --sidebar: rgba(18, 18, 22, 0.85);
-  --sidebar-foreground: #f2efe8;
-  --sidebar-muted: #9a9384;
-  --sidebar-active: #8c6d1c;
+  --secondary: #e6f2ef;
+  --secondary-foreground: #2f4a46;
+  --muted: #eef4f2;
+  --muted-foreground: #5c7671;
+  --accent: #e6f2ef;
+  --accent-foreground: #123330;
+  --border: #dbe8e4;
+  --input: #d1e2dd;
+  --ring: #0f766e;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #2f4a46;
+  --sidebar-muted: #7d938e;
+  --sidebar-active: #0f766e;
   --sidebar-active-foreground: #ffffff;
-  --success: #16a34a;
+  --success: #059669;
   --warning: #d97706;
   --danger: #dc2626;
 
-  --glass-blur: 16px;
-  --shadow-card: 0 8px 30px -12px rgba(2, 6, 23, 0.18), 0 2px 8px -4px rgba(2, 6, 23, 0.1);
-  --shadow-hover: 0 18px 45px -14px rgba(2, 6, 23, 0.28), 0 6px 16px -6px rgba(2, 6, 23, 0.16);
-  --glow: 0 0 0 1px rgba(140, 109, 28, 0.25), 0 8px 28px -8px rgba(201, 162, 39, 0.4);
-  --edge: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  --glass-blur: 8px;
+  --shadow-card: 0 6px 22px -12px rgba(15, 118, 110, 0.18), 0 2px 6px -4px rgba(2, 6, 23, 0.08);
+  --shadow-hover: 0 16px 40px -16px rgba(15, 118, 110, 0.28), 0 6px 14px -6px rgba(2, 6, 23, 0.12);
+  --glow: 0 0 0 1px rgba(15, 118, 110, 0.2), 0 8px 24px -8px rgba(15, 118, 110, 0.35);
+  --edge: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-/* ============ Tema escuro (premium grafite + dourado) ============ */
+/* ============ Tema A — variante escura (teal) ============ */
 .dark {
-  --background: #0f1218;
-  --foreground: #f2efe8;
-  --card: rgba(23, 27, 35, 0.72);
-  --card-foreground: #f2efe8;
-  --primary: #8c6d1c;
+  --background: #0b1a18;
+  --foreground: #e7f1ef;
+  --card: rgba(19, 32, 30, 0.78);
+  --card-foreground: #e7f1ef;
+  --primary: #0f766e;
   --primary-foreground: #ffffff;
-  --secondary: rgba(34, 37, 46, 0.6);
-  --secondary-foreground: #d6d1c4;
-  --muted: rgba(34, 37, 46, 0.55);
-  --muted-foreground: #98917f;
-  --accent: rgba(34, 37, 46, 0.6);
-  --accent-foreground: #f2efe8;
-  --border: rgba(199, 174, 116, 0.15);
-  --input: rgba(199, 174, 116, 0.2);
-  --ring: #c9a227;
-  --sidebar: rgba(13, 16, 22, 0.78);
-  --sidebar-foreground: #f2efe8;
-  --sidebar-muted: #8a8574;
-  --sidebar-active: #8c6d1c;
+  --secondary: rgba(30, 46, 43, 0.6);
+  --secondary-foreground: #cfe0dc;
+  --muted: rgba(30, 46, 43, 0.55);
+  --muted-foreground: #8aa39e;
+  --accent: rgba(30, 46, 43, 0.6);
+  --accent-foreground: #e7f1ef;
+  --border: rgba(94, 173, 160, 0.16);
+  --input: rgba(94, 173, 160, 0.2);
+  --ring: #14b8a6;
+  --sidebar: rgba(9, 20, 18, 0.85);
+  --sidebar-foreground: #e7f1ef;
+  --sidebar-muted: #7c928d;
+  --sidebar-active: #0f766e;
   --sidebar-active-foreground: #ffffff;
   --success: #22c55e;
   --warning: #f59e0b;
   --danger: #ef4444;
 
-  --glass-blur: 18px;
+  --glass-blur: 12px;
   --shadow-card: 0 10px 34px -14px rgba(0, 0, 0, 0.6), 0 2px 10px -4px rgba(0, 0, 0, 0.5);
   --shadow-hover: 0 22px 55px -16px rgba(0, 0, 0, 0.7), 0 8px 20px -8px rgba(0, 0, 0, 0.6);
-  --glow: 0 0 0 1px rgba(201, 162, 39, 0.35), 0 10px 34px -8px rgba(201, 162, 39, 0.5);
-  --edge: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --glow: 0 0 0 1px rgba(20, 184, 166, 0.35), 0 10px 34px -8px rgba(20, 184, 166, 0.45);
+  --edge: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 @theme inline {
@@ -80,7 +81,7 @@
   --color-input: var(--input);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: "Plus Jakarta Sans", var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -93,12 +94,11 @@
 /* Fundo com gradientes suaves (dá profundidade ao vidro) */
 body {
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: "Plus Jakarta Sans", var(--font-geist-sans), Arial, Helvetica, sans-serif;
   background-color: var(--background);
   background-image:
-    radial-gradient(1200px 640px at 8% -12%, rgba(201, 162, 39, 0.16), transparent 60%),
-    radial-gradient(1000px 520px at 100% 0%, rgba(150, 120, 50, 0.12), transparent 55%),
-    radial-gradient(900px 720px at 50% 120%, rgba(201, 162, 39, 0.06), transparent 60%);
+    radial-gradient(1200px 640px at 8% -12%, rgba(15, 118, 110, 0.08), transparent 60%),
+    radial-gradient(1000px 520px at 100% 0%, rgba(3, 105, 161, 0.06), transparent 55%);
   background-attachment: fixed;
 }
 
