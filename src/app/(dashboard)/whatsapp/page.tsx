@@ -14,6 +14,7 @@ import {
 } from "@/hooks/use-conversations";
 import { useUsers } from "@/hooks/use-users";
 import { useKanbanBoard } from "@/hooks/use-kanban";
+import { DocRequestPanel } from "@/components/documents/doc-request-panel";
 
 function initials(name?: string) {
   if (!name) return "?";
@@ -209,6 +210,12 @@ export default function WhatsAppPage() {
                 ) : null;
               })()}
             </div>
+
+            <DocRequestPanel
+              conversationId={selected.id}
+              clientName={displayName(selected)}
+              clientPhone={selected.remoteJid}
+            />
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ background: "var(--background)" }}>
               {(thread?.messages ?? []).map((msg) => (
