@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Header } from "@/components/layout/header";
 import { Search, Send, Bot, QrCode, Loader2 } from "lucide-react";
-import { api, getApiErrorMessage } from "@/lib/api";
+import { api, getApiErrorMessage, API_URL } from "@/lib/api";
 import {
   useConversations,
   useMessages,
@@ -224,7 +224,38 @@ export default function WhatsAppPage() {
                     {msg.direction === "out" && msg.isAI && (
                       <div className="flex items-center gap-1 mb-1 opacity-70 text-xs"><Bot size={10} /><span>Kayser One AI</span></div>
                     )}
-                    <p className="text-sm leading-relaxed whitespace-pre-line">{msg.content}</p>
+                    {msg.mediaType && (
+                      <div className="mb-1">
+                        {msg.mediaType === "image" || msg.mediaType === "sticker" ? (
+                          <a href={`${API_URL}/conversations/media/${msg.id}`} target="_blank" rel="noreferrer">
+                            <img
+                              src={`${API_URL}/conversations/media/${msg.id}`}
+                              alt="imagem"
+                              className="rounded-lg max-w-full max-h-64 object-cover"
+                            />
+                          </a>
+                        ) : msg.mediaType === "audio" ? (
+                          <audio controls src={`${API_URL}/conversations/media/${msg.id}`} className="max-w-full" />
+                        ) : msg.mediaType === "video" ? (
+                          <video controls src={`${API_URL}/conversations/media/${msg.id}`} className="rounded-lg max-w-full max-h-64" />
+                        ) : msg.mediaType === "document" ? (
+                          <a
+                            href={`${API_URL}/conversations/media/${msg.id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-sm underline break-all"
+                          >
+                            {msg.content}
+                          </a>
+                        ) : null}
+                      </div>
+                    )}
+                    {(!msg.mediaType ||
+                      ((msg.mediaType === "image" || msg.mediaType === "video") &&
+                        !/^(📷|🎥)/.test(msg.content))) &&
+                      msg.mediaType !== "document" && (
+                        <p className="text-sm leading-relaxed whitespace-pre-line">{msg.content}</p>
+                      )}
                     <p className="text-xs mt-1 opacity-60 text-right">
                       {new Date(msg.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                     </p>

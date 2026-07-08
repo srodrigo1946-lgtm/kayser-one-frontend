@@ -26,6 +26,8 @@ export interface ChatMessageItem {
   content: string;
   direction: "in" | "out";
   isAI: boolean;
+  mediaType?: string | null;
+  mediaMime?: string | null;
   createdAt: string;
 }
 
