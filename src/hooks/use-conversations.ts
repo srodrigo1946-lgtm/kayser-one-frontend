@@ -28,6 +28,7 @@ export interface ChatMessageItem {
   isAI: boolean;
   mediaType?: string | null;
   mediaMime?: string | null;
+  hasMedia?: boolean;
   createdAt: string;
 }
 
