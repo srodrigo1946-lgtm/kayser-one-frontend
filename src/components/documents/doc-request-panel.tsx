@@ -19,13 +19,19 @@ export function DocRequestPanel({
   const [link, setLink] = useState("");
   const [copied, setCopied] = useState(false);
   const [form, setForm] = useState({ fase: "simplificada", perfil: "clt", estadoCivil: "solteiro", declaraIR: false });
+  const [nome, setNome] = useState(clientName || "");
 
   const inputStyle = { background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" };
 
   const gerar = async () => {
     setLink("");
     try {
-      const res = await create.mutateAsync({ conversationId, clientName, clientPhone, ...form });
+      const res = await create.mutateAsync({
+        conversationId,
+        clientName: nome.trim() || clientName || clientPhone || "",
+        clientPhone,
+        ...form,
+      });
       setLink(res.link);
     } catch {
       /* silencioso */
@@ -61,6 +67,18 @@ export function DocRequestPanel({
 
       {open && (
         <div className="mt-2 space-y-2">
+          <div>
+            <label className="text-xs block mb-1" style={{ color: "var(--muted-foreground)" }}>
+              Nome do cliente (aparece na pasta dos documentos)
+            </label>
+            <input
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              placeholder="Ex.: João da Silva"
+              className="w-full px-2 py-1.5 rounded-lg border text-xs outline-none"
+              style={inputStyle}
+            />
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <select value={form.fase} onChange={(e) => setForm((s) => ({ ...s, fase: e.target.value }))} className="px-2 py-1.5 rounded-lg border text-xs outline-none" style={inputStyle}>
               <option value="simplificada">Análise simplificada</option>
