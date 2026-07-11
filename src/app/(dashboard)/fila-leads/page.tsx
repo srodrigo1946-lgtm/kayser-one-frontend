@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Megaphone, ChevronUp, ChevronDown, Loader2, Check } from "lucide-react";
+import { Megaphone, ChevronUp, ChevronDown, Loader2, Check, Search } from "lucide-react";
 import { useQueueSettings, useUpdateQueue, useQueueBoard } from "@/hooks/use-lead-queue";
 import { useUsers } from "@/hooks/use-users";
 import { getStoredUser } from "@/lib/auth";
@@ -25,6 +25,7 @@ export default function FilaLeadsPage() {
   const [slaMinutes, setSlaMinutes] = useState(5);
   const [members, setMembers] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (settings) {
@@ -150,17 +151,41 @@ export default function FilaLeadsPage() {
         {/* Disponíveis */}
         <div className="pt-2 border-t" style={{ borderColor: "var(--border)" }}>
           <div className="text-xs mb-1.5" style={{ color: "var(--muted-foreground)" }}>Adicionar à fila:</div>
+          <div className="relative mb-2">
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: "var(--muted-foreground)" }} />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Pesquisar cargo por nome..."
+              className="w-full pl-8 pr-2 py-1.5 rounded-lg border text-sm outline-none"
+              style={input}
+            />
+          </div>
           <div className="flex flex-wrap gap-2">
-            {eligible.filter((u: any) => !members.includes(u.id)).map((u: any) => (
-              <button
-                key={u.id}
-                onClick={() => toggleMember(u.id)}
-                className="text-xs px-2.5 py-1.5 rounded-lg border"
-                style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
-              >
-                + {u.name} <span style={{ color: "var(--muted-foreground)" }}>({roleLabels[u.role] ?? u.role})</span>
-              </button>
-            ))}
+            {(() => {
+              const disponiveis = eligible.filter(
+                (u: any) =>
+                  !members.includes(u.id) &&
+                  (u.name ?? "").toLowerCase().includes(search.trim().toLowerCase())
+              );
+              if (disponiveis.length === 0) {
+                return (
+                  <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+                    {search ? "Nenhum cargo encontrado." : "Todos os cargos já estão na fila."}
+                  </span>
+                );
+              }
+              return disponiveis.map((u: any) => (
+                <button
+                  key={u.id}
+                  onClick={() => toggleMember(u.id)}
+                  className="text-xs px-2.5 py-1.5 rounded-lg border"
+                  style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+                >
+                  + {u.name} <span style={{ color: "var(--muted-foreground)" }}>({roleLabels[u.role] ?? u.role})</span>
+                </button>
+              ));
+            })()}
           </div>
         </div>
       </div>
