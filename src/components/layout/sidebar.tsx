@@ -20,6 +20,7 @@ import {
   ChevronRight,
   LogOut,
   Crown,
+  Megaphone,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { getStoredUser, logout } from "@/lib/auth";
@@ -31,6 +32,7 @@ const navItems = [
   { href: "/imoveis", label: "Imóveis", icon: Building },
   { href: "/kanban", label: "Kanban", icon: Kanban },
   { href: "/whatsapp", label: "WhatsApp", icon: MessageSquare },
+  { href: "/fila-leads", label: "Fila de Leads", icon: Megaphone, diretorOnly: true },
   { href: "/agenda", label: "Agenda", icon: Calendar },
   { href: "/ia", label: "IA Agente", icon: Bot },
   { href: "/metas", label: "Metas", icon: Target },
@@ -133,7 +135,9 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {navItems
+          .filter((item) => !(item as any).diretorOnly || user.role === "diretor")
+          .map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link

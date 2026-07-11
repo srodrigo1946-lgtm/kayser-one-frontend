@@ -15,6 +15,7 @@ export interface ConversationItem {
   assignedToId?: string | null;
   assignedTo?: { id: string; name: string; role?: string; avatar?: string | null } | null;
   etiquetas?: string[] | null;
+  fromAd?: boolean;
   lastMessage?: string;
   lastMessageAt?: string;
   unreadCount: number;

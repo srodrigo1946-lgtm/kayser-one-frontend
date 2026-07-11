@@ -122,8 +122,11 @@ export default function WhatsAppPage() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
-                    {displayName(conv)}
+                  <div className="text-sm font-medium truncate flex items-center gap-1.5" style={{ color: "var(--foreground)" }}>
+                    <span className="truncate">{displayName(conv)}</span>
+                    {conv.fromAd && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: "var(--primary)", color: "white" }} title="Lead de anúncio">🎯 Anúncio</span>
+                    )}
                   </div>
                   <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>{conv.lastMessage}</div>
                   {(conv.etiquetas ?? []).length > 0 && (
