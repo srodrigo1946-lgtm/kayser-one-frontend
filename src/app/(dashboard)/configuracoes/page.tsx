@@ -222,7 +222,11 @@ function IaSettings() {
 
   return (
     <div className="space-y-4">
-      <Card title="Configuração da IA">
+      <Card title="IA da empresa (reserva)">
+        <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
+          Chave usada por quem <strong>não</strong> configurou a própria IA. Cada cargo pode cadastrar
+          a sua em <strong>IA Agente → Minha IA</strong>; sem isso, cai nesta chave da empresa.
+        </p>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>Provedor</label>
