@@ -193,8 +193,6 @@ function IaSettings() {
   const [model, setModel] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [masterPrompt, setMasterPrompt] = useState("");
-  const [followupEnabled, setFollowupEnabled] = useState(true);
-  const [followupDays, setFollowupDays] = useState(3);
   const [aiAutoReply, setAiAutoReply] = useState(true);
   const [aiReplyGroups, setAiReplyGroups] = useState(false);
   const [feedback, setFeedback] = useState("");
@@ -204,8 +202,6 @@ function IaSettings() {
       setProvider(settings.aiProvider);
       setModel(settings.aiModel ?? "");
       setMasterPrompt(settings.masterPrompt ?? "");
-      setFollowupEnabled(settings.followupEnabled);
-      setFollowupDays(settings.followupDays);
       setAiAutoReply(settings.aiAutoReply);
       setAiReplyGroups(settings.aiReplyGroups);
     }
@@ -214,7 +210,7 @@ function IaSettings() {
   const save = async () => {
     setFeedback("");
     try {
-      const payload: any = { aiProvider: provider, aiModel: model, masterPrompt, followupEnabled, followupDays, aiAutoReply, aiReplyGroups };
+      const payload: any = { aiProvider: provider, aiModel: model, masterPrompt, aiAutoReply, aiReplyGroups };
       if (apiKey) payload.aiApiKey = apiKey;
       await update.mutateAsync(payload);
       setApiKey("");
@@ -251,14 +247,9 @@ function IaSettings() {
           <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>Prompt mestre (opcional — sobrescreve o padrão)</label>
           <textarea value={masterPrompt} onChange={(e) => setMasterPrompt(e.target.value)} rows={5} className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
         </div>
-        <div className="grid grid-cols-4 gap-4 mt-4 items-end">
+        <div className="grid grid-cols-2 gap-4 mt-4 items-end">
           <Toggle label="Resposta automática" checked={aiAutoReply} onChange={setAiAutoReply} />
           <Toggle label="IA responde em grupos" checked={aiReplyGroups} onChange={setAiReplyGroups} />
-          <Toggle label="Follow-up automático" checked={followupEnabled} onChange={setFollowupEnabled} />
-          <div>
-            <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>Dias p/ follow-up</label>
-            <input type="number" min={1} value={followupDays} onChange={(e) => setFollowupDays(Number(e.target.value))} className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
-          </div>
         </div>
         {feedback && <p className="text-sm mt-4" style={{ color: "var(--muted-foreground)" }}>{feedback}</p>}
         <button onClick={save} disabled={update.isPending} className="mt-6 px-6 py-2.5 rounded-xl text-sm font-medium disabled:opacity-60 inline-flex items-center gap-2" style={{ background: "var(--primary)", color: "white" }}>
@@ -267,7 +258,130 @@ function IaSettings() {
         </button>
       </Card>
 
+      <FollowupSettings />
       <KnowledgeManager />
+    </div>
+  );
+}
+
+/* ---------------- Follow-up automático (só Diretor) ---------------- */
+const SOURCE_OPTIONS: { id: string; label: string }[] = [
+  { id: "anuncio", label: "Anúncio (Facebook/Instagram/etc)" },
+  { id: "manual", label: "Cadastrado pelo cargo" },
+  { id: "whatsapp", label: "WhatsApp orgânico (sem anúncio)" },
+];
+
+const FOLLOWUP_DEFAULTS = {
+  manha: "Oi {nome}, bom dia! 😊 Passando pra saber se você ainda tem interesse no imóvel. Posso tirar dúvidas ou já agendar uma visita?",
+  tarde: "Oi {nome}, boa tarde! 😊 Passando pra saber se você ainda tem interesse no imóvel. Posso tirar dúvidas ou já agendar uma visita?",
+  noite: "Oie {nome}, boa noite! 😊 Passando pra saber se você ainda tem interesse no imóvel. Posso tirar dúvidas ou já agendar uma visita?",
+};
+
+function FollowupSettings() {
+  const stored = getStoredUser();
+  const { data: settings } = useSettings();
+  const update = useUpdateSettings();
+  const [enabled, setEnabled] = useState(true);
+  const [days, setDays] = useState(3);
+  const [sources, setSources] = useState<string[]>(["anuncio", "manual"]);
+  const [manha, setManha] = useState("");
+  const [tarde, setTarde] = useState("");
+  const [noite, setNoite] = useState("");
+  const [feedback, setFeedback] = useState("");
+
+  useEffect(() => {
+    if (settings) {
+      setEnabled(settings.followupEnabled);
+      setDays(settings.followupDays);
+      setSources(settings.followupSources?.length ? settings.followupSources : ["anuncio", "manual"]);
+      setManha(settings.followupMsgManha ?? "");
+      setTarde(settings.followupMsgTarde ?? "");
+      setNoite(settings.followupMsgNoite ?? "");
+    }
+  }, [settings]);
+
+  // Regras de follow-up são exclusivas do Diretor.
+  if (stored?.role !== "diretor") return null;
+
+  const toggleSource = (id: string) =>
+    setSources((cur) => (cur.includes(id) ? cur.filter((s) => s !== id) : [...cur, id]));
+
+  const save = async () => {
+    setFeedback("");
+    try {
+      await update.mutateAsync({
+        followupEnabled: enabled,
+        followupDays: days,
+        followupSources: sources,
+        followupMsgManha: manha,
+        followupMsgTarde: tarde,
+        followupMsgNoite: noite,
+      });
+      setFeedback("Regras de follow-up salvas.");
+    } catch (err) {
+      setFeedback(getApiErrorMessage(err, "Falha ao salvar."));
+    }
+  };
+
+  return (
+    <Card title="Follow-up automático">
+      <p className="text-sm mb-5" style={{ color: "var(--muted-foreground)" }}>
+        Quando ligado, leads sem contato há alguns dias recebem uma saudação automática por WhatsApp
+        conforme o horário. Só o Diretor edita estas regras.
+      </p>
+
+      <div className="grid grid-cols-2 gap-4 items-end mb-5">
+        <Toggle label="Ativar follow-up" checked={enabled} onChange={setEnabled} />
+        <div>
+          <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>Disparar após (dias sem contato)</label>
+          <input type="number" min={1} value={days} onChange={(e) => setDays(Number(e.target.value))} className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
+        </div>
+      </div>
+
+      <label className="text-xs font-medium block mb-2" style={{ color: "var(--muted-foreground)" }}>Origens que recebem o follow-up</label>
+      <div className="flex flex-wrap gap-2 mb-5">
+        {SOURCE_OPTIONS.map((opt) => {
+          const on = sources.includes(opt.id);
+          return (
+            <button
+              key={opt.id}
+              onClick={() => toggleSource(opt.id)}
+              className="text-xs px-3 py-2 rounded-xl border font-medium inline-flex items-center gap-1.5"
+              style={{
+                borderColor: on ? "var(--primary)" : "var(--border)",
+                background: on ? "var(--primary)" : "transparent",
+                color: on ? "white" : "var(--muted-foreground)",
+              }}
+            >
+              {on && <Check size={13} />} {opt.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="space-y-3">
+        <FollowupMsg label="🌅 Mensagem da manhã (até 12h)" value={manha} onChange={setManha} placeholder={FOLLOWUP_DEFAULTS.manha} />
+        <FollowupMsg label="☀️ Mensagem da tarde (12h–18h)" value={tarde} onChange={setTarde} placeholder={FOLLOWUP_DEFAULTS.tarde} />
+        <FollowupMsg label="🌙 Mensagem da noite (após 18h)" value={noite} onChange={setNoite} placeholder={FOLLOWUP_DEFAULTS.noite} />
+      </div>
+      <p className="text-xs mt-2" style={{ color: "var(--muted-foreground)" }}>
+        Use <code>{"{nome}"}</code> para inserir o primeiro nome do lead. Deixe vazio para usar o texto padrão.
+      </p>
+
+      {feedback && <p className="text-sm mt-4" style={{ color: "var(--muted-foreground)" }}>{feedback}</p>}
+      <button onClick={save} disabled={update.isPending} className="mt-5 px-6 py-2.5 rounded-xl text-sm font-medium disabled:opacity-60 inline-flex items-center gap-2" style={{ background: "var(--primary)", color: "white" }}>
+        {update.isPending && <Loader2 size={16} className="animate-spin" />}
+        Salvar regras
+      </button>
+    </Card>
+  );
+}
+
+function FollowupMsg({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder: string }) {
+  return (
+    <div>
+      <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>{label}</label>
+      <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={2} placeholder={placeholder} className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
     </div>
   );
 }

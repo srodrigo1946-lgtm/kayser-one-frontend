@@ -10,6 +10,10 @@ export interface AppSettings {
   masterPrompt?: string;
   followupEnabled: boolean;
   followupDays: number;
+  followupSources?: string[];
+  followupMsgManha?: string;
+  followupMsgTarde?: string;
+  followupMsgNoite?: string;
   aiAutoReply: boolean;
   aiReplyGroups: boolean;
   hasApiKey: boolean;
