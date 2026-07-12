@@ -238,14 +238,14 @@ function IaSettings() {
           </div>
           <div>
             <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>Modelo (opcional)</label>
-            <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="ex: claude-sonnet-4-6" className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
+            <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="ex: claude-sonnet-4-6" autoComplete="off" name="kayser-company-ai-model" className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
           </div>
         </div>
         <div className="mt-4">
           <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>
             API Key {settings?.hasApiKey && <span style={{ color: "#22c55e" }}>(já configurada — preencha para trocar)</span>}
           </label>
-          <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="sk-..." className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
+          <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="sk-..." autoComplete="new-password" name="kayser-company-ai-key" className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
         </div>
         <div className="mt-4">
           <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>Prompt mestre (opcional — sobrescreve o padrão)</label>

@@ -210,6 +210,18 @@ function MyAiCard() {
     }
   };
 
+  // Remove a chave salva (volta a usar a IA da empresa). Usa o sentinela do backend.
+  const clearKey = async () => {
+    setFeedback("");
+    try {
+      await update.mutateAsync({ aiApiKey: "__clear__" });
+      setApiKey("");
+      setFeedback("Chave removida. Seus leads voltam a usar a IA da empresa.");
+    } catch (err) {
+      setFeedback(getApiErrorMessage(err, "Falha ao remover."));
+    }
+  };
+
   return (
     <div className="rounded-2xl border p-4" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
       <div className="flex items-center gap-2 mb-1">
@@ -228,18 +240,23 @@ function MyAiCard() {
         </div>
         <div>
           <label className="text-xs font-medium block mb-1" style={{ color: "var(--muted-foreground)" }}>Modelo (opcional)</label>
-          <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="ex: gpt-4o-mini" className="w-full px-3 py-2 rounded-xl border text-sm outline-none" style={inputStyle} />
+          <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="ex: gpt-4o-mini" autoComplete="off" name="kayser-ai-model" className="w-full px-3 py-2 rounded-xl border text-sm outline-none" style={inputStyle} />
         </div>
         <div>
           <label className="text-xs font-medium block mb-1" style={{ color: "var(--muted-foreground)" }}>
             API Key {myAi?.hasAiKey && <span style={{ color: "#22c55e" }}>(configurada — preencha p/ trocar)</span>}
           </label>
-          <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="sk-..." className="w-full px-3 py-2 rounded-xl border text-sm outline-none" style={inputStyle} />
+          <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="sk-..." autoComplete="new-password" name="kayser-ai-key" className="w-full px-3 py-2 rounded-xl border text-sm outline-none" style={inputStyle} />
         </div>
         {feedback && <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>{feedback}</p>}
         <button onClick={save} disabled={update.isPending} className="w-full px-3 py-2 rounded-xl text-sm font-medium disabled:opacity-60 inline-flex items-center justify-center gap-2" style={{ background: "var(--primary)", color: "white" }}>
           {update.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Salvar minha IA
         </button>
+        {myAi?.hasAiKey && (
+          <button onClick={clearKey} disabled={update.isPending} className="w-full px-3 py-1.5 rounded-xl text-xs font-medium disabled:opacity-60" style={{ color: "#ef4444" }}>
+            Remover minha chave
+          </button>
+        )}
       </div>
     </div>
   );
