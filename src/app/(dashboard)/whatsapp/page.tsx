@@ -4,6 +4,10 @@ import { useState } from "react";
 import { Header } from "@/components/layout/header";
 import { Search, Send, Bot, QrCode, Loader2 } from "lucide-react";
 import { api, getApiErrorMessage, API_URL } from "@/lib/api";
+import { getToken } from "@/lib/auth";
+
+// Mídia protegida: o token vai na query pra funcionar dentro de <img>/<audio>/<video>.
+const mediaUrl = (id: string) => `${API_URL}/conversations/media/${id}?token=${getToken() ?? ""}`;
 import {
   useConversations,
   useMessages,
@@ -230,20 +234,20 @@ export default function WhatsAppPage() {
                     {msg.hasMedia && (
                       <div className="mb-1">
                         {msg.mediaType === "image" || msg.mediaType === "sticker" ? (
-                          <a href={`${API_URL}/conversations/media/${msg.id}`} target="_blank" rel="noreferrer">
+                          <a href={mediaUrl(msg.id)} target="_blank" rel="noreferrer">
                             <img
-                              src={`${API_URL}/conversations/media/${msg.id}`}
+                              src={mediaUrl(msg.id)}
                               alt="imagem"
                               className="rounded-lg max-w-full max-h-64 object-cover"
                             />
                           </a>
                         ) : msg.mediaType === "audio" ? (
-                          <audio controls src={`${API_URL}/conversations/media/${msg.id}`} className="max-w-full" />
+                          <audio controls src={mediaUrl(msg.id)} className="max-w-full" />
                         ) : msg.mediaType === "video" ? (
-                          <video controls src={`${API_URL}/conversations/media/${msg.id}`} className="rounded-lg max-w-full max-h-64" />
+                          <video controls src={mediaUrl(msg.id)} className="rounded-lg max-w-full max-h-64" />
                         ) : (
                           <a
-                            href={`${API_URL}/conversations/media/${msg.id}`}
+                            href={mediaUrl(msg.id)}
                             target="_blank"
                             rel="noreferrer"
                             className="text-sm underline break-all"
