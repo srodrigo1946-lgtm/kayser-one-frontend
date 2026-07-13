@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showForgot, setShowForgot] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,12 +173,19 @@ export default function LoginPage() {
                 </label>
                 <button
                   type="button"
+                  onClick={() => setShowForgot((v) => !v)}
                   className="text-sm"
                   style={{ color: "var(--primary)" }}
                 >
                   Esqueceu a senha?
                 </button>
               </div>
+              {showForgot && (
+                <div className="mb-2 p-3 rounded-xl text-xs leading-relaxed border" style={{ borderColor: "var(--border)", background: "var(--secondary)", color: "var(--muted-foreground)" }}>
+                  Peça ao seu <strong>gestor</strong> ou ao <strong>Diretor</strong> para redefinir sua senha.
+                  Você entrará com a senha padrão <strong>123456789</strong> e criará uma nova no primeiro acesso.
+                </div>
+              )}
               <div className="relative">
                 <Lock
                   size={18}

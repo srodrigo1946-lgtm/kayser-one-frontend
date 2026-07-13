@@ -52,6 +52,15 @@ export function useActivateUser() {
   });
 }
 
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post<{ message: string }>(`/users/${id}/reset-password`);
+      return data;
+    },
+  });
+}
+
 export function usePendingUsers() {
   return useQuery({
     queryKey: ["users", "pending"],

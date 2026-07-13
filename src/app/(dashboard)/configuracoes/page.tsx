@@ -2,14 +2,14 @@
 
 import { Header } from "@/components/layout/header";
 import { useEffect, useState } from "react";
-import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2, Upload, Check, X } from "lucide-react";
+import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2, Upload, Check, X, KeyRound } from "lucide-react";
 import { useRef } from "react";
 import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useUpdateProfile, useUploadAvatar, avatarUrl } from "@/hooks/use-profile";
 import { useKnowledge, useCreateKnowledge, useDeleteKnowledge, useUploadKnowledge } from "@/hooks/use-knowledge";
-import { useUsers, useCreateUser, useDeactivateUser, useActivateUser, usePendingUsers, useApproveUser, useRejectUser } from "@/hooks/use-users";
+import { useUsers, useCreateUser, useDeactivateUser, useActivateUser, useResetPassword, usePendingUsers, useApproveUser, useRejectUser } from "@/hooks/use-users";
 import type { UserRole } from "@/types";
 
 const tabs = [
@@ -522,7 +522,16 @@ function UsersManager() {
   const create = useCreateUser();
   const deactivate = useDeactivateUser();
   const activate = useActivateUser();
+  const resetPw = useResetPassword();
   const [feedback, setFeedback] = useState("");
+
+  const handleReset = (u: { id: string; name: string }) => {
+    if (!window.confirm(`Redefinir a senha de ${u.name} para a padrão (123456789)? A pessoa criará uma nova no próximo acesso.`)) return;
+    resetPw.mutate(u.id, {
+      onSuccess: (d) => setFeedback(d.message),
+      onError: (err) => setFeedback(getApiErrorMessage(err, "Falha ao redefinir a senha.")),
+    });
+  };
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -618,6 +627,15 @@ function UsersManager() {
             <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: u.active ? "#22c55e18" : "var(--border)", color: u.active ? "#22c55e" : "var(--muted-foreground)" }}>
               {u.active ? "Ativo" : "Inativo"}
             </span>
+            <button
+              onClick={() => handleReset(u)}
+              disabled={resetPw.isPending}
+              className="text-xs px-3 py-1.5 rounded-lg font-medium inline-flex items-center gap-1.5 disabled:opacity-50"
+              style={{ background: "var(--card)", color: "var(--muted-foreground)" }}
+              title="Redefinir senha"
+            >
+              <KeyRound size={14} /> Redefinir senha
+            </button>
             {u.active ? (
               <button
                 onClick={() => { if (window.confirm(`Desativar ${u.name}? Ela perde o acesso, mas o histórico é mantido.`)) deactivate.mutate(u.id); }}
