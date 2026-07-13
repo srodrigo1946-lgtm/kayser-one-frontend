@@ -8,6 +8,7 @@ import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useUpdateProfile, useUploadAvatar, avatarUrl } from "@/hooks/use-profile";
+import { useMe, useSetRecoveryCode } from "@/hooks/use-recovery";
 import { useKnowledge, useCreateKnowledge, useDeleteKnowledge, useUploadKnowledge } from "@/hooks/use-knowledge";
 import { useUsers, useCreateUser, useDeactivateUser, useActivateUser, useResetPassword, usePendingUsers, useApproveUser, useRejectUser } from "@/hooks/use-users";
 import type { UserRole } from "@/types";
@@ -59,6 +60,7 @@ export default function ConfiguracoesPage() {
 
         <div className="flex-1 space-y-4">
           {activeTab === "perfil" && <ProfileForm />}
+          {activeTab === "perfil" && <RecoveryCodeCard />}
 
           {activeTab === "ia" && <IaSettings />}
           {activeTab === "usuarios" && (
@@ -182,6 +184,56 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
         style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
       />
     </div>
+  );
+}
+
+/* ---------------- Código de recuperação do Diretor ---------------- */
+function RecoveryCodeCard() {
+  const stored = getStoredUser();
+  const { data: me } = useMe();
+  const setCodeMut = useSetRecoveryCode();
+  const [code, setCode] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [feedback, setFeedback] = useState("");
+
+  if (stored?.role !== "diretor") return null;
+
+  const save = async () => {
+    setFeedback("");
+    if (code.length < 6) { setFeedback("O código precisa ter pelo menos 6 caracteres."); return; }
+    if (code !== confirm) { setFeedback("Os códigos não conferem."); return; }
+    try {
+      await setCodeMut.mutateAsync(code);
+      setCode(""); setConfirm("");
+      setFeedback("Código de recuperação salvo! Guarde-o em local seguro.");
+    } catch (err) {
+      setFeedback(getApiErrorMessage(err, "Falha ao salvar."));
+    }
+  };
+
+  return (
+    <Card title="Código de recuperação (Diretor)">
+      <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
+        Como você está no topo, ninguém pode redefinir sua senha. Cadastre um <strong>código de recuperação</strong> secreto:
+        se esquecer a senha, use ele no login (em &quot;Esqueceu a senha?&quot;) para criar uma nova.
+        {me?.hasRecoveryCode && <span style={{ color: "#22c55e" }}> ✅ Já configurado.</span>}
+      </p>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>Novo código (mín. 6)</label>
+          <input type="password" value={code} onChange={(e) => setCode(e.target.value)} autoComplete="new-password" name="kayser-recovery-code" placeholder="••••••" className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
+        </div>
+        <div>
+          <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>Confirmar código</label>
+          <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" name="kayser-recovery-confirm" placeholder="••••••" className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
+        </div>
+      </div>
+      {feedback && <p className="text-sm mt-4" style={{ color: "var(--muted-foreground)" }}>{feedback}</p>}
+      <button onClick={save} disabled={setCodeMut.isPending} className="mt-5 px-6 py-2.5 rounded-xl text-sm font-medium disabled:opacity-60 inline-flex items-center gap-2" style={{ background: "var(--primary)", color: "white" }}>
+        {setCodeMut.isPending && <Loader2 size={16} className="animate-spin" />}
+        Salvar código
+      </button>
+    </Card>
   );
 }
 

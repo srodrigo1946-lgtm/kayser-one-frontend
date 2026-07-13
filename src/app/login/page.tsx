@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Eye, EyeOff, Moon, Sun, Building2, Lock, Mail } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { login } from "@/lib/auth";
-import { getApiErrorMessage } from "@/lib/api";
+import { api, getApiErrorMessage } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,6 +17,31 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showForgot, setShowForgot] = useState(false);
+  const [showRecover, setShowRecover] = useState(false);
+  const [recCode, setRecCode] = useState("");
+  const [recNewPass, setRecNewPass] = useState("");
+  const [recMsg, setRecMsg] = useState("");
+  const [recLoading, setRecLoading] = useState(false);
+
+  const handleRecover = async () => {
+    setRecMsg("");
+    if (!email || recCode.length < 6 || recNewPass.length < 6) {
+      setRecMsg("Preencha e-mail, código (mín. 6) e nova senha (mín. 6).");
+      return;
+    }
+    setRecLoading(true);
+    try {
+      await api.post("/auth/recover", { email, recoveryCode: recCode, newPassword: recNewPass });
+      setRecMsg("✅ Senha redefinida! Agora é só entrar com a nova senha.");
+      setRecCode("");
+      setRecNewPass("");
+      setPassword("");
+    } catch (err) {
+      setRecMsg(getApiErrorMessage(err, "E-mail ou código de recuperação inválido."));
+    } finally {
+      setRecLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,9 +206,25 @@ export default function LoginPage() {
                 </button>
               </div>
               {showForgot && (
-                <div className="mb-2 p-3 rounded-xl text-xs leading-relaxed border" style={{ borderColor: "var(--border)", background: "var(--secondary)", color: "var(--muted-foreground)" }}>
-                  Peça ao seu <strong>gestor</strong> ou ao <strong>Diretor</strong> para redefinir sua senha.
-                  Você entrará com a senha padrão <strong>123456789</strong> e criará uma nova no primeiro acesso.
+                <div className="mb-2 p-3 rounded-xl text-xs leading-relaxed border space-y-2" style={{ borderColor: "var(--border)", background: "var(--secondary)", color: "var(--muted-foreground)" }}>
+                  <p>
+                    Peça ao seu <strong>gestor</strong> ou ao <strong>Diretor</strong> para redefinir sua senha.
+                    Você entrará com a senha padrão <strong>123456789</strong> e criará uma nova no primeiro acesso.
+                  </p>
+                  <button type="button" onClick={() => setShowRecover((v) => !v)} className="font-medium" style={{ color: "var(--primary)" }}>
+                    É o Diretor? Recuperar com o código de recuperação
+                  </button>
+                  {showRecover && (
+                    <div className="pt-2 space-y-2 border-t" style={{ borderColor: "var(--border)" }}>
+                      <p>Digite seu <strong>e-mail acima</strong>, e aqui o código de recuperação + a nova senha:</p>
+                      <input type="password" value={recCode} onChange={(e) => setRecCode(e.target.value)} autoComplete="off" placeholder="Código de recuperação" className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }} />
+                      <input type="password" value={recNewPass} onChange={(e) => setRecNewPass(e.target.value)} autoComplete="new-password" placeholder="Nova senha (mín. 6)" className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }} />
+                      <button type="button" onClick={handleRecover} disabled={recLoading} className="w-full py-2 rounded-lg text-sm font-medium disabled:opacity-60" style={{ background: "var(--primary)", color: "white" }}>
+                        {recLoading ? "Recuperando..." : "Redefinir minha senha"}
+                      </button>
+                      {recMsg && <p className="text-xs">{recMsg}</p>}
+                    </div>
+                  )}
                 </div>
               )}
               <div className="relative">
