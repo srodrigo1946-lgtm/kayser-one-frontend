@@ -25,7 +25,17 @@ export interface Pasta {
   parecer?: string;
   docToken?: string;
   empresaId?: string;
+  docsReleasedAt?: string | null;
   createdAt: string;
+}
+
+export interface PastaWindow {
+  released: boolean;
+  active: boolean;
+  archived: boolean;
+  remainingMs: number;
+  releasedAt: string | null;
+  expiresAt: string | null;
 }
 
 export function usePastas() {
@@ -81,6 +91,7 @@ export interface PastaFile {
 export interface PastaFilesResp {
   request: { clientName?: string };
   documents: PastaFile[];
+  window?: PastaWindow;
 }
 
 // Lista os documentos recebidos da pasta (empresa parceira / gestor com acesso).
@@ -101,6 +112,21 @@ export async function openPastaFile(pastaId: string, docId: string) {
   const url = URL.createObjectURL(data as Blob);
   window.open(url, "_blank");
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+// Libera/reabre a janela de 40 min para a empresa (corretor/Diretor).
+export function useReleasePastaDocs() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post<PastaWindow>(`/pastas/${id}/release`, {});
+      return data;
+    },
+    onSuccess: (_d, id) => {
+      qc.invalidateQueries({ queryKey: ["pastas"] });
+      qc.invalidateQueries({ queryKey: ["pasta-files", id] });
+    },
+  });
 }
 
 export function useUpdatePastaStatus() {

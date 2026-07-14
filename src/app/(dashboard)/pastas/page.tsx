@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/header";
-import { FolderPlus, Search, X, User, Pencil, FileText, Eye, ExternalLink, StickyNote } from "lucide-react";
-import { usePastas, useCreatePasta, useUpdatePasta, useUpdatePastaStatus, useGeneratePastaDocs, usePastaFiles, openPastaFile, type Pasta } from "@/hooks/use-pastas";
+import { FolderPlus, Search, X, User, Pencil, FileText, Eye, ExternalLink, StickyNote, Clock, Lock } from "lucide-react";
+import { usePastas, useCreatePasta, useUpdatePasta, useUpdatePastaStatus, useGeneratePastaDocs, usePastaFiles, useReleasePastaDocs, openPastaFile, type Pasta } from "@/hooks/use-pastas";
 import { useLeads } from "@/hooks/use-leads";
 import { useProperties } from "@/hooks/use-properties";
 import { useEmpresas } from "@/hooks/use-empresas";
@@ -356,14 +356,41 @@ const TIPO_LABEL: Record<string, string> = {
   comprovante_renda: "Comprovante de renda",
 };
 
+function fmtRemaining(ms: number) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
+function WindowBanner({ color, icon, children }: { color: string; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 p-2.5 rounded-lg text-xs" style={{ background: `${color}18`, color }}>
+      <span className="flex-shrink-0">{icon}</span>
+      <span>{children}</span>
+    </div>
+  );
+}
+
 function DocsViewer({ pasta, onClose }: { pasta: Pasta; onClose: () => void }) {
   const { data, isLoading } = usePastaFiles(pasta.id);
   const [opening, setOpening] = useState<string | null>(null);
   const docs = data?.documents ?? [];
+  const win = data?.window;
 
+  const isEmpresa = !!(getStoredUser() as any)?.empresaId;
   const updatePasta = useUpdatePasta();
+  const releaseDocs = useReleasePastaDocs();
   const [parecer, setParecer] = useState(pasta.parecer ?? "");
   const [savedMsg, setSavedMsg] = useState("");
+
+  // Cronômetro ao vivo enquanto a janela de 40 min estiver ativa.
+  const [nowTs, setNowTs] = useState(Date.now());
+  useEffect(() => {
+    if (!win?.active) return;
+    const t = setInterval(() => setNowTs(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [win?.active, win?.expiresAt]);
+  const remainingMs = win?.expiresAt ? new Date(win.expiresAt).getTime() - nowTs : 0;
+  const empresaBloqueada = isEmpresa && (!win?.active || remainingMs <= 0);
 
   const abrir = async (docId: string) => {
     setOpening(docId);
@@ -385,6 +412,14 @@ function DocsViewer({ pasta, onClose }: { pasta: Pasta; onClose: () => void }) {
     }
   };
 
+  const liberar = async () => {
+    try {
+      await releaseDocs.mutateAsync(pasta.id);
+    } catch {
+      /* ignora */
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }} onClick={onClose}>
       <div className="w-full max-w-lg rounded-2xl border max-h-[85vh] overflow-hidden flex flex-col" style={{ background: "var(--card)", borderColor: "var(--border)" }} onClick={(e) => e.stopPropagation()}>
@@ -397,9 +432,46 @@ function DocsViewer({ pasta, onClose }: { pasta: Pasta; onClose: () => void }) {
           </div>
           <button onClick={onClose} style={{ color: "var(--muted-foreground)" }}><X size={18} /></button>
         </div>
+
+        {/* Janela de 40 minutos (Fase 5) */}
+        <div className="px-4 pt-3">
+          {isEmpresa ? (
+            !win?.released ? (
+              <WindowBanner color="#f59e0b" icon={<Clock size={14} />}>
+                Aguardando o corretor liberar os documentos para análise.
+              </WindowBanner>
+            ) : empresaBloqueada ? (
+              <WindowBanner color="#ef4444" icon={<Lock size={14} />}>
+                Janela expirada — documentos arquivados com segurança. Peça ao corretor para liberar novamente.
+              </WindowBanner>
+            ) : (
+              <WindowBanner color="#10b981" icon={<Clock size={14} />}>
+                Documentos disponíveis por mais <strong>{fmtRemaining(remainingMs)}</strong> — baixe o que precisar.
+              </WindowBanner>
+            )
+          ) : (
+            <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg" style={{ background: "var(--secondary)" }}>
+              <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+                {!win?.released
+                  ? "Empresa: ainda não liberado."
+                  : win.active && remainingMs > 0
+                  ? `Empresa: janela ativa (${fmtRemaining(remainingMs)})`
+                  : "Empresa: janela expirada (arquivado)."}
+              </span>
+              <button onClick={liberar} disabled={releaseDocs.isPending} className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium disabled:opacity-60 flex-shrink-0" style={{ background: "var(--primary)", color: "white" }}>
+                <Clock size={13} /> {releaseDocs.isPending ? "Liberando…" : win?.released ? "Reabrir (40 min)" : "Liberar (40 min)"}
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="p-4 overflow-y-auto space-y-2">
           {isLoading ? (
             <div className="py-10 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>Carregando…</div>
+          ) : empresaBloqueada ? (
+            <div className="py-10 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
+              Os documentos ficam disponíveis por 40 minutos após a liberação do corretor.
+            </div>
           ) : docs.length === 0 ? (
             <div className="py-10 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>Nenhum documento enviado ainda.</div>
           ) : (
