@@ -61,6 +61,7 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
               <Detail label="Score" value={current.score != null ? String(current.score) : "—"} />
               <Detail label="Renda" value={current.renda ? formatCurrency(current.renda) : "—"} />
               <Detail label="FGTS" value={current.fgts ? formatCurrency(current.fgts) : "—"} />
+              <Detail label="Valor da venda" value={current.valorVenda ? formatCurrency(current.valorVenda) : "—"} />
             </div>
 
             <h4 className="font-semibold mb-3" style={{ color: "var(--foreground)" }}>Histórico</h4>
@@ -117,6 +118,7 @@ function LeadEditForm({
     cidade: lead.cidade ?? "",
     renda: lead.renda != null ? String(lead.renda) : "",
     fgts: lead.fgts != null ? String(lead.fgts) : "",
+    valorVenda: lead.valorVenda != null ? String(lead.valorVenda) : "",
     observacoes: lead.observacoes ?? "",
   });
   const set = (k: string, v: string) => setForm((s) => ({ ...s, [k]: v }));
@@ -158,6 +160,7 @@ function LeadEditForm({
       cidade: form.cidade.trim() || undefined,
       renda: form.renda !== "" ? Number(form.renda) : undefined,
       fgts: form.fgts !== "" ? Number(form.fgts) : undefined,
+      valorVenda: form.valorVenda !== "" ? Number(form.valorVenda) : undefined,
       observacoes: form.observacoes.trim() || undefined,
       responsavelId: form.responsavelId || undefined,
     };
@@ -258,6 +261,10 @@ function LeadEditForm({
         <Field label="Renda (R$)"><input type="number" value={form.renda} onChange={(e) => set("renda", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
         <Field label="FGTS (R$)"><input type="number" value={form.fgts} onChange={(e) => set("fgts", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
       </div>
+      <Field label="Valor da venda (R$)">
+        <input type="number" value={form.valorVenda} onChange={(e) => set("valorVenda", e.target.value)} placeholder="Preencha ao fechar a venda" className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} />
+        <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>Usado no VGV e no campeão do dashboard (some as vendas ganhas).</div>
+      </Field>
       <Field label="Observações">
         <textarea value={form.observacoes} onChange={(e) => set("observacoes", e.target.value)} rows={2} className="w-full px-3 py-2 rounded-lg border text-sm outline-none resize-none" style={inputStyle} />
       </Field>

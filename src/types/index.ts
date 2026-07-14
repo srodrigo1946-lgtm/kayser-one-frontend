@@ -44,6 +44,7 @@ export interface Lead {
   renda?: number;
   fgts?: number;
   entrada?: number;
+  valorVenda?: number;
   observacoes?: string;
   status: LeadStatus;
   score?: number;

@@ -5,7 +5,6 @@ import { StatsCards } from "@/components/dashboard/stats-cards";
 import { SalesChart, ConversionChart } from "@/components/dashboard/sales-chart";
 import {
   useDashboardMetrics,
-  useMonthlyData,
   useRanking,
 } from "@/hooks/use-dashboard";
 import { useKanbanBoard } from "@/hooks/use-kanban";
@@ -27,7 +26,6 @@ export default function DashboardPage() {
   });
 
   const { data: metrics } = useDashboardMetrics();
-  const { data: monthly } = useMonthlyData();
   const { data: ranking } = useRanking();
   const { data: board } = useKanbanBoard();
 
@@ -60,7 +58,7 @@ export default function DashboardPage() {
 
         <div className="grid lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
-            <SalesChart data={monthly ?? []} />
+            <SalesChart />
           </div>
           <ConversionChart data={funnel} />
         </div>

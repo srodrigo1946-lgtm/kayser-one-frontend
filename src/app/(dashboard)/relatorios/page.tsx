@@ -5,7 +5,6 @@ import { SalesChart, ConversionChart } from "@/components/dashboard/sales-chart"
 import { TrendingUp, Download } from "lucide-react";
 import {
   useDashboardMetrics,
-  useMonthlyData,
   useRanking,
 } from "@/hooks/use-dashboard";
 import { useKanbanBoard } from "@/hooks/use-kanban";
@@ -20,7 +19,6 @@ const roleLabels: Record<string, string> = {
 
 export default function RelatoriosPage() {
   const { data: metrics } = useDashboardMetrics();
-  const { data: monthly } = useMonthlyData();
   const { data: ranking } = useRanking();
   const { data: board } = useKanbanBoard();
 
@@ -62,7 +60,7 @@ export default function RelatoriosPage() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-4">
-          <SalesChart data={monthly ?? []} />
+          <SalesChart />
           <ConversionChart data={funnel} />
         </div>
 

@@ -35,11 +35,34 @@ export function useDashboardMetrics() {
   });
 }
 
-export function useMonthlyData() {
+export function useMonthlyData(year?: number) {
   return useQuery({
-    queryKey: ["dashboard", "monthly"],
+    queryKey: ["dashboard", "monthly", year ?? "current"],
     queryFn: async () => {
-      const { data } = await api.get<SaleData[]>("/dashboard/chart/monthly");
+      const { data } = await api.get<SaleData[]>("/dashboard/chart/monthly", {
+        params: year ? { year } : undefined,
+      });
+      return data;
+    },
+  });
+}
+
+export interface Champion {
+  responsavelId: string;
+  nome: string;
+  hasAvatar: boolean;
+  vgv: number;
+  vendas: number;
+}
+
+// year obrigatório; month opcional (undefined = ano todo).
+export function useChampion(year: number, month?: number) {
+  return useQuery({
+    queryKey: ["dashboard", "champion", year, month ?? "all"],
+    queryFn: async () => {
+      const { data } = await api.get<Champion | null>("/dashboard/champion", {
+        params: { year, ...(month ? { month } : {}) },
+      });
       return data;
     },
   });
