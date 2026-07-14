@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getStoredUser } from "@/lib/auth";
 import { Header } from "@/components/layout/header";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { SalesChart, ConversionChart } from "@/components/dashboard/sales-chart";
@@ -19,6 +22,12 @@ const roleLabels: Record<string, string> = {
 };
 
 export default function DashboardPage() {
+  const router = useRouter();
+  // Empresa parceira não tem dashboard — mandamos direto para a área de análise.
+  useEffect(() => {
+    if ((getStoredUser() as any)?.empresaId) router.replace("/pastas");
+  }, [router]);
+
   const today = new Date().toLocaleDateString("pt-BR", {
     weekday: "long",
     day: "numeric",

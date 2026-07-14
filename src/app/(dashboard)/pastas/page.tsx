@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Header } from "@/components/layout/header";
-import { FolderPlus, Search, X, User, Pencil, FileText } from "lucide-react";
-import { usePastas, useCreatePasta, useUpdatePasta, useUpdatePastaStatus, useGeneratePastaDocs, type Pasta } from "@/hooks/use-pastas";
+import { FolderPlus, Search, X, User, Pencil, FileText, Eye, ExternalLink } from "lucide-react";
+import { usePastas, useCreatePasta, useUpdatePasta, useUpdatePastaStatus, useGeneratePastaDocs, usePastaFiles, openPastaFile, type Pasta } from "@/hooks/use-pastas";
 import { useLeads } from "@/hooks/use-leads";
 import { useProperties } from "@/hooks/use-properties";
 import { useEmpresas } from "@/hooks/use-empresas";
@@ -49,6 +49,7 @@ export default function PastasPage() {
   };
 
   const [showForm, setShowForm] = useState(false);
+  const [viewing, setViewing] = useState<Pasta | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ ...EMPTY });
   const [clientQuery, setClientQuery] = useState("");
@@ -278,9 +279,14 @@ export default function PastasPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => abrirDocs(p)} disabled={genDocs.isPending} title="Documentos" className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-medium disabled:opacity-60" style={{ color: "#10b981", background: "#10b98122" }}>
-                        <FileText size={14} /> Docs
+                      <button onClick={() => setViewing(p)} title="Ver documentos enviados" className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-medium" style={{ color: "#3b82f6", background: "#3b82f622" }}>
+                        <Eye size={14} /> Ver docs
                       </button>
+                      {!isEmpresa && (
+                        <button onClick={() => abrirDocs(p)} disabled={genDocs.isPending} title="Ambiente de upload (link do cliente)" className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-medium disabled:opacity-60" style={{ color: "#10b981", background: "#10b98122" }}>
+                          <FileText size={14} /> Upload
+                        </button>
+                      )}
                       {!isEmpresa && (
                         <button onClick={() => editarPasta(p)} title="Editar" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "var(--muted-foreground)", background: "var(--secondary)" }}>
                           <Pencil size={15} />
@@ -302,6 +308,71 @@ export default function PastasPage() {
                 );
               })}
             </div>
+          )}
+        </div>
+      </div>
+
+      {viewing && <DocsViewer pasta={viewing} onClose={() => setViewing(null)} />}
+    </div>
+  );
+}
+
+const TIPO_LABEL: Record<string, string> = {
+  rg_cnh: "RG ou CNH",
+  cpf: "CPF",
+  comprovante_residencia: "Comprovante de residência",
+  contracheque: "Contracheque",
+  contracheques: "Contracheques",
+  imposto_renda: "Imposto de renda",
+  extrato_bancario: "Extrato bancário",
+  certidao_nascimento: "Certidão de nascimento",
+  certidao_casamento: "Certidão de casamento",
+  carteira_trabalho: "Carteira de trabalho",
+  comprovante_renda: "Comprovante de renda",
+};
+
+function DocsViewer({ pasta, onClose }: { pasta: Pasta; onClose: () => void }) {
+  const { data, isLoading } = usePastaFiles(pasta.id);
+  const [opening, setOpening] = useState<string | null>(null);
+  const docs = data?.documents ?? [];
+
+  const abrir = async (docId: string) => {
+    setOpening(docId);
+    try {
+      await openPastaFile(pasta.id, docId);
+    } finally {
+      setOpening(null);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }} onClick={onClose}>
+      <div className="w-full max-w-lg rounded-2xl border max-h-[85vh] overflow-hidden flex flex-col" style={{ background: "var(--card)", borderColor: "var(--border)" }} onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: "var(--border)" }}>
+          <div>
+            <div className="font-semibold" style={{ color: "var(--foreground)" }}>Documentos — {pasta.clientName}</div>
+            <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>Análise {pasta.fase === "completa" ? "completa" : "simplificada"}</div>
+          </div>
+          <button onClick={onClose} style={{ color: "var(--muted-foreground)" }}><X size={18} /></button>
+        </div>
+        <div className="p-4 overflow-y-auto space-y-2">
+          {isLoading ? (
+            <div className="py-10 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>Carregando…</div>
+          ) : docs.length === 0 ? (
+            <div className="py-10 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>Nenhum documento enviado ainda.</div>
+          ) : (
+            docs.map((d) => (
+              <div key={d.id} className="flex items-center gap-3 p-3 rounded-lg border" style={{ background: "var(--secondary)", borderColor: "var(--border)" }}>
+                <FileText size={16} style={{ color: "#10b981" }} className="flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>{TIPO_LABEL[d.tipo] ?? d.tipo}</div>
+                  <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>{d.filename}</div>
+                </div>
+                <button onClick={() => abrir(d.id)} disabled={opening === d.id} className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium disabled:opacity-60 flex-shrink-0" style={{ color: "white", background: "var(--primary)" }}>
+                  <ExternalLink size={13} /> {opening === d.id ? "Abrindo…" : "Abrir"}
+                </button>
+              </div>
+            ))
           )}
         </div>
       </div>

@@ -70,6 +70,37 @@ export function useGeneratePastaDocs() {
   });
 }
 
+export interface PastaFile {
+  id: string;
+  tipo: string;
+  filename: string;
+  uploadedAt: string;
+}
+export interface PastaFilesResp {
+  request: { clientName?: string };
+  documents: PastaFile[];
+}
+
+// Lista os documentos recebidos da pasta (empresa parceira / gestor com acesso).
+export function usePastaFiles(id: string | null) {
+  return useQuery({
+    queryKey: ["pasta-files", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data } = await api.get<PastaFilesResp>(`/pastas/${id}/files`);
+      return data;
+    },
+  });
+}
+
+// Baixa o arquivo autenticado (blob) e abre em nova aba (PDF/imagem renderizam inline).
+export async function openPastaFile(pastaId: string, docId: string) {
+  const { data } = await api.get(`/pastas/${pastaId}/files/${docId}`, { responseType: "blob" });
+  const url = URL.createObjectURL(data as Blob);
+  window.open(url, "_blank");
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
 export function useUpdatePastaStatus() {
   const qc = useQueryClient();
   return useMutation({

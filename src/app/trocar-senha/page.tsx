@@ -36,7 +36,8 @@ export default function TrocarSenhaPage() {
     setLoading(true);
     try {
       await changePassword(currentPassword, newPassword);
-      router.push("/dashboard");
+      // Empresa parceira vai direto para a área de análise (não vê dashboard).
+      router.push((user as any)?.empresaId ? "/pastas" : "/dashboard");
     } catch (err) {
       setError(getApiErrorMessage(err, "Não foi possível alterar a senha."));
     } finally {

@@ -54,8 +54,13 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const { firstLogin } = await login(email, password);
-      router.push(firstLogin ? "/trocar-senha" : "/dashboard");
+      const res = await login(email, password);
+      if (res.firstLogin) {
+        router.push("/trocar-senha");
+      } else {
+        // Empresa parceira entra direto na área de análise (não vê dashboard).
+        router.push((res.user as any)?.empresaId ? "/pastas" : "/dashboard");
+      }
     } catch (err) {
       setError(getApiErrorMessage(err, "Credenciais inválidas."));
     } finally {
