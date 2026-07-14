@@ -35,8 +35,12 @@ export function SalesChart({ data = [] }: { data?: SaleData[] }) {
             color: "var(--foreground)",
           }}
         >
-          <option>2025</option>
-          <option>2024</option>
+          {/* Anos dinâmicos: do ano atual até 2 anos atrás (o corrente vem primeiro). */}
+          {Array.from({ length: 3 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
         </select>
       </div>
       <ResponsiveContainer width="100%" height={240}>
