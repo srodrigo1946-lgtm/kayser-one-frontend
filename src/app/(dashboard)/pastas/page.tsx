@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Header } from "@/components/layout/header";
-import { FolderPlus, Search, X, User, Pencil, FileText, Eye, ExternalLink } from "lucide-react";
+import { FolderPlus, Search, X, User, Pencil, FileText, Eye, ExternalLink, StickyNote } from "lucide-react";
 import { usePastas, useCreatePasta, useUpdatePasta, useUpdatePastaStatus, useGeneratePastaDocs, usePastaFiles, openPastaFile, type Pasta } from "@/hooks/use-pastas";
 import { useLeads } from "@/hooks/use-leads";
 import { useProperties } from "@/hooks/use-properties";
@@ -282,6 +282,12 @@ export default function PastasPage() {
                         {[p.empreendimento, p.unidade && `Un. ${p.unidade}`, p.bloco && `Bl. ${p.bloco}`, p.apartamento && `Ap. ${p.apartamento}`].filter(Boolean).join(" · ") || "Sem empreendimento"}
                         {p.valorVendaFinal ? ` · ${brl(p.valorVendaFinal)}` : ""}
                       </div>
+                      {p.parecer && (
+                        <div className="text-xs mt-1 flex items-start gap-1.5" style={{ color: "#f59e0b" }}>
+                          <StickyNote size={12} className="flex-shrink-0 mt-0.5" />
+                          <span className="line-clamp-2">{p.parecer}</span>
+                        </div>
+                      )}
                       <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--secondary)" }}>
                         <div className="h-full rounded-full" style={{ width: `${st.pct}%`, background: st.color }} />
                       </div>
@@ -355,12 +361,27 @@ function DocsViewer({ pasta, onClose }: { pasta: Pasta; onClose: () => void }) {
   const [opening, setOpening] = useState<string | null>(null);
   const docs = data?.documents ?? [];
 
+  const updatePasta = useUpdatePasta();
+  const [parecer, setParecer] = useState(pasta.parecer ?? "");
+  const [savedMsg, setSavedMsg] = useState("");
+
   const abrir = async (docId: string) => {
     setOpening(docId);
     try {
       await openPastaFile(pasta.id, docId);
     } finally {
       setOpening(null);
+    }
+  };
+
+  const salvarParecer = async () => {
+    setSavedMsg("");
+    try {
+      await updatePasta.mutateAsync({ id: pasta.id, parecer });
+      setSavedMsg("✓ Observação salva.");
+      setTimeout(() => setSavedMsg(""), 2500);
+    } catch {
+      setSavedMsg("Não foi possível salvar.");
     }
   };
 
@@ -400,6 +421,32 @@ function DocsViewer({ pasta, onClose }: { pasta: Pasta; onClose: () => void }) {
               </div>
             ))
           )}
+        </div>
+
+        {/* Parecer / observações da empresa parceira */}
+        <div className="p-4 border-t space-y-2" style={{ borderColor: "var(--border)" }}>
+          <div className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+            Parecer / observações
+          </div>
+          <textarea
+            value={parecer}
+            onChange={(e) => setParecer(e.target.value)}
+            rows={3}
+            placeholder="Ex.: Aprovado, mas com ressalva — falta o extrato do FGTS de abril."
+            className="w-full px-3 py-2 rounded-lg border text-sm outline-none resize-y"
+            style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+          />
+          <div className="flex items-center justify-end gap-3">
+            {savedMsg && <span className="text-xs" style={{ color: "#10b981" }}>{savedMsg}</span>}
+            <button
+              onClick={salvarParecer}
+              disabled={updatePasta.isPending}
+              className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-60"
+              style={{ background: "var(--primary)", color: "white" }}
+            >
+              {updatePasta.isPending ? "Salvando…" : "Salvar observação"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

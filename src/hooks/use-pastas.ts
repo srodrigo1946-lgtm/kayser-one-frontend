@@ -22,6 +22,7 @@ export interface Pasta {
   fase?: string;
   perfil?: string;
   status: string;
+  parecer?: string;
   docToken?: string;
   empresaId?: string;
   createdAt: string;
