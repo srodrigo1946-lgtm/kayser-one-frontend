@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 
 export interface Pasta {
   id: string;
+  numero?: number;
   leadId: string;
   clientName: string;
   clientCpf?: string;

@@ -20,6 +20,7 @@ const STATUS: Record<string, { label: string; pct: number; color: string }> = {
 const STATUS_KEYS = ["montando", "em_analise", "complemento", "aprovado", "reprovado"];
 const brl = (v?: number) =>
   v != null ? Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }) : "—";
+const analiseLabel = (n?: number) => (n != null ? `Análise ${String(n).padStart(2, "0")}` : "");
 
 const EMPTY = {
   leadId: "", clientName: "", propertyId: "", empreendimento: "", construtora: "",
@@ -269,7 +270,14 @@ export default function PastasPage() {
                 return (
                   <div key={p.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold truncate" style={{ color: "var(--foreground)" }}>{p.clientName}</div>
+                      <div className="flex items-center gap-2">
+                        {p.numero != null && (
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded-md whitespace-nowrap" style={{ background: "var(--primary)", color: "white" }}>
+                            {analiseLabel(p.numero)}
+                          </span>
+                        )}
+                        <span className="font-semibold truncate" style={{ color: "var(--foreground)" }}>{p.clientName}</span>
+                      </div>
                       <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>
                         {[p.empreendimento, p.unidade && `Un. ${p.unidade}`, p.bloco && `Bl. ${p.bloco}`, p.apartamento && `Ap. ${p.apartamento}`].filter(Boolean).join(" · ") || "Sem empreendimento"}
                         {p.valorVendaFinal ? ` · ${brl(p.valorVendaFinal)}` : ""}
@@ -361,7 +369,9 @@ function DocsViewer({ pasta, onClose }: { pasta: Pasta; onClose: () => void }) {
       <div className="w-full max-w-lg rounded-2xl border max-h-[85vh] overflow-hidden flex flex-col" style={{ background: "var(--card)", borderColor: "var(--border)" }} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: "var(--border)" }}>
           <div>
-            <div className="font-semibold" style={{ color: "var(--foreground)" }}>Documentos — {pasta.clientName}</div>
+            <div className="font-semibold" style={{ color: "var(--foreground)" }}>
+              {pasta.numero != null ? `${analiseLabel(pasta.numero)} · ` : ""}{pasta.clientName}
+            </div>
             <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>Análise {pasta.fase === "completa" ? "completa" : "simplificada"}</div>
           </div>
           <button onClick={onClose} style={{ color: "var(--muted-foreground)" }}><X size={18} /></button>
