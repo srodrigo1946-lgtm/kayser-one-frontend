@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Header } from "@/components/layout/header";
-import { Building2, Plus, Check, X } from "lucide-react";
+import { Building2, Plus, Check, X, KeyRound } from "lucide-react";
 import { useEmpresas, useCreateEmpresa, useSetEmpresaStatus } from "@/hooks/use-empresas";
 import { getApiErrorMessage } from "@/lib/api";
 
@@ -21,11 +21,12 @@ export default function EmpresasPage() {
   const [creds, setCreds] = useState<{ email: string; senhaProvisoria: string } | null>(null);
 
   const aprovar = async (id: string) => {
+    setError("");
     try {
       const r: any = await setStatus.mutateAsync({ id, status: "aprovada" });
       if (r?.credenciais) setCreds(r.credenciais);
-    } catch {
-      /* ignore */
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Falha ao aprovar / gerar acesso da empresa."));
     }
   };
   const loginLink = typeof window !== "undefined" ? `${window.location.origin}/login` : "/login";
@@ -98,8 +99,10 @@ export default function EmpresasPage() {
                       <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>CNPJ {e.cnpj} · {e.email}</div>
                     </div>
                     <span className="text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap" style={{ background: `${st.color}22`, color: st.color }}>{st.label}</span>
-                    {e.status !== "aprovada" && (
+                    {e.status !== "aprovada" ? (
                       <button onClick={() => aprovar(e.id)} title="Aprovar" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "#10b981", background: "#10b98122" }}><Check size={16} /></button>
+                    ) : (
+                      <button onClick={() => aprovar(e.id)} title="Gerar/mostrar acesso" className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-medium" style={{ color: "#10b981", background: "#10b98122" }}><KeyRound size={14} /> Acesso</button>
                     )}
                     {e.status !== "reprovada" && (
                       <button onClick={() => setStatus.mutate({ id: e.id, status: "reprovada" })} title="Reprovar" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "#ef4444", background: "#ef444422" }}><X size={16} /></button>
