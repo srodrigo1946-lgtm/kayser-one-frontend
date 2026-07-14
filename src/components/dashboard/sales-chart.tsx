@@ -11,8 +11,8 @@ import {
   Legend,
 } from "recharts";
 import { useState } from "react";
-import { Trophy } from "lucide-react";
-import { useMonthlyData, useChampion } from "@/hooks/use-dashboard";
+import { Trophy, DollarSign } from "lucide-react";
+import { useMonthlyData, useChampion, useVgv } from "@/hooks/use-dashboard";
 import { avatarUrl } from "@/hooks/use-profile";
 
 const MESES = [
@@ -28,6 +28,7 @@ export function SalesChart() {
   const [month, setMonth] = useState(0); // 0 = ano todo
   const { data = [] } = useMonthlyData(year);
   const { data: champion } = useChampion(year, month || undefined);
+  const { data: vgv } = useVgv(year, month || undefined);
   const periodo = month ? MESES[month - 1] : `${year}`;
 
   return (
@@ -70,17 +71,41 @@ export function SalesChart() {
         </div>
       </div>
 
-      {/* Campeão do período (maior VGV) */}
-      <div
-        className="flex items-center gap-3 mb-5 p-3 rounded-xl border"
-        style={{ background: "var(--secondary)", borderColor: "var(--border)" }}
-      >
+      {/* VGV do período + Campeão — ambos acompanham o filtro Ano/Mês */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+        {/* VGV do período (soma das vendas ganhas) */}
         <div
-          className="flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0"
-          style={{ background: "rgba(234,179,8,0.15)" }}
+          className="flex items-center gap-3 p-3 rounded-xl border"
+          style={{ background: "var(--secondary)", borderColor: "var(--border)" }}
         >
-          <Trophy size={18} style={{ color: "#eab308" }} />
+          <div
+            className="flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0"
+            style={{ background: "rgba(16,185,129,0.15)" }}
+          >
+            <DollarSign size={18} style={{ color: "#10b981" }} />
+          </div>
+          <div className="min-w-0">
+            <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>VGV · {periodo}</div>
+            <div className="text-lg font-bold" style={{ color: "var(--foreground)" }}>
+              {formatBRL(vgv?.total ?? 0)}
+            </div>
+            <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+              {vgv?.vendas ?? 0} {(vgv?.vendas ?? 0) === 1 ? "venda" : "vendas"}
+            </div>
+          </div>
         </div>
+
+        {/* Campeão do período (maior VGV) */}
+        <div
+          className="flex items-center gap-3 p-3 rounded-xl border"
+          style={{ background: "var(--secondary)", borderColor: "var(--border)" }}
+        >
+          <div
+            className="flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0"
+            style={{ background: "rgba(234,179,8,0.15)" }}
+          >
+            <Trophy size={18} style={{ color: "#eab308" }} />
+          </div>
         {champion ? (
           <>
             {champion.hasAvatar ? (
@@ -118,6 +143,7 @@ export function SalesChart() {
             <span style={{ color: "var(--foreground)" }}>sem vendas registradas no período.</span>
           </div>
         )}
+        </div>
       </div>
       <ResponsiveContainer width="100%" height={240}>
         <AreaChart data={data}>

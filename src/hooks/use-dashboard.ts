@@ -55,6 +55,19 @@ export interface Champion {
   vendas: number;
 }
 
+// VGV total do período (soma valorVenda das vendas ganhas). Acompanha ano/mês.
+export function useVgv(year: number, month?: number) {
+  return useQuery({
+    queryKey: ["dashboard", "vgv", year, month ?? "all"],
+    queryFn: async () => {
+      const { data } = await api.get<{ total: number; vendas: number }>("/dashboard/vgv", {
+        params: { year, ...(month ? { month } : {}) },
+      });
+      return data;
+    },
+  });
+}
+
 // year obrigatório; month opcional (undefined = ano todo).
 export function useChampion(year: number, month?: number) {
   return useQuery({
