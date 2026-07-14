@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Header } from "@/components/layout/header";
-import { FolderPlus, Search, X, User, Pencil } from "lucide-react";
-import { usePastas, useCreatePasta, useUpdatePasta, useUpdatePastaStatus, type Pasta } from "@/hooks/use-pastas";
+import { FolderPlus, Search, X, User, Pencil, FileText } from "lucide-react";
+import { usePastas, useCreatePasta, useUpdatePasta, useUpdatePastaStatus, useGeneratePastaDocs, type Pasta } from "@/hooks/use-pastas";
 import { useLeads } from "@/hooks/use-leads";
 import { useProperties } from "@/hooks/use-properties";
 import { getApiErrorMessage } from "@/lib/api";
@@ -30,6 +30,20 @@ export default function PastasPage() {
   const createPasta = useCreatePasta();
   const updatePasta = useUpdatePasta();
   const updateStatus = useUpdatePastaStatus();
+  const genDocs = useGeneratePastaDocs();
+
+  const abrirDocs = async (p: Pasta) => {
+    let token = p.docToken;
+    if (!token) {
+      try {
+        const res = await genDocs.mutateAsync(p.id);
+        token = res.token;
+      } catch {
+        return;
+      }
+    }
+    if (token) window.open(`/docs/${token}`, "_blank");
+  };
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -243,6 +257,9 @@ export default function PastasPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      <button onClick={() => abrirDocs(p)} disabled={genDocs.isPending} title="Documentos" className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-medium disabled:opacity-60" style={{ color: "#10b981", background: "#10b98122" }}>
+                        <FileText size={14} /> Docs
+                      </button>
                       <button onClick={() => editarPasta(p)} title="Editar" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "var(--muted-foreground)", background: "var(--secondary)" }}>
                         <Pencil size={15} />
                       </button>

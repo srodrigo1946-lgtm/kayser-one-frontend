@@ -21,6 +21,7 @@ export interface Pasta {
   fase?: string;
   perfil?: string;
   status: string;
+  docToken?: string;
   createdAt: string;
 }
 
@@ -50,6 +51,18 @@ export function useUpdatePasta() {
   return useMutation({
     mutationFn: async ({ id, ...payload }: Partial<Pasta> & { id: string }) => {
       const { data } = await api.put<Pasta>(`/pastas/${id}`, payload);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["pastas"] }),
+  });
+}
+
+// Garante/retorna o token do ambiente de documentos da pasta.
+export function useGeneratePastaDocs() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post<{ token: string }>(`/pastas/${id}/documents`, {});
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["pastas"] }),
