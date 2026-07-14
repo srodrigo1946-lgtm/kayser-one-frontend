@@ -18,6 +18,17 @@ export default function EmpresasPage() {
   const setStatus = useSetEmpresaStatus();
   const [form, setForm] = useState({ cnpj: "", email: "", nome: "" });
   const [error, setError] = useState("");
+  const [creds, setCreds] = useState<{ email: string; senhaProvisoria: string } | null>(null);
+
+  const aprovar = async (id: string) => {
+    try {
+      const r: any = await setStatus.mutateAsync({ id, status: "aprovada" });
+      if (r?.credenciais) setCreds(r.credenciais);
+    } catch {
+      /* ignore */
+    }
+  };
+  const loginLink = typeof window !== "undefined" ? `${window.location.origin}/login` : "/login";
 
   const inputStyle = { background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" };
   const inputCls = "w-full px-3 py-2 rounded-lg border text-sm outline-none";
@@ -40,6 +51,20 @@ export default function EmpresasPage() {
     <div>
       <Header title="Empresas Parceiras" subtitle="Cadastre e libere as empresas que analisam as pastas" />
       <div className="p-6 space-y-4">
+        {creds && (
+          <div className="rounded-2xl p-4 border" style={{ background: "#10b98111", borderColor: "#10b98155" }}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="text-sm" style={{ color: "var(--foreground)" }}>
+                <div className="font-semibold mb-1" style={{ color: "#10b981" }}>Empresa aprovada — envie o acesso para ela:</div>
+                <div>🔗 Link: <span className="font-mono">{loginLink}</span></div>
+                <div>✉️ Login: <span className="font-mono">{creds.email}</span></div>
+                <div>🔑 Senha provisória: <span className="font-mono">{creds.senhaProvisoria}</span></div>
+                <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>A empresa troca a senha no primeiro acesso.</div>
+              </div>
+              <button onClick={() => setCreds(null)} style={{ color: "var(--muted-foreground)" }}><X size={16} /></button>
+            </div>
+          </div>
+        )}
         <div className="rounded-2xl p-5 border" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
           {error && <div className="text-sm p-2 rounded-lg mb-3" style={{ background: "#ef444422", color: "#ef4444" }}>{error}</div>}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -74,7 +99,7 @@ export default function EmpresasPage() {
                     </div>
                     <span className="text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap" style={{ background: `${st.color}22`, color: st.color }}>{st.label}</span>
                     {e.status !== "aprovada" && (
-                      <button onClick={() => setStatus.mutate({ id: e.id, status: "aprovada" })} title="Aprovar" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "#10b981", background: "#10b98122" }}><Check size={16} /></button>
+                      <button onClick={() => aprovar(e.id)} title="Aprovar" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "#10b981", background: "#10b98122" }}><Check size={16} /></button>
                     )}
                     {e.status !== "reprovada" && (
                       <button onClick={() => setStatus.mutate({ id: e.id, status: "reprovada" })} title="Reprovar" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "#ef4444", background: "#ef444422" }}><X size={16} /></button>

@@ -8,6 +8,7 @@ import { useLeads } from "@/hooks/use-leads";
 import { useProperties } from "@/hooks/use-properties";
 import { useEmpresas } from "@/hooks/use-empresas";
 import { getApiErrorMessage } from "@/lib/api";
+import { getStoredUser } from "@/lib/auth";
 
 const STATUS: Record<string, { label: string; pct: number; color: string }> = {
   montando: { label: "Montando", pct: 20, color: "#3b82f6" },
@@ -32,6 +33,7 @@ export default function PastasPage() {
   const updatePasta = useUpdatePasta();
   const updateStatus = useUpdatePastaStatus();
   const genDocs = useGeneratePastaDocs();
+  const isEmpresa = getStoredUser()?.role === "empresa";
 
   const abrirDocs = async (p: Pasta) => {
     let token = p.docToken;
@@ -141,21 +143,23 @@ export default function PastasPage() {
     <div>
       <Header title="Subir Pasta para Análise" subtitle="Monte a pasta do cliente e acompanhe a análise" />
       <div className="p-6 space-y-4">
-        <div className="flex justify-end">
-          <button
-            onClick={() => {
-              if (showForm) {
-                setShowForm(false);
-                setEditingId(null);
-              } else novaPasta();
-            }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
-            style={{ background: "var(--primary)", color: "white" }}
-          >
-            {showForm ? <X size={16} /> : <FolderPlus size={16} />}
-            {showForm ? "Fechar" : "Nova pasta"}
-          </button>
-        </div>
+        {!isEmpresa && (
+          <div className="flex justify-end">
+            <button
+              onClick={() => {
+                if (showForm) {
+                  setShowForm(false);
+                  setEditingId(null);
+                } else novaPasta();
+              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
+              style={{ background: "var(--primary)", color: "white" }}
+            >
+              {showForm ? <X size={16} /> : <FolderPlus size={16} />}
+              {showForm ? "Fechar" : "Nova pasta"}
+            </button>
+          </div>
+        )}
 
         {showForm && (
           <div className="rounded-2xl p-5 border space-y-4" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
@@ -277,9 +281,11 @@ export default function PastasPage() {
                       <button onClick={() => abrirDocs(p)} disabled={genDocs.isPending} title="Documentos" className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-medium disabled:opacity-60" style={{ color: "#10b981", background: "#10b98122" }}>
                         <FileText size={14} /> Docs
                       </button>
-                      <button onClick={() => editarPasta(p)} title="Editar" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "var(--muted-foreground)", background: "var(--secondary)" }}>
-                        <Pencil size={15} />
-                      </button>
+                      {!isEmpresa && (
+                        <button onClick={() => editarPasta(p)} title="Editar" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "var(--muted-foreground)", background: "var(--secondary)" }}>
+                          <Pencil size={15} />
+                        </button>
+                      )}
                       <span className="text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap" style={{ background: `${st.color}22`, color: st.color }}>{st.label}</span>
                       <select
                         value={p.status}

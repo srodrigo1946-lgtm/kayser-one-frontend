@@ -139,7 +139,11 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         {navItems
-          .filter((item) => !(item as any).diretorOnly || user.role === "diretor")
+          .filter((item) => {
+            // Empresa parceira só enxerga as análises (pastas atribuídas a ela).
+            if (user.role === "empresa") return item.href === "/pastas";
+            return !(item as any).diretorOnly || user.role === "diretor";
+          })
           .map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + "/");
           return (
