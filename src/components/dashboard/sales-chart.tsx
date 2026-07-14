@@ -30,6 +30,13 @@ export function SalesChart() {
   const { data: champion } = useChampion(year, month || undefined);
   const { data: vgv } = useVgv(year, month || undefined);
   const periodo = month ? MESES[month - 1] : `${year}`;
+  // Só é "Campeão" quando o período FECHA; enquanto está em andamento (mês/ano
+  // corrente ou futuro), é apenas "Líder parcial".
+  const currentMonth = new Date().getMonth() + 1;
+  const emAndamento = month
+    ? year > currentYear || (year === currentYear && month >= currentMonth)
+    : year >= currentYear;
+  const tituloCampeao = emAndamento ? "Líder parcial" : "Campeão";
 
   return (
     <div
@@ -124,7 +131,7 @@ export function SalesChart() {
             )}
             <div className="min-w-0 flex-1">
               <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-                Campeão · {periodo}
+                {tituloCampeao} · {periodo}
               </div>
               <div className="font-semibold truncate" style={{ color: "var(--foreground)" }}>
                 {champion.nome}
@@ -139,7 +146,7 @@ export function SalesChart() {
           </>
         ) : (
           <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-            Campeão · {periodo}:{" "}
+            {tituloCampeao} · {periodo}:{" "}
             <span style={{ color: "var(--foreground)" }}>sem vendas registradas no período.</span>
           </div>
         )}
