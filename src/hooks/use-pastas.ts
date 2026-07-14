@@ -45,6 +45,17 @@ export function useCreatePasta() {
   });
 }
 
+export function useUpdatePasta() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...payload }: Partial<Pasta> & { id: string }) => {
+      const { data } = await api.put<Pasta>(`/pastas/${id}`, payload);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["pastas"] }),
+  });
+}
+
 export function useUpdatePastaStatus() {
   const qc = useQueryClient();
   return useMutation({

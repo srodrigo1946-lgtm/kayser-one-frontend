@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Header } from "@/components/layout/header";
-import { FolderPlus, Search, X, User } from "lucide-react";
-import { usePastas, useCreatePasta, useUpdatePastaStatus, type Pasta } from "@/hooks/use-pastas";
+import { FolderPlus, Search, X, User, Pencil } from "lucide-react";
+import { usePastas, useCreatePasta, useUpdatePasta, useUpdatePastaStatus, type Pasta } from "@/hooks/use-pastas";
 import { useLeads } from "@/hooks/use-leads";
 import { useProperties } from "@/hooks/use-properties";
 import { getApiErrorMessage } from "@/lib/api";
@@ -28,13 +28,44 @@ const EMPTY = {
 export default function PastasPage() {
   const { data: pastas = [], isLoading } = usePastas();
   const createPasta = useCreatePasta();
+  const updatePasta = useUpdatePasta();
   const updateStatus = useUpdatePastaStatus();
 
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ ...EMPTY });
   const [clientQuery, setClientQuery] = useState("");
   const [error, setError] = useState("");
   const set = (k: string, v: string) => setForm((s) => ({ ...s, [k]: v }));
+
+  const num = (v?: number) => (v != null ? String(v) : "");
+  const novaPasta = () => {
+    setEditingId(null);
+    setForm({ ...EMPTY });
+    setError("");
+    setShowForm(true);
+  };
+  const editarPasta = (p: Pasta) => {
+    setEditingId(p.id);
+    setForm({
+      leadId: p.leadId,
+      clientName: p.clientName,
+      propertyId: p.propertyId ?? "",
+      empreendimento: p.empreendimento ?? "",
+      construtora: p.construtora ?? "",
+      unidade: p.unidade ?? "",
+      bloco: p.bloco ?? "",
+      apartamento: p.apartamento ?? "",
+      valorAvaliacao: num(p.valorAvaliacao),
+      valorVendaFinal: num(p.valorVendaFinal),
+      condicoesComerciais: p.condicoesComerciais ?? "",
+      observacoes: p.observacoes ?? "",
+      fase: p.fase ?? "simplificada",
+      perfil: p.perfil ?? "clt",
+    });
+    setError("");
+    setShowForm(true);
+  };
 
   const { data: leadsResp } = useLeads({ search: clientQuery, limit: 8 });
   const clientResults = clientQuery.length >= 2 ? leadsResp?.data ?? [] : [];
@@ -74,11 +105,16 @@ export default function PastasPage() {
       perfil: form.perfil,
     };
     try {
-      await createPasta.mutateAsync(payload);
+      if (editingId) {
+        await updatePasta.mutateAsync({ id: editingId, ...payload });
+      } else {
+        await createPasta.mutateAsync(payload);
+      }
       setForm({ ...EMPTY });
       setShowForm(false);
+      setEditingId(null);
     } catch (err) {
-      setError(getApiErrorMessage(err, "Falha ao criar a pasta."));
+      setError(getApiErrorMessage(err, "Falha ao salvar a pasta."));
     }
   };
 
@@ -88,7 +124,12 @@ export default function PastasPage() {
       <div className="p-6 space-y-4">
         <div className="flex justify-end">
           <button
-            onClick={() => setShowForm((v) => !v)}
+            onClick={() => {
+              if (showForm) {
+                setShowForm(false);
+                setEditingId(null);
+              } else novaPasta();
+            }}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
             style={{ background: "var(--primary)", color: "white" }}
           >
@@ -99,6 +140,7 @@ export default function PastasPage() {
 
         {showForm && (
           <div className="rounded-2xl p-5 border space-y-4" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+            <div className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>{editingId ? "Editar pasta" : "Nova pasta"}</div>
             {error && <div className="text-sm p-2 rounded-lg" style={{ background: "#ef444422", color: "#ef4444" }}>{error}</div>}
 
             {/* Cliente */}
@@ -171,8 +213,8 @@ export default function PastasPage() {
             <Campo label="Observações" value={form.observacoes} onChange={(v) => set("observacoes", v)} />
 
             <div className="flex justify-end">
-              <button onClick={criar} disabled={createPasta.isPending} className="px-5 py-2 rounded-xl text-sm font-medium disabled:opacity-60" style={{ background: "var(--primary)", color: "white" }}>
-                {createPasta.isPending ? "Criando…" : "Criar pasta"}
+              <button onClick={criar} disabled={createPasta.isPending || updatePasta.isPending} className="px-5 py-2 rounded-xl text-sm font-medium disabled:opacity-60" style={{ background: "var(--primary)", color: "white" }}>
+                {createPasta.isPending || updatePasta.isPending ? "Salvando…" : editingId ? "Salvar alterações" : "Criar pasta"}
               </button>
             </div>
           </div>
@@ -201,6 +243,9 @@ export default function PastasPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      <button onClick={() => editarPasta(p)} title="Editar" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "var(--muted-foreground)", background: "var(--secondary)" }}>
+                        <Pencil size={15} />
+                      </button>
                       <span className="text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap" style={{ background: `${st.color}22`, color: st.color }}>{st.label}</span>
                       <select
                         value={p.status}
