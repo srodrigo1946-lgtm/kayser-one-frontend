@@ -317,6 +317,17 @@ export default function PastasPage() {
   );
 }
 
+const fmtDateTime = (s?: string) =>
+  s
+    ? new Date(s).toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
+
 const TIPO_LABEL: Record<string, string> = {
   rg_cnh: "RG ou CNH",
   cpf: "CPF",
@@ -367,6 +378,11 @@ function DocsViewer({ pasta, onClose }: { pasta: Pasta; onClose: () => void }) {
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>{TIPO_LABEL[d.tipo] ?? d.tipo}</div>
                   <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>{d.filename}</div>
+                  {d.uploadedAt && (
+                    <div className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
+                      Enviado em {fmtDateTime(d.uploadedAt)}
+                    </div>
+                  )}
                 </div>
                 <button onClick={() => abrir(d.id)} disabled={opening === d.id} className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium disabled:opacity-60 flex-shrink-0" style={{ color: "white", background: "var(--primary)" }}>
                   <ExternalLink size={13} /> {opening === d.id ? "Abrindo…" : "Abrir"}
