@@ -21,6 +21,7 @@ import {
   LogOut,
   Crown,
   Megaphone,
+  FolderUp,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { getStoredUser, logout } from "@/lib/auth";
@@ -30,6 +31,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/leads", label: "Leads / CRM", icon: Users },
   { href: "/imoveis", label: "Imóveis", icon: Building },
+  { href: "/pastas", label: "Subir Pasta", icon: FolderUp },
   { href: "/kanban", label: "Kanban", icon: Kanban },
   { href: "/whatsapp", label: "WhatsApp", icon: MessageSquare },
   { href: "/fila-leads", label: "Fila de Leads", icon: Megaphone, diretorOnly: true },
