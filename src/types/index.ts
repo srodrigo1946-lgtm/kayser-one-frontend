@@ -45,6 +45,15 @@ export interface Lead {
   fgts?: number;
   entrada?: number;
   valorVenda?: number;
+  cpf?: string;
+  dataNascimento?: string;
+  estadoCivil?: string;
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  estado?: string;
   observacoes?: string;
   status: LeadStatus;
   score?: number;

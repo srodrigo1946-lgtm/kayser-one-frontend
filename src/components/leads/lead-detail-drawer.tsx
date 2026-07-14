@@ -62,6 +62,9 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
               <Detail label="Renda" value={current.renda ? formatCurrency(current.renda) : "—"} />
               <Detail label="FGTS" value={current.fgts ? formatCurrency(current.fgts) : "—"} />
               <Detail label="Valor da venda" value={current.valorVenda ? formatCurrency(current.valorVenda) : "—"} />
+              <Detail label="CPF" value={current.cpf || "—"} />
+              <Detail label="Estado civil" value={current.estadoCivil || "—"} />
+              <Detail label="Endereço" value={[current.logradouro, current.numero, current.bairro, current.cidade, current.estado].filter(Boolean).join(", ") || "—"} />
             </div>
 
             <h4 className="font-semibold mb-3" style={{ color: "var(--foreground)" }}>Histórico</h4>
@@ -119,8 +122,18 @@ function LeadEditForm({
     renda: lead.renda != null ? String(lead.renda) : "",
     fgts: lead.fgts != null ? String(lead.fgts) : "",
     valorVenda: lead.valorVenda != null ? String(lead.valorVenda) : "",
+    cpf: lead.cpf ?? "",
+    dataNascimento: lead.dataNascimento ?? "",
+    estadoCivil: lead.estadoCivil ?? "",
+    cep: lead.cep ?? "",
+    logradouro: lead.logradouro ?? "",
+    numero: lead.numero ?? "",
+    complemento: lead.complemento ?? "",
+    bairro: lead.bairro ?? "",
+    estado: lead.estado ?? "",
     observacoes: lead.observacoes ?? "",
   });
+  const [cepLoading, setCepLoading] = useState(false);
   const set = (k: string, v: string) => setForm((s) => ({ ...s, [k]: v }));
 
   // Se o lead tem empreendimento em texto mas sem vínculo, avisa.
@@ -129,6 +142,30 @@ function LeadEditForm({
   const pickProperty = (id: string) => {
     const p = (properties ?? []).find((x) => x.id === id);
     setForm((s) => ({ ...s, propertyId: id, empreendimento: p?.name ?? (id ? s.empreendimento : "") }));
+  };
+
+  // Preenche o endereço pelo CEP (ViaCEP, grátis, sem chave). Edição manual segue liberada.
+  const buscaCep = async (raw: string) => {
+    const cep = raw.replace(/\D/g, "");
+    if (cep.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const d = await res.json();
+      if (!d.erro) {
+        setForm((s) => ({
+          ...s,
+          logradouro: d.logradouro || s.logradouro,
+          bairro: d.bairro || s.bairro,
+          cidade: d.localidade || s.cidade,
+          estado: d.uf || s.estado,
+        }));
+      }
+    } catch {
+      /* silencioso — permite preencher manualmente */
+    } finally {
+      setCepLoading(false);
+    }
   };
 
   // Busca de responsável (lupa) — filtra os corretores pelo nome.
@@ -161,6 +198,15 @@ function LeadEditForm({
       renda: form.renda !== "" ? Number(form.renda) : undefined,
       fgts: form.fgts !== "" ? Number(form.fgts) : undefined,
       valorVenda: form.valorVenda !== "" ? Number(form.valorVenda) : undefined,
+      cpf: form.cpf.trim() || undefined,
+      dataNascimento: form.dataNascimento || undefined,
+      estadoCivil: form.estadoCivil || undefined,
+      cep: form.cep.trim() || undefined,
+      logradouro: form.logradouro.trim() || undefined,
+      numero: form.numero.trim() || undefined,
+      complemento: form.complemento.trim() || undefined,
+      bairro: form.bairro.trim() || undefined,
+      estado: form.estado.trim() || undefined,
       observacoes: form.observacoes.trim() || undefined,
       responsavelId: form.responsavelId || undefined,
     };
@@ -253,10 +299,7 @@ function LeadEditForm({
         )}
       </Field>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Origem"><input value={form.origem} onChange={(e) => set("origem", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
-        <Field label="Cidade"><input value={form.cidade} onChange={(e) => set("cidade", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
-      </div>
+      <Field label="Origem"><input value={form.origem} onChange={(e) => set("origem", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Renda (R$)"><input type="number" value={form.renda} onChange={(e) => set("renda", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
         <Field label="FGTS (R$)"><input type="number" value={form.fgts} onChange={(e) => set("fgts", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
@@ -265,6 +308,41 @@ function LeadEditForm({
         <input type="number" value={form.valorVenda} onChange={(e) => set("valorVenda", e.target.value)} placeholder="Preencha ao fechar a venda" className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} />
         <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>Usado no VGV e no campeão do dashboard (some as vendas ganhas).</div>
       </Field>
+      {/* Cadastro completo (financiamento / Subir Pasta para Análise) */}
+      <div className="pt-2 mt-1 border-t space-y-3" style={{ borderColor: "var(--border)" }}>
+        <div className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Cadastro completo (financiamento)</div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="CPF"><input value={form.cpf} onChange={(e) => set("cpf", e.target.value)} placeholder="000.000.000-00" className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
+          <Field label="Nascimento"><input type="date" value={form.dataNascimento} onChange={(e) => set("dataNascimento", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
+        </div>
+        <Field label="Estado civil">
+          <select value={form.estadoCivil} onChange={(e) => set("estadoCivil", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle}>
+            <option value="">—</option>
+            <option value="solteiro">Solteiro(a)</option>
+            <option value="casado">Casado(a)</option>
+            <option value="divorciado">Divorciado(a)</option>
+            <option value="viuvo">Viúvo(a)</option>
+            <option value="uniao_estavel">União estável</option>
+          </select>
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="CEP">
+            <input value={form.cep} onChange={(e) => set("cep", e.target.value)} onBlur={(e) => buscaCep(e.target.value)} placeholder="00000-000" className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} />
+            {cepLoading && <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>Buscando endereço…</div>}
+          </Field>
+          <Field label="Número"><input value={form.numero} onChange={(e) => set("numero", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
+        </div>
+        <Field label="Rua / Logradouro"><input value={form.logradouro} onChange={(e) => set("logradouro", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Bairro"><input value={form.bairro} onChange={(e) => set("bairro", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
+          <Field label="Complemento"><input value={form.complemento} onChange={(e) => set("complemento", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Cidade"><input value={form.cidade} onChange={(e) => set("cidade", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
+          <Field label="Estado (UF)"><input value={form.estado} onChange={(e) => set("estado", e.target.value)} maxLength={2} placeholder="SP" className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
+        </div>
+      </div>
+
       <Field label="Observações">
         <textarea value={form.observacoes} onChange={(e) => set("observacoes", e.target.value)} rows={2} className="w-full px-3 py-2 rounded-lg border text-sm outline-none resize-none" style={inputStyle} />
       </Field>
