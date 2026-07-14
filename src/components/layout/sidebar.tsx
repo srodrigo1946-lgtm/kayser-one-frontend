@@ -118,7 +118,8 @@ export function Sidebar() {
               <div className="flex items-center gap-1">
                 <Crown size={10} style={{ color: "var(--warning)" }} />
                 <span className="text-xs" style={{ color: "var(--sidebar-muted)" }}>
-                  {roleLabels[user.role] ?? user.role}
+                  {/* Empresa parceira: cargo real continua "corretor" por dentro; aqui só o rótulo muda. */}
+                  {(user as any).empresaId ? "Empresa parceira" : (roleLabels[user.role] ?? user.role)}
                 </span>
               </div>
             </div>
