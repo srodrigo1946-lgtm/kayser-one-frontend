@@ -140,8 +140,8 @@ export function Sidebar() {
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         {navItems
           .filter((item) => {
-            // Empresa parceira só enxerga as análises (pastas atribuídas a ela).
-            if (user.role === "empresa") return item.href === "/pastas";
+            // Empresa parceira (usuário com empresaId) só enxerga as análises.
+            if ((user as any).empresaId) return item.href === "/pastas";
             return !(item as any).diretorOnly || user.role === "diretor";
           })
           .map(({ href, label, icon: Icon }) => {

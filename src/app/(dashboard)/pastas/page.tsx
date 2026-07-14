@@ -33,7 +33,7 @@ export default function PastasPage() {
   const updatePasta = useUpdatePasta();
   const updateStatus = useUpdatePastaStatus();
   const genDocs = useGeneratePastaDocs();
-  const isEmpresa = getStoredUser()?.role === "empresa";
+  const isEmpresa = !!(getStoredUser() as any)?.empresaId;
 
   const abrirDocs = async (p: Pasta) => {
     let token = p.docToken;
