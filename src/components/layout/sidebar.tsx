@@ -35,6 +35,7 @@ const navItems = [
   { href: "/kanban", label: "Kanban", icon: Kanban },
   { href: "/whatsapp", label: "WhatsApp", icon: MessageSquare },
   { href: "/fila-leads", label: "Fila de Leads", icon: Megaphone, diretorOnly: true },
+  { href: "/empresas", label: "Empresas", icon: Building2, diretorOnly: true },
   { href: "/agenda", label: "Agenda", icon: Calendar },
   { href: "/ia", label: "IA Agente", icon: Bot },
   { href: "/metas", label: "Metas", icon: Target },

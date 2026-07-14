@@ -6,6 +6,7 @@ import { FolderPlus, Search, X, User, Pencil, FileText } from "lucide-react";
 import { usePastas, useCreatePasta, useUpdatePasta, useUpdatePastaStatus, useGeneratePastaDocs, type Pasta } from "@/hooks/use-pastas";
 import { useLeads } from "@/hooks/use-leads";
 import { useProperties } from "@/hooks/use-properties";
+import { useEmpresas } from "@/hooks/use-empresas";
 import { getApiErrorMessage } from "@/lib/api";
 
 const STATUS: Record<string, { label: string; pct: number; color: string }> = {
@@ -22,7 +23,7 @@ const brl = (v?: number) =>
 const EMPTY = {
   leadId: "", clientName: "", propertyId: "", empreendimento: "", construtora: "",
   unidade: "", bloco: "", apartamento: "", valorAvaliacao: "", valorVendaFinal: "",
-  condicoesComerciais: "", observacoes: "", fase: "simplificada", perfil: "clt",
+  condicoesComerciais: "", observacoes: "", fase: "simplificada", perfil: "clt", empresaId: "",
 };
 
 export default function PastasPage() {
@@ -76,6 +77,7 @@ export default function PastasPage() {
       observacoes: p.observacoes ?? "",
       fase: p.fase ?? "simplificada",
       perfil: p.perfil ?? "clt",
+      empresaId: p.empresaId ?? "",
     });
     setError("");
     setShowForm(true);
@@ -84,6 +86,8 @@ export default function PastasPage() {
   const { data: leadsResp } = useLeads({ search: clientQuery, limit: 8 });
   const clientResults = clientQuery.length >= 2 ? leadsResp?.data ?? [] : [];
   const { data: properties = [] } = useProperties();
+  const { data: empresas = [] } = useEmpresas();
+  const empresasAprovadas = empresas.filter((e) => e.status === "aprovada");
 
   const pickClient = (id: string, name: string) => {
     setForm((s) => ({ ...s, leadId: id, clientName: name }));
@@ -117,6 +121,7 @@ export default function PastasPage() {
       observacoes: form.observacoes.trim() || undefined,
       fase: form.fase,
       perfil: form.perfil,
+      empresaId: form.empresaId || undefined,
     };
     try {
       if (editingId) {
@@ -222,6 +227,18 @@ export default function PastasPage() {
                   <option value="empresario">Empresário</option>
                 </select>
               </div>
+            </div>
+            <div>
+              <div className="text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>Empresa parceira (análise)</div>
+              <select value={form.empresaId} onChange={(e) => set("empresaId", e.target.value)} className={inputCls} style={inputStyle}>
+                <option value="">— nenhuma —</option>
+                {empresasAprovadas.map((emp) => (
+                  <option key={emp.id} value={emp.id}>{emp.nome || emp.email}</option>
+                ))}
+              </select>
+              {empresasAprovadas.length === 0 && (
+                <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>Nenhuma empresa aprovada ainda (cadastre e libere em “Empresas”).</div>
+              )}
             </div>
             <Campo label="Condições comerciais" value={form.condicoesComerciais} onChange={(v) => set("condicoesComerciais", v)} />
             <Campo label="Observações" value={form.observacoes} onChange={(v) => set("observacoes", v)} />
