@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/header";
 import { FolderPlus, Search, X, User, Pencil, FileText, Eye, ExternalLink, StickyNote, Clock, Lock, Trash2 } from "lucide-react";
-import { usePastas, useCreatePasta, useUpdatePasta, useUpdatePastaStatus, useGeneratePastaDocs, usePastaFiles, useReleasePastaDocs, useDeletePasta, openPastaFile, type Pasta } from "@/hooks/use-pastas";
+import { usePastas, useCreatePasta, useUpdatePasta, useUpdatePastaStatus, useGeneratePastaDocs, usePastaFiles, useReleasePastaDocs, useDeletePasta, useAddPendencia, openPastaFile, type Pasta } from "@/hooks/use-pastas";
 import { useLeads } from "@/hooks/use-leads";
 import { useProperties } from "@/hooks/use-properties";
 import { useEmpresas } from "@/hooks/use-empresas";
@@ -403,8 +403,11 @@ function DocsViewer({ pasta, onClose }: { pasta: Pasta; onClose: () => void }) {
   const isEmpresa = !!(getStoredUser() as any)?.empresaId;
   const updatePasta = useUpdatePasta();
   const releaseDocs = useReleasePastaDocs();
+  const addPend = useAddPendencia();
   const [parecer, setParecer] = useState(pasta.parecer ?? "");
   const [savedMsg, setSavedMsg] = useState("");
+  const [pendLabel, setPendLabel] = useState("");
+  const [pendMsg, setPendMsg] = useState("");
 
   // Cronômetro ao vivo enquanto a janela de 40 min estiver ativa.
   const [nowTs, setNowTs] = useState(Date.now());
@@ -441,6 +444,20 @@ function DocsViewer({ pasta, onClose }: { pasta: Pasta; onClose: () => void }) {
       await releaseDocs.mutateAsync(pasta.id);
     } catch {
       /* ignora */
+    }
+  };
+
+  const pedirPendencia = async () => {
+    const label = pendLabel.trim();
+    if (!label) return;
+    setPendMsg("");
+    try {
+      await addPend.mutateAsync({ id: pasta.id, label });
+      setPendLabel("");
+      setPendMsg("✓ Pedido criado — o cliente verá o novo espaço no link.");
+      setTimeout(() => setPendMsg(""), 3500);
+    } catch {
+      setPendMsg("Não foi possível pedir.");
     }
   };
 
@@ -517,6 +534,35 @@ function DocsViewer({ pasta, onClose }: { pasta: Pasta; onClose: () => void }) {
               </div>
             ))
           )}
+        </div>
+
+        {/* Pedir documento pendente (abre espaço novo no mesmo link) */}
+        <div className="p-4 border-t space-y-2" style={{ borderColor: "var(--border)" }}>
+          <div className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+            Pedir documento pendente
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              value={pendLabel}
+              onChange={(e) => setPendLabel(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && pedirPendencia()}
+              placeholder="Ex.: Extrato do FGTS de abril"
+              className="flex-1 px-3 py-2 rounded-lg border text-sm outline-none"
+              style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+            />
+            <button
+              onClick={pedirPendencia}
+              disabled={addPend.isPending || !pendLabel.trim()}
+              className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-60 flex-shrink-0"
+              style={{ background: "#f59e0b", color: "white" }}
+            >
+              {addPend.isPending ? "Pedindo…" : "Pedir"}
+            </button>
+          </div>
+          {pendMsg && <div className="text-xs" style={{ color: "#10b981" }}>{pendMsg}</div>}
+          <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+            Cria um espaço extra no mesmo link do cliente, sem apagar o que já foi enviado.
+          </div>
         </div>
 
         {/* Parecer / observações da empresa parceira */}

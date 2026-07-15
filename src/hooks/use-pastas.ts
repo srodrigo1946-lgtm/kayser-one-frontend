@@ -70,6 +70,18 @@ export function useUpdatePasta() {
   });
 }
 
+// Pede um documento pendente (abre espaço novo no mesmo link do cliente).
+export function useAddPendencia() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, label }: { id: string; label: string }) => {
+      const { data } = await api.post(`/pastas/${id}/pendencia`, { label });
+      return data;
+    },
+    onSuccess: (_d, v) => qc.invalidateQueries({ queryKey: ["pasta-files", v.id] }),
+  });
+}
+
 // Exclui a pasta (só Diretor no backend).
 export function useDeletePasta() {
   const qc = useQueryClient();
