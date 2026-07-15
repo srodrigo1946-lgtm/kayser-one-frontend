@@ -34,7 +34,12 @@ export default function PastasPage() {
   const updatePasta = useUpdatePasta();
   const updateStatus = useUpdatePastaStatus();
   const genDocs = useGeneratePastaDocs();
-  const isEmpresa = !!(getStoredUser() as any)?.empresaId;
+  const storedUser = getStoredUser() as any;
+  const isEmpresa = !!storedUser?.empresaId;
+  const isDiretor = storedUser?.role === "diretor";
+  // Veredito (complemento/aprovado/reprovado) só Diretor ou empresa parceira;
+  // corretor/gestores só movem entre "montando" e "em_analise".
+  const statusOptions = isEmpresa || isDiretor ? STATUS_KEYS : ["montando", "em_analise"];
 
   const abrirDocs = async (p: Pasta) => {
     let token = p.docToken;
@@ -307,16 +312,19 @@ export default function PastasPage() {
                         </button>
                       )}
                       <span className="text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap" style={{ background: `${st.color}22`, color: st.color }}>{st.label}</span>
-                      <select
-                        value={p.status}
-                        onChange={(e) => updateStatus.mutate({ id: p.id, status: e.target.value })}
-                        className="text-xs px-2 py-1.5 rounded-lg border outline-none"
-                        style={inputStyle}
-                      >
-                        {STATUS_KEYS.map((k) => (
-                          <option key={k} value={k}>{STATUS[k].label}</option>
-                        ))}
-                      </select>
+                      {/* Cargos restritos não mexem em pasta já com veredito (mostra só o selo). */}
+                      {(statusOptions.includes(p.status) || statusOptions.length === STATUS_KEYS.length) && (
+                        <select
+                          value={p.status}
+                          onChange={(e) => updateStatus.mutate({ id: p.id, status: e.target.value })}
+                          className="text-xs px-2 py-1.5 rounded-lg border outline-none"
+                          style={inputStyle}
+                        >
+                          {statusOptions.map((k) => (
+                            <option key={k} value={k}>{STATUS[k].label}</option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                   </div>
                 );
