@@ -7,6 +7,7 @@ import { Eye, EyeOff, Moon, Sun, Building2, Lock, Mail } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { login } from "@/lib/auth";
 import { api, getApiErrorMessage } from "@/lib/api";
+import { SupportBox } from "@/components/support/support-box";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -296,6 +297,9 @@ export default function LoginPage() {
             Não tem conta?{" "}
             <Link href="/register" style={{ color: "var(--primary)" }}>Cadastre-se</Link>
           </p>
+
+          {/* Caixinha pública de suporte/reclamação */}
+          <SupportBox />
         </div>
       </div>
     </div>

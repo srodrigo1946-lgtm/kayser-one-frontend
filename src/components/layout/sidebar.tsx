@@ -22,10 +22,12 @@ import {
   Crown,
   Megaphone,
   FolderUp,
+  LifeBuoy,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { getStoredUser, logout } from "@/lib/auth";
 import { avatarUrl } from "@/hooks/use-profile";
+import { useSupportUnread } from "@/hooks/use-support";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -37,6 +39,7 @@ const navItems = [
   { href: "/fila-leads", label: "Fila de Leads", icon: Megaphone, diretorOnly: true },
   { href: "/empresas", label: "Empresas", icon: Building2, diretorOnly: true },
   { href: "/ranking-analises", label: "Ranking Análises", icon: Trophy, roles: ["diretor", "superintendente", "gerente_geral"] },
+  { href: "/suporte", label: "Suporte", icon: LifeBuoy, diretorOnly: true },
   { href: "/agenda", label: "Agenda", icon: Calendar },
   { href: "/ia", label: "IA Agente", icon: Bot },
   { href: "/metas", label: "Metas", icon: Target },
@@ -57,6 +60,8 @@ export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const user = getStoredUser() ?? { name: "Usuário", role: "corretor" };
+  const isDiretor = (user as any).role === "diretor";
+  const { data: supportUnread } = useSupportUnread(isDiretor);
 
   return (
     <aside
@@ -165,7 +170,15 @@ export function Sidebar() {
               title={collapsed ? label : undefined}
             >
               <Icon size={18} className="flex-shrink-0" />
-              {!collapsed && <span>{label}</span>}
+              {!collapsed && <span className="flex-1">{label}</span>}
+              {href === "/suporte" && !!supportUnread?.count && (
+                <span
+                  className="text-[10px] font-bold rounded-full flex items-center justify-center"
+                  style={{ background: "#ef4444", color: "white", minWidth: 18, height: 18, padding: "0 5px" }}
+                >
+                  {supportUnread.count}
+                </span>
+              )}
             </Link>
           );
         })}
