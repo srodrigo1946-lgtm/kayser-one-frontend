@@ -520,7 +520,7 @@ function DocsViewer({ pasta, onClose }: { pasta: Pasta; onClose: () => void }) {
               <div key={d.id} className="flex items-center gap-3 p-3 rounded-lg border" style={{ background: "var(--secondary)", borderColor: "var(--border)" }}>
                 <FileText size={16} style={{ color: "#10b981" }} className="flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>{TIPO_LABEL[d.tipo] ?? d.tipo}</div>
+                  <div className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>{TIPO_LABEL[d.tipo] ?? (d.tipo?.startsWith("pend_") ? "Documento pendente" : d.tipo)}</div>
                   <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>{d.filename}</div>
                   {d.uploadedAt && (
                     <div className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
