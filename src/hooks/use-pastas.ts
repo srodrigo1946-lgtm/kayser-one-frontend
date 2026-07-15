@@ -70,6 +70,18 @@ export function useUpdatePasta() {
   });
 }
 
+// Exclui a pasta (só Diretor no backend).
+export function useDeletePasta() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.delete(`/pastas/${id}`);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["pastas"] }),
+  });
+}
+
 // Garante/retorna o token do ambiente de documentos da pasta.
 export function useGeneratePastaDocs() {
   const qc = useQueryClient();

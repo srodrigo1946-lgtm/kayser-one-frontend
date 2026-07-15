@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/header";
-import { FolderPlus, Search, X, User, Pencil, FileText, Eye, ExternalLink, StickyNote, Clock, Lock } from "lucide-react";
-import { usePastas, useCreatePasta, useUpdatePasta, useUpdatePastaStatus, useGeneratePastaDocs, usePastaFiles, useReleasePastaDocs, openPastaFile, type Pasta } from "@/hooks/use-pastas";
+import { FolderPlus, Search, X, User, Pencil, FileText, Eye, ExternalLink, StickyNote, Clock, Lock, Trash2 } from "lucide-react";
+import { usePastas, useCreatePasta, useUpdatePasta, useUpdatePastaStatus, useGeneratePastaDocs, usePastaFiles, useReleasePastaDocs, useDeletePasta, openPastaFile, type Pasta } from "@/hooks/use-pastas";
 import { useLeads } from "@/hooks/use-leads";
 import { useProperties } from "@/hooks/use-properties";
 import { useEmpresas } from "@/hooks/use-empresas";
@@ -34,6 +34,7 @@ export default function PastasPage() {
   const updatePasta = useUpdatePasta();
   const updateStatus = useUpdatePastaStatus();
   const genDocs = useGeneratePastaDocs();
+  const deletePasta = useDeletePasta();
   const storedUser = getStoredUser() as any;
   const isEmpresa = !!storedUser?.empresaId;
   const isDiretor = storedUser?.role === "diretor";
@@ -52,6 +53,16 @@ export default function PastasPage() {
       }
     }
     if (token) window.open(`/docs/${token}`, "_blank");
+  };
+
+  const excluir = async (p: Pasta) => {
+    const rotulo = analiseLabel(p.numero) || "esta pasta";
+    if (!window.confirm(`Excluir ${rotulo} — ${p.clientName}? Isso apaga também os documentos enviados. Não dá para desfazer.`)) return;
+    try {
+      await deletePasta.mutateAsync(p.id);
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Falha ao excluir a pasta."));
+    }
   };
 
   const [showForm, setShowForm] = useState(false);
@@ -309,6 +320,11 @@ export default function PastasPage() {
                       {!isEmpresa && (
                         <button onClick={() => editarPasta(p)} title="Editar" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "var(--muted-foreground)", background: "var(--secondary)" }}>
                           <Pencil size={15} />
+                        </button>
+                      )}
+                      {isDiretor && (
+                        <button onClick={() => excluir(p)} disabled={deletePasta.isPending} title="Excluir pasta" className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-60" style={{ color: "#ef4444", background: "#ef444422" }}>
+                          <Trash2 size={15} />
                         </button>
                       )}
                       <span className="text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap" style={{ background: `${st.color}22`, color: st.color }}>{st.label}</span>
