@@ -115,6 +115,7 @@ export interface PastaFile {
 export interface PastaFilesResp {
   request: { clientName?: string };
   documents: PastaFile[];
+  pendencias?: { label: string; recebido: boolean }[];
   window?: PastaWindow;
 }
 

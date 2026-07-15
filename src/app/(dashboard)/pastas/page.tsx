@@ -398,6 +398,7 @@ function DocsViewer({ pasta, onClose }: { pasta: Pasta; onClose: () => void }) {
   const { data, isLoading } = usePastaFiles(pasta.id);
   const [opening, setOpening] = useState<string | null>(null);
   const docs = data?.documents ?? [];
+  const pendencias = data?.pendencias ?? [];
   const win = data?.window;
 
   const isEmpresa = !!(getStoredUser() as any)?.empresaId;
@@ -507,6 +508,18 @@ function DocsViewer({ pasta, onClose }: { pasta: Pasta; onClose: () => void }) {
         </div>
 
         <div className="p-4 overflow-y-auto space-y-2">
+          {pendencias.length > 0 && (
+            <div className="rounded-lg border p-3 space-y-1.5" style={{ background: "#f59e0b14", borderColor: "#f59e0b55" }}>
+              <div className="text-xs font-semibold" style={{ color: "#f59e0b" }}>Documentos pendentes pedidos</div>
+              {pendencias.map((p, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm">
+                  <span style={{ color: p.recebido ? "#10b981" : "#f59e0b" }}>{p.recebido ? "✓" : "⏳"}</span>
+                  <span className="flex-1 truncate" style={{ color: "var(--foreground)" }}>{p.label}</span>
+                  <span className="text-xs whitespace-nowrap" style={{ color: "var(--muted-foreground)" }}>{p.recebido ? "recebido" : "aguardando"}</span>
+                </div>
+              ))}
+            </div>
+          )}
           {isLoading ? (
             <div className="py-10 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>Carregando…</div>
           ) : empresaBloqueada ? (
