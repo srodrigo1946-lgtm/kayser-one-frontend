@@ -36,6 +36,7 @@ const navItems = [
   { href: "/whatsapp", label: "WhatsApp", icon: MessageSquare },
   { href: "/fila-leads", label: "Fila de Leads", icon: Megaphone, diretorOnly: true },
   { href: "/empresas", label: "Empresas", icon: Building2, diretorOnly: true },
+  { href: "/ranking-analises", label: "Ranking Análises", icon: Trophy, roles: ["diretor", "superintendente", "gerente_geral"] },
   { href: "/agenda", label: "Agenda", icon: Calendar },
   { href: "/ia", label: "IA Agente", icon: Bot },
   { href: "/metas", label: "Metas", icon: Target },
@@ -143,6 +144,8 @@ export function Sidebar() {
           .filter((item) => {
             // Empresa parceira (usuário com empresaId) só enxerga as análises.
             if ((user as any).empresaId) return item.href === "/pastas";
+            // Itens com lista de cargos: só os cargos permitidos veem.
+            if ((item as any).roles) return (item as any).roles.includes(user.role);
             return !(item as any).diretorOnly || user.role === "diretor";
           })
           .map(({ href, label, icon: Icon }) => {

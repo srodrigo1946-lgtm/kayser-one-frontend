@@ -141,6 +141,47 @@ export function useReleasePastaDocs() {
   });
 }
 
+export interface AnaliseRankRow {
+  id: string;
+  name: string;
+  role: string;
+  hasAvatar: boolean;
+  analises: number;
+  vendas: number;
+  conversao: number;
+  vgv: number;
+}
+
+// Ranking de análises (só Gerente Geral pra cima no backend).
+export function useAnalysesRanking(year?: number, month?: number) {
+  return useQuery({
+    queryKey: ["analises-ranking", year, month],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (year) params.set("year", String(year));
+      if (month) params.set("month", String(month));
+      const { data } = await api.get<AnaliseRankRow[]>(`/pastas/ranking/analises?${params.toString()}`);
+      return data;
+    },
+  });
+}
+
+// Baixa o Excel das análises (só Diretor no backend).
+export async function downloadAnalysesExcel(year?: number, month?: number) {
+  const params = new URLSearchParams();
+  if (year) params.set("year", String(year));
+  if (month) params.set("month", String(month));
+  const { data } = await api.get(`/pastas/ranking/analises/export?${params.toString()}`, { responseType: "blob" });
+  const url = URL.createObjectURL(data as Blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "ranking-analises.xlsx";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
 export function useUpdatePastaStatus() {
   const qc = useQueryClient();
   return useMutation({
