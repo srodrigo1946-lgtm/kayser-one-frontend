@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getStoredUser } from "@/lib/auth";
 import { Bot, MessageCircle } from "lucide-react";
@@ -23,6 +23,11 @@ const roleLabels: Record<string, string> = {
   diretor: "Diretor",
 };
 
+const MESES = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
+
 export default function DashboardPage() {
   const router = useRouter();
   // Empresa parceira não tem dashboard — mandamos direto para a área de análise.
@@ -36,10 +41,16 @@ export default function DashboardPage() {
     month: "long",
   });
 
+  const currentYear = new Date().getFullYear();
+  const [fuYear, setFuYear] = useState(currentYear);
+  const [fuMonth, setFuMonth] = useState(0); // 0 = ano todo consolidado
+
   const { data: metrics } = useDashboardMetrics();
   const { data: ranking } = useRanking();
-  const { data: followups } = useFollowups();
+  const { data: followups } = useFollowups(fuYear, fuMonth || undefined);
   const { data: board } = useKanbanBoard();
+
+  const fuPeriodo = fuMonth ? MESES[fuMonth - 1] : `${fuYear}`;
 
   const abrirConversa = (f: { leadId: string; phone: string }) => {
     const params = new URLSearchParams();
@@ -89,8 +100,8 @@ export default function DashboardPage() {
       <div className="p-6 space-y-6">
         <StatsCards
           metrics={statsMetrics}
-          followupsSemana={followups?.semana}
-          followupsHoje={followups?.hoje}
+          followupsTotal={followups?.total}
+          followupsPeriodo={fuPeriodo}
         />
 
         {/* Follow-ups automáticos da IA — clique para abrir a conversa */}
@@ -98,13 +109,38 @@ export default function DashboardPage() {
           className="rounded-2xl border p-5"
           style={{ background: "var(--card)", borderColor: "var(--border)" }}
         >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold flex items-center gap-2" style={{ color: "var(--foreground)" }}>
-              <Bot size={18} style={{ color: "#a855f7" }} /> Follow-ups automáticos da IA
-            </h3>
-            <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-              Clique para abrir a conversa
-            </span>
+          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+            <div>
+              <h3 className="font-semibold flex items-center gap-2" style={{ color: "var(--foreground)" }}>
+                <Bot size={18} style={{ color: "#a855f7" }} /> Follow-ups automáticos da IA
+              </h3>
+              <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
+                {followups?.total ?? 0} no período · clique para abrir a conversa
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={fuMonth}
+                onChange={(e) => setFuMonth(Number(e.target.value))}
+                className="text-sm px-3 py-1.5 rounded-lg border outline-none"
+                style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+              >
+                <option value={0}>Ano todo</option>
+                {MESES.map((m, i) => (
+                  <option key={m} value={i + 1}>{m}</option>
+                ))}
+              </select>
+              <select
+                value={fuYear}
+                onChange={(e) => setFuYear(Number(e.target.value))}
+                className="text-sm px-3 py-1.5 rounded-lg border outline-none"
+                style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+              >
+                {Array.from({ length: 3 }, (_, i) => currentYear - i).map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="space-y-1">
             {(followups?.items ?? []).map((f) => (
@@ -136,7 +172,7 @@ export default function DashboardPage() {
             ))}
             {(followups?.items ?? []).length === 0 && (
               <div className="py-6 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
-                A IA ainda não disparou follow-ups.
+                Nenhum follow-up da IA em {fuPeriodo}.
               </div>
             )}
           </div>

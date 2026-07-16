@@ -91,16 +91,17 @@ export interface FollowupItem {
 
 export interface FollowupsResponse {
   items: FollowupItem[];
-  semana: number;
-  hoje: number;
+  total: number;
 }
 
-// Follow-ups automáticos que a IA disparou (nome/telefone/quando + clicar p/ conversa).
-export function useFollowups() {
+// Follow-ups automáticos da IA no período (mês específico ou ano todo consolidado).
+export function useFollowups(year: number, month?: number) {
   return useQuery({
-    queryKey: ["dashboard", "followups"],
+    queryKey: ["dashboard", "followups", year, month ?? "all"],
     queryFn: async () => {
-      const { data } = await api.get<FollowupsResponse>("/dashboard/followups");
+      const { data } = await api.get<FollowupsResponse>("/dashboard/followups", {
+        params: { year, ...(month ? { month } : {}) },
+      });
       return data;
     },
   });

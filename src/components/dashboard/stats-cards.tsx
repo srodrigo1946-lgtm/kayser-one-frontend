@@ -72,12 +72,12 @@ function StatCard({ title, value, subtitle, icon, trend, color, danger }: StatCa
 
 export function StatsCards({
   metrics,
-  followupsSemana,
-  followupsHoje,
+  followupsTotal,
+  followupsPeriodo,
 }: {
   metrics: DashboardMetrics;
-  followupsSemana?: number;
-  followupsHoje?: number;
+  followupsTotal?: number;
+  followupsPeriodo?: string;
 }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -138,8 +138,8 @@ export function StatsCards({
       />
       <StatCard
         title="Follow-ups IA"
-        value={followupsSemana ?? 0}
-        subtitle={`${followupsHoje ?? 0} hoje · últimos 7 dias`}
+        value={followupsTotal ?? 0}
+        subtitle={followupsPeriodo ? `IA · ${followupsPeriodo}` : "IA enviou"}
         icon={<Bot size={20} />}
         color="#a855f7"
       />
