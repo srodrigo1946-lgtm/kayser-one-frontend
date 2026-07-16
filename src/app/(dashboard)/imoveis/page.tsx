@@ -104,6 +104,13 @@ function cover(p: Property): string | null {
   return (p.photos && p.photos[0]) || (isImageUrl(p.imageUrl) ? (p.imageUrl as string) : null);
 }
 
+// Data de entrega salva como ISO ("2026-12-25"); mostra em pt-BR. Aceita texto antigo.
+function formatEntrega(v?: string | null): string {
+  if (!v) return "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : v;
+}
+
 export default function ImoveisPage() {
   const [search, setSearch] = useState("");
   const { data: properties, isLoading } = useProperties(search);
@@ -230,7 +237,7 @@ export default function ImoveisPage() {
 
                   {p.deliveryDate && (
                     <div className="flex items-center gap-1 text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>
-                      <CalendarClock size={12} /> Entrega: {p.deliveryDate}
+                      <CalendarClock size={12} /> Entrega: {formatEntrega(p.deliveryDate)}
                     </div>
                   )}
 
@@ -428,7 +435,7 @@ function PropertyForm({
               <input value={form.construtora} onChange={(e) => set("construtora", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} />
             </Field>
             <Field label="Previsão de entrega">
-              <input value={form.deliveryDate} onChange={(e) => set("deliveryDate", e.target.value)} placeholder="Ex: Dez/2026 ou Pronto" className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} />
+              <input type="date" value={form.deliveryDate} onChange={(e) => set("deliveryDate", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} />
             </Field>
           </div>
 
