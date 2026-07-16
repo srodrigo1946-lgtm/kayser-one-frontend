@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -18,6 +18,7 @@ import {
   Building,
   ChevronLeft,
   ChevronRight,
+  X,
   LogOut,
   Crown,
   Megaphone,
@@ -61,15 +62,33 @@ const roleLabels: Record<string, string> = {
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const user = getStoredUser() ?? { name: "Usuário", role: "corretor" };
   const isDiretor = (user as any).role === "diretor";
   const { data: supportUnread } = useSupportUnread(isDiretor);
 
+  // O botão hambúrguer do Header dispara este evento (mesmo padrão da busca ⌘K).
+  useEffect(() => {
+    const toggle = () => setMobileOpen((o) => !o);
+    window.addEventListener("kayser:toggle-menu", toggle);
+    return () => window.removeEventListener("kayser:toggle-menu", toggle);
+  }, []);
+  // Fecha a gaveta ao navegar (celular).
+  useEffect(() => setMobileOpen(false), [pathname]);
+
   return (
+    <>
+      {/* Fundo escuro atrás da gaveta (só no celular) */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setMobileOpen(false)} />
+      )}
     <aside
       className={cn(
-        "flex flex-col h-screen sticky top-0 transition-all duration-300 border-r",
-        collapsed ? "w-[68px]" : "w-64"
+        "flex flex-col h-screen transition-all duration-300 border-r",
+        "fixed inset-y-0 left-0 z-50 lg:relative lg:z-auto lg:translate-x-0",
+        mobileOpen ? "translate-x-0" : "-translate-x-full",
+        "w-64",
+        collapsed ? "lg:w-[68px]" : "lg:w-64"
       )}
       style={{
         background: "var(--sidebar)",
@@ -94,6 +113,15 @@ export function Sidebar() {
             </div>
           </div>
         )}
+        {/* Fechar gaveta (só celular) */}
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="ml-auto p-1 rounded-lg lg:hidden"
+          style={{ color: "var(--sidebar-muted)" }}
+          title="Fechar menu"
+        >
+          <X size={18} />
+        </button>
       </div>
 
       {/* Usuário (topo) */}
@@ -161,6 +189,7 @@ export function Sidebar() {
             <Link
               key={href}
               href={href}
+              onClick={() => setMobileOpen(false)}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
                 collapsed ? "justify-center" : ""
@@ -186,10 +215,10 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Collapse Toggle */}
+      {/* Collapse Toggle — recolher (só no computador) */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-20 w-6 h-6 rounded-full border flex items-center justify-center shadow-sm"
+        className="absolute -right-3 top-20 w-6 h-6 rounded-full border items-center justify-center shadow-sm hidden lg:flex"
         style={{
           background: "var(--card)",
           borderColor: "var(--border)",
@@ -199,5 +228,6 @@ export function Sidebar() {
         {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
       </button>
     </aside>
+    </>
   );
 }

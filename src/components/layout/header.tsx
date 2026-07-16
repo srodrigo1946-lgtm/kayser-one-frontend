@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Moon, Sun, Search, AlertCircle, Clock, UserPlus } from "lucide-react";
+import { Bell, Moon, Sun, Search, AlertCircle, Clock, UserPlus, Menu } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { useAlerts } from "@/hooks/use-alerts";
 import { usePendingUsers } from "@/hooks/use-users";
@@ -36,18 +36,29 @@ export function Header({ title, subtitle }: HeaderProps) {
 
   return (
     <header
-      className="h-16 flex items-center justify-between px-6 border-b sticky top-0 z-20"
+      className="h-16 flex items-center justify-between px-4 md:px-6 border-b sticky top-0 z-20"
       style={{ background: "var(--card)", borderColor: "var(--border)" }}
     >
-      <div>
-        <h1 className="text-lg font-semibold" style={{ color: "var(--foreground)" }}>
-          {title}
-        </h1>
-        {subtitle && (
-          <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-            {subtitle}
-          </p>
-        )}
+      <div className="flex items-center gap-2 min-w-0">
+        {/* Abrir menu (só celular) */}
+        <button
+          onClick={() => window.dispatchEvent(new Event("kayser:toggle-menu"))}
+          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 lg:hidden"
+          style={{ background: "var(--secondary)", color: "var(--foreground)" }}
+          title="Menu"
+        >
+          <Menu size={18} />
+        </button>
+        <div className="min-w-0">
+          <h1 className="text-lg font-semibold truncate" style={{ color: "var(--foreground)" }}>
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-2">
