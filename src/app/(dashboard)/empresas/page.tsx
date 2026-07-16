@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Header } from "@/components/layout/header";
-import { Building2, Plus, Check, X, KeyRound } from "lucide-react";
-import { useEmpresas, useCreateEmpresa, useSetEmpresaStatus } from "@/hooks/use-empresas";
+import { Building2, Plus, Check, X, KeyRound, Trash2 } from "lucide-react";
+import { useEmpresas, useCreateEmpresa, useSetEmpresaStatus, useDeleteEmpresa } from "@/hooks/use-empresas";
 import { getApiErrorMessage } from "@/lib/api";
 
 const STATUS: Record<string, { label: string; color: string }> = {
@@ -16,6 +16,7 @@ export default function EmpresasPage() {
   const { data: empresas = [], isLoading } = useEmpresas();
   const createEmpresa = useCreateEmpresa();
   const setStatus = useSetEmpresaStatus();
+  const deleteEmpresa = useDeleteEmpresa();
   const [form, setForm] = useState({ cnpj: "", email: "", nome: "" });
   const [error, setError] = useState("");
   const [creds, setCreds] = useState<{ email: string; senhaProvisoria: string } | null>(null);
@@ -27,6 +28,15 @@ export default function EmpresasPage() {
       if (r?.credenciais) setCreds(r.credenciais);
     } catch (err) {
       setError(getApiErrorMessage(err, "Falha ao aprovar / gerar acesso da empresa."));
+    }
+  };
+  const excluir = async (e: { id: string; nome?: string; email: string }) => {
+    if (!window.confirm(`Excluir a empresa "${e.nome || e.email}" de vez? O acesso dela será removido e as pastas atribuídas ficarão sem empresa. Esta ação não pode ser desfeita.`)) return;
+    setError("");
+    try {
+      await deleteEmpresa.mutateAsync(e.id);
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Falha ao excluir empresa."));
     }
   };
   const loginLink = typeof window !== "undefined" ? `${window.location.origin}/login` : "/login";
@@ -107,6 +117,7 @@ export default function EmpresasPage() {
                     {e.status !== "reprovada" && (
                       <button onClick={() => setStatus.mutate({ id: e.id, status: "reprovada" })} title="Reprovar" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ color: "#ef4444", background: "#ef444422" }}><X size={16} /></button>
                     )}
+                    <button onClick={() => excluir(e)} disabled={deleteEmpresa.isPending} title="Excluir empresa" className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-60" style={{ color: "#ef4444", background: "#ef444422" }}><Trash2 size={16} /></button>
                   </div>
                 );
               })}

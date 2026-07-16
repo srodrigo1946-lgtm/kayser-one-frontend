@@ -43,3 +43,14 @@ export function useSetEmpresaStatus() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["empresas"] }),
   });
 }
+
+export function useDeleteEmpresa() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.delete(`/empresas/${id}`);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["empresas"] }),
+  });
+}
