@@ -27,6 +27,7 @@ import {
   Ruler,
   Layers,
   ExternalLink,
+  CalendarClock,
 } from "lucide-react";
 
 const typeLabels: Record<string, string> = {
@@ -227,6 +228,12 @@ export default function ImoveisPage() {
                     </div>
                   )}
 
+                  {p.deliveryDate && (
+                    <div className="flex items-center gap-1 text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>
+                      <CalendarClock size={12} /> Entrega: {p.deliveryDate}
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
                     {p.vgv ? <Info label="VGV" value={formatCurrency(p.vgv)} /> : null}
                     {(p.priceMin || p.priceMax) ? (
@@ -300,7 +307,7 @@ function PropertyForm({
     const src = (initial ?? {}) as any;
     [
       "name", "type", "status", "construtora", "description",
-      "address", "bairro", "cidade", "estado", "cep", "imageUrl",
+      "address", "bairro", "cidade", "estado", "cep", "imageUrl", "deliveryDate",
       ...NUMERIC_FIELDS,
     ].forEach((k) => {
       f[k] = src[k] != null ? String(src[k]) : "";
@@ -354,7 +361,7 @@ function PropertyForm({
 
   const buildPayload = (): PropertyInput => {
     const out: any = {};
-    ["name", "type", "status", "construtora", "description", "address", "bairro", "cidade", "estado", "cep", "imageUrl"].forEach((k) => {
+    ["name", "type", "status", "construtora", "description", "address", "bairro", "cidade", "estado", "cep", "imageUrl", "deliveryDate"].forEach((k) => {
       if (form[k] && form[k].trim()) out[k] = form[k].trim();
     });
     NUMERIC_FIELDS.forEach((k) => {
@@ -416,9 +423,14 @@ function PropertyForm({
             </Field>
           </div>
 
-          <Field label="Construtora">
-            <input value={form.construtora} onChange={(e) => set("construtora", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} />
-          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Construtora">
+              <input value={form.construtora} onChange={(e) => set("construtora", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} />
+            </Field>
+            <Field label="Previsão de entrega">
+              <input value={form.deliveryDate} onChange={(e) => set("deliveryDate", e.target.value)} placeholder="Ex: Dez/2026 ou Pronto" className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} />
+            </Field>
+          </div>
 
           {/* Localização */}
           <div className="text-xs font-semibold pt-1" style={{ color: "var(--muted-foreground)" }}>LOCALIZAÇÃO</div>

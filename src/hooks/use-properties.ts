@@ -25,6 +25,7 @@ export interface Property {
   bedrooms?: number | null;
   parkingSpots?: number | null;
   amenities?: string[] | null;
+  deliveryDate?: string | null;
   imageUrl?: string | null;
   photos?: string[] | null;
   active?: boolean;
