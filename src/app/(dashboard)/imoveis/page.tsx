@@ -116,7 +116,8 @@ export default function ImoveisPage() {
   const { data: properties, isLoading } = useProperties(search);
   const deleteP = useDeleteProperty();
   const user = getStoredUser();
-  const isManager = !!user && user.role !== "corretor";
+  // Só o Diretor cadastra/edita/exclui imóveis; os demais apenas visualizam.
+  const isManager = !!user && user.role === "diretor";
 
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Property | null>(null);
