@@ -2,7 +2,7 @@
 
 import { Header } from "@/components/layout/header";
 import { useEffect, useState } from "react";
-import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2, Upload, Check, X, KeyRound } from "lucide-react";
+import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2, Upload, Check, X, KeyRound, UserX } from "lucide-react";
 import { useRef } from "react";
 import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
@@ -10,7 +10,7 @@ import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useUpdateProfile, useUploadAvatar, avatarUrl } from "@/hooks/use-profile";
 import { useMe, useSetRecoveryCode } from "@/hooks/use-recovery";
 import { useKnowledge, useCreateKnowledge, useDeleteKnowledge, useUploadKnowledge } from "@/hooks/use-knowledge";
-import { useUsers, useCreateUser, useDeactivateUser, useActivateUser, useResetPassword, usePendingUsers, useApproveUser, useRejectUser } from "@/hooks/use-users";
+import { useUsers, useCreateUser, useDeactivateUser, useActivateUser, useDeleteUser, useResetPassword, usePendingUsers, useApproveUser, useRejectUser } from "@/hooks/use-users";
 import type { UserRole } from "@/types";
 
 const tabs = [
@@ -574,14 +574,25 @@ function UsersManager() {
   const create = useCreateUser();
   const deactivate = useDeactivateUser();
   const activate = useActivateUser();
+  const del = useDeleteUser();
   const resetPw = useResetPassword();
   const [feedback, setFeedback] = useState("");
+  const me = getStoredUser();
+  const isDiretor = (me as any)?.role === "diretor";
 
   const handleReset = (u: { id: string; name: string }) => {
     if (!window.confirm(`Redefinir a senha de ${u.name} para a padrão (123456789)? A pessoa criará uma nova no próximo acesso.`)) return;
     resetPw.mutate(u.id, {
       onSuccess: (d) => setFeedback(d.message),
       onError: (err) => setFeedback(getApiErrorMessage(err, "Falha ao redefinir a senha.")),
+    });
+  };
+
+  const handleDelete = (u: { id: string; name: string }) => {
+    if (!window.confirm(`EXCLUIR ${u.name} de vez? Remove o usuário permanentemente (os leads dele ficam sem responsável). Não dá para desfazer.`)) return;
+    del.mutate(u.id, {
+      onSuccess: () => setFeedback(`${u.name} excluído.`),
+      onError: (err) => setFeedback(getApiErrorMessage(err, "Falha ao excluir o usuário.")),
     });
   };
   const [showForm, setShowForm] = useState(false);
@@ -707,6 +718,17 @@ function UsersManager() {
                 title="Ativar"
               >
                 <Check size={14} /> Ativar
+              </button>
+            )}
+            {isDiretor && u.role !== "diretor" && u.id !== (me as any)?.id && (
+              <button
+                onClick={() => handleDelete(u)}
+                disabled={del.isPending}
+                className="text-xs px-3 py-1.5 rounded-lg font-medium inline-flex items-center gap-1.5 disabled:opacity-50"
+                style={{ background: "#ef4444", color: "white" }}
+                title="Excluir de vez"
+              >
+                <UserX size={14} /> Excluir
               </button>
             )}
           </div>

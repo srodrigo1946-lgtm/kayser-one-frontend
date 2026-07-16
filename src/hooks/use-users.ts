@@ -41,6 +41,18 @@ export function useDeactivateUser() {
   });
 }
 
+// Exclui o usuário DE VEZ (só Diretor no backend).
+export function useDeleteUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.delete(`/users/${id}/permanent`);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["users"] }),
+  });
+}
+
 export function useActivateUser() {
   const qc = useQueryClient();
   return useMutation({
