@@ -23,6 +23,7 @@ import {
   Megaphone,
   FolderUp,
   LifeBuoy,
+  Table,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { getStoredUser, logout } from "@/lib/auth";
@@ -45,6 +46,7 @@ const navItems = [
   { href: "/metas", label: "Metas", icon: Target },
   { href: "/ranking", label: "Ranking", icon: Trophy },
   { href: "/relatorios", label: "Relatórios", icon: BarChart3 },
+  { href: "/tabela-riva", label: "Tabela Riva", icon: Table },
   { href: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
