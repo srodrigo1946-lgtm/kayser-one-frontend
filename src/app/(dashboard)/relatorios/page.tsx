@@ -105,6 +105,19 @@ export default function RelatoriosPage() {
             </table>
           </div>
         </div>
+
+        {/* Relatório do Looker Studio (Google Data Studio) — embed nativo por iframe.
+            Requer "Ativar incorporação" no relatório. */}
+        <div className="rounded-2xl border p-5" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+          <h3 className="font-semibold mb-4" style={{ color: "var(--foreground)" }}>Relatório Looker Studio</h3>
+          <iframe
+            title="Relatório Looker Studio"
+            src="https://lookerstudio.google.com/embed/reporting/73d40acf-7aeb-4f53-8993-299ae9c27e6f/page/p_zivhebprhd"
+            className="w-full rounded-xl border"
+            style={{ height: 720, borderColor: "var(--border)" }}
+            allowFullScreen
+          />
+        </div>
       </div>
     </div>
   );
