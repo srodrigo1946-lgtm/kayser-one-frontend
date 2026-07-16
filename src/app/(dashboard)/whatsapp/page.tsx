@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/header";
 import { Search, Send, Bot, QrCode, Loader2 } from "lucide-react";
 import { api, getApiErrorMessage, API_URL } from "@/lib/api";
@@ -57,6 +57,22 @@ export default function WhatsAppPage() {
   const [search, setSearch] = useState("");
   const [qr, setQr] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
+
+  // Deep-link vindo do card do lead (/whatsapp?lead=<id>&phone=<tel>): abre a conversa.
+  useEffect(() => {
+    if (selectedId || !conversations) return;
+    const params = new URLSearchParams(window.location.search);
+    const leadP = params.get("lead");
+    const phoneP = (params.get("phone") || "").replace(/\D/g, "");
+    let conv: ConversationItem | undefined;
+    if (leadP) conv = conversations.find((c) => c.leadId === leadP);
+    if (!conv && phoneP.length >= 6) {
+      const tail = phoneP.slice(-8);
+      conv = conversations.find((c) => (c.remoteJid || "").replace(/\D/g, "").includes(tail));
+    }
+    if (conv) setSelectedId(conv.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversations]);
 
   const list = (conversations ?? []).filter((c) =>
     (c.lead?.name || c.contactName || c.remoteJid || "").toLowerCase().includes(search.toLowerCase())

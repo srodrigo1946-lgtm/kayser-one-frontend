@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import { formatDate } from "@/lib/utils";
 import { getApiErrorMessage } from "@/lib/api";
@@ -76,6 +77,13 @@ export default function LeadsPage() {
   const [feedback, setFeedback] = useState<string>("");
   const [detailLead, setDetailLead] = useState<Lead | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+
+  // Abre a conversa do WhatsApp do lead (pela página do WhatsApp, deep-link).
+  const abrirWhatsapp = (lead: { id: string; whatsapp?: string; phone?: string }) => {
+    const phone = lead.whatsapp || lead.phone || "";
+    router.push(`/whatsapp?lead=${lead.id}&phone=${encodeURIComponent(phone)}`);
+  };
 
   // Inicializa a busca a partir de ?q= (vindo da busca global ⌘K).
   useEffect(() => {
@@ -293,11 +301,12 @@ export default function LeadsPage() {
                         >
                           <Eye size={14} />
                         </button>
-                        {lead.whatsapp && (
+                        {(lead.whatsapp || lead.phone) && (
                           <button
+                            onClick={() => abrirWhatsapp(lead)}
                             className="w-7 h-7 rounded-lg flex items-center justify-center"
                             style={{ color: "#22c55e" }}
-                            title="WhatsApp"
+                            title="Abrir conversa do WhatsApp"
                           >
                             <MessageSquare size={14} />
                           </button>
