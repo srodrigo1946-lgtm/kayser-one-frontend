@@ -26,6 +26,7 @@ import {
   Home,
   Ruler,
   Layers,
+  ExternalLink,
 } from "lucide-react";
 
 const typeLabels: Record<string, string> = {
@@ -92,8 +93,14 @@ function fileToDataUrl(file: File, max = 1280, quality = 0.82): Promise<string> 
   });
 }
 
+// imageUrl é usado tanto como "capa" (imagem) quanto como link externo do site.
+// Só serve de imagem se parecer uma imagem — senão vira só o link "Ver no site".
+function isImageUrl(u?: string | null): boolean {
+  return !!u && (u.startsWith("data:image") || /\.(jpe?g|png|webp|gif|avif|svg)(\?|#|$)/i.test(u));
+}
+
 function cover(p: Property): string | null {
-  return (p.photos && p.photos[0]) || p.imageUrl || null;
+  return (p.photos && p.photos[0]) || (isImageUrl(p.imageUrl) ? (p.imageUrl as string) : null);
 }
 
 export default function ImoveisPage() {
@@ -234,6 +241,18 @@ export default function ImoveisPage() {
                     {p.parkingSpots ? <span className="flex items-center gap-1"><Layers size={12} /> {p.parkingSpots} vaga(s)</span> : null}
                     {p.areaMin ? <span className="flex items-center gap-1"><Ruler size={12} /> {p.areaMin} m²</span> : null}
                   </div>
+
+                  {p.imageUrl && (
+                    <a
+                      href={p.imageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 mt-3 text-xs font-medium"
+                      style={{ color: "var(--primary)" }}
+                    >
+                      <ExternalLink size={13} /> Ver no site
+                    </a>
+                  )}
                 </div>
               </div>
             );
