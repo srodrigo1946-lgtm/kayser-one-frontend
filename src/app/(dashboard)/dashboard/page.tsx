@@ -3,12 +3,14 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getStoredUser } from "@/lib/auth";
+import { Bot, MessageCircle } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { SalesChart, ConversionChart } from "@/components/dashboard/sales-chart";
 import {
   useDashboardMetrics,
   useRanking,
+  useFollowups,
 } from "@/hooks/use-dashboard";
 import { useKanbanBoard } from "@/hooks/use-kanban";
 import type { DashboardMetrics } from "@/types";
@@ -36,7 +38,29 @@ export default function DashboardPage() {
 
   const { data: metrics } = useDashboardMetrics();
   const { data: ranking } = useRanking();
+  const { data: followups } = useFollowups();
   const { data: board } = useKanbanBoard();
+
+  const abrirConversa = (f: { leadId: string; phone: string }) => {
+    const params = new URLSearchParams();
+    if (f.leadId) params.set("lead", f.leadId);
+    if (f.phone) params.set("phone", f.phone);
+    router.push(`/whatsapp?${params.toString()}`);
+  };
+
+  const quando = (iso: string) => {
+    const d = new Date(iso);
+    const diff = Date.now() - d.getTime();
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return "agora";
+    if (min < 60) return `há ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `há ${h}h`;
+    const dias = Math.floor(h / 24);
+    if (dias === 1) return "ontem";
+    if (dias < 7) return `há ${dias} dias`;
+    return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  };
 
   // Funil segue as colunas do Kanban (contagem real de leads por etapa)
   const funnel = (board ?? []).map((col) => ({
@@ -63,7 +87,60 @@ export default function DashboardPage() {
       <Header title="Dashboard" subtitle={`Hoje é ${today}`} />
 
       <div className="p-6 space-y-6">
-        <StatsCards metrics={statsMetrics} />
+        <StatsCards
+          metrics={statsMetrics}
+          followupsSemana={followups?.semana}
+          followupsHoje={followups?.hoje}
+        />
+
+        {/* Follow-ups automáticos da IA — clique para abrir a conversa */}
+        <div
+          className="rounded-2xl border p-5"
+          style={{ background: "var(--card)", borderColor: "var(--border)" }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold flex items-center gap-2" style={{ color: "var(--foreground)" }}>
+              <Bot size={18} style={{ color: "#a855f7" }} /> Follow-ups automáticos da IA
+            </h3>
+            <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+              Clique para abrir a conversa
+            </span>
+          </div>
+          <div className="space-y-1">
+            {(followups?.items ?? []).map((f) => (
+              <button
+                key={f.id}
+                onClick={() => abrirConversa(f)}
+                className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-colors hover:opacity-90"
+                style={{ background: "var(--secondary)" }}
+              >
+                <div
+                  className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: "#a855f722", color: "#a855f7" }}
+                >
+                  <Bot size={16} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
+                    {f.nome || "Lead sem nome"}
+                  </div>
+                  <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>
+                    {f.phone || "sem telefone"}
+                  </div>
+                </div>
+                <span className="text-xs whitespace-nowrap" style={{ color: "var(--muted-foreground)" }}>
+                  {quando(f.at)}
+                </span>
+                <MessageCircle size={16} style={{ color: "#25d366" }} />
+              </button>
+            ))}
+            {(followups?.items ?? []).length === 0 && (
+              <div className="py-6 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
+                A IA ainda não disparou follow-ups.
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="grid lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">

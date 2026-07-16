@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, TrendingUp, Eye, ShoppingBag, Clock, AlertCircle } from "lucide-react";
+import { Users, TrendingUp, Eye, ShoppingBag, Clock, AlertCircle, Bot } from "lucide-react";
 import type { DashboardMetrics } from "@/types";
 
 interface StatCardProps {
@@ -70,7 +70,15 @@ function StatCard({ title, value, subtitle, icon, trend, color, danger }: StatCa
   );
 }
 
-export function StatsCards({ metrics }: { metrics: DashboardMetrics }) {
+export function StatsCards({
+  metrics,
+  followupsSemana,
+  followupsHoje,
+}: {
+  metrics: DashboardMetrics;
+  followupsSemana?: number;
+  followupsHoje?: number;
+}) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
@@ -127,6 +135,13 @@ export function StatsCards({ metrics }: { metrics: DashboardMetrics }) {
         icon={<AlertCircle size={20} />}
         color="#f97316"
         danger
+      />
+      <StatCard
+        title="Follow-ups IA"
+        value={followupsSemana ?? 0}
+        subtitle={`${followupsHoje ?? 0} hoje · últimos 7 dias`}
+        icon={<Bot size={20} />}
+        color="#a855f7"
       />
     </div>
   );

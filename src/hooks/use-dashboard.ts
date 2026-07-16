@@ -81,6 +81,31 @@ export function useChampion(year: number, month?: number) {
   });
 }
 
+export interface FollowupItem {
+  id: string;
+  leadId: string;
+  nome: string;
+  phone: string;
+  at: string;
+}
+
+export interface FollowupsResponse {
+  items: FollowupItem[];
+  semana: number;
+  hoje: number;
+}
+
+// Follow-ups automáticos que a IA disparou (nome/telefone/quando + clicar p/ conversa).
+export function useFollowups() {
+  return useQuery({
+    queryKey: ["dashboard", "followups"],
+    queryFn: async () => {
+      const { data } = await api.get<FollowupsResponse>("/dashboard/followups");
+      return data;
+    },
+  });
+}
+
 export function useRanking() {
   return useQuery({
     queryKey: ["dashboard", "ranking"],
