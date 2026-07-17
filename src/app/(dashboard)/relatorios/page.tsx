@@ -9,7 +9,6 @@ import {
   useRanking,
 } from "@/hooks/use-dashboard";
 import { useKanbanBoard } from "@/hooks/use-kanban";
-import { exportLeads } from "@/hooks/use-leads";
 
 const roleLabels: Record<string, string> = {
   superintendente: "Superintendente",
@@ -38,13 +37,45 @@ export default function RelatoriosPage() {
     { label: "Conversão", value: `${(metrics?.conversao ?? 0).toFixed(1)}%`, color: "#8b5cf6" },
   ];
 
+  // Exporta o que está NA TELA (KPIs + Desempenho por Corretor) como CSV que abre no Excel.
+  const exportarExcel = () => {
+    const sep = ";";
+    const q = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const linhas: string[] = [];
+    linhas.push("Relatório - Kayser One");
+    linhas.push(`Gerado em${sep}${q(new Date().toLocaleString("pt-BR"))}`);
+    linhas.push("");
+    linhas.push(`Leads no mês${sep}${metrics?.leadsMes ?? 0}`);
+    linhas.push(`Visitas${sep}${metrics?.visitas ?? 0}`);
+    linhas.push(`Vendas${sep}${metrics?.vendas ?? 0}`);
+    linhas.push(`Conversão${sep}${(metrics?.conversao ?? 0).toFixed(1)}%`);
+    linhas.push("");
+    linhas.push(["Corretor", "Cargo", "Leads", "Vendas", "Conversão"].map(q).join(sep));
+    (ranking ?? []).forEach((r) => {
+      const vendas = Number(r.vendas) || 0;
+      const leads = Number(r.leads) || 0;
+      const conv = leads > 0 ? ((vendas / leads) * 100).toFixed(1) : "0.0";
+      linhas.push([r.nome || "Sem responsável", roleLabels[r.role ?? ""] ?? r.role ?? "", leads, vendas, `${conv}%`].map(q).join(sep));
+    });
+    const csv = "﻿" + linhas.join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "relatorio-kayser-one.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div>
       <Header title="Relatórios" subtitle="Análise completa do desempenho comercial" />
       <div className="p-6 space-y-6">
         <div className="flex justify-end gap-2 no-print">
           <button
-            onClick={() => exportLeads()}
+            onClick={exportarExcel}
             className="flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium"
             style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
           >
