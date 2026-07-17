@@ -8,7 +8,7 @@ import { ExternalLink, Table } from "lucide-react";
 // Incorporar → Ativar incorporação.
 const RELATORIOS = [
   {
-    nome: "Grupo Direcional",
+    nome: "Direcional",
     url: "https://lookerstudio.google.com/reporting/a6fcbf8c-bea2-49f6-acbf-a1ab85900b07/page/p_ly5biwnrhd",
   },
   {
@@ -20,7 +20,7 @@ const RELATORIOS = [
 export default function GrupoDirecionalPage() {
   return (
     <div>
-      <Header title="Grupo Direcional" subtitle="Relatórios (Looker Studio)" />
+      <Header title="Direcional" subtitle="Relatórios (Looker Studio)" />
       <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {RELATORIOS.map((r) => (
           <div
