@@ -2,12 +2,14 @@
 
 import { Header } from "@/components/layout/header";
 import { SalesChart, ConversionChart } from "@/components/dashboard/sales-chart";
-import { TrendingUp, Download } from "lucide-react";
+import { FollowupsPanel } from "@/components/dashboard/followups-panel";
+import { TrendingUp, Download, FileSpreadsheet } from "lucide-react";
 import {
   useDashboardMetrics,
   useRanking,
 } from "@/hooks/use-dashboard";
 import { useKanbanBoard } from "@/hooks/use-kanban";
+import { exportLeads } from "@/hooks/use-leads";
 
 const roleLabels: Record<string, string> = {
   superintendente: "Superintendente",
@@ -40,7 +42,15 @@ export default function RelatoriosPage() {
     <div>
       <Header title="Relatórios" subtitle="Análise completa do desempenho comercial" />
       <div className="p-6 space-y-6">
-        <div className="flex justify-end no-print">
+        <div className="flex justify-end gap-2 no-print">
+          <button
+            onClick={() => exportLeads()}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium"
+            style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+          >
+            <FileSpreadsheet size={16} />
+            Exportar Excel
+          </button>
           <button
             onClick={() => window.print()}
             className="flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium"
@@ -105,6 +115,8 @@ export default function RelatoriosPage() {
             </table>
           </div>
         </div>
+
+        <FollowupsPanel />
       </div>
     </div>
   );
