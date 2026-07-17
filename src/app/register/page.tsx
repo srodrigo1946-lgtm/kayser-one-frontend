@@ -8,12 +8,13 @@ import { api, getApiErrorMessage } from "@/lib/api";
 
 type Role = "superintendente" | "gerente_geral" | "gerente" | "corretor";
 
-// Cargo do gestor que cada cargo deve escolher (nível imediatamente acima).
-const MANAGER_LABEL: Record<Role, string> = {
-  superintendente: "Diretor",
-  gerente_geral: "Superintendente",
-  gerente: "Gerente Geral",
-  corretor: "Gerente",
+// Rótulo do cargo (para mostrar ao lado do nome do gestor).
+const ROLE_NAME: Record<string, string> = {
+  diretor: "Diretor",
+  superintendente: "Superintendente",
+  gerente_geral: "Gerente Geral",
+  gerente: "Gerente",
+  corretor: "Corretor",
 };
 
 const ROLE_OPTIONS: { value: Role; label: string }[] = [
@@ -68,7 +69,7 @@ export default function RegisterPage() {
       return;
     }
     if (!managerId) {
-      setError(`Selecione seu ${MANAGER_LABEL[role]}.`);
+      setError("Selecione seu gestor.");
       return;
     }
     setLoading(true);
@@ -139,18 +140,21 @@ export default function RegisterPage() {
 
           <div>
             <label className="block text-sm font-medium mb-2" style={{ color: "var(--foreground)" }}>
-              Seu {MANAGER_LABEL[role]} (a quem você responde)
+              Seu gestor (a quem você responde)
             </label>
             <input
               value={managerSearch}
               onChange={(e) => setManagerSearch(e.target.value)}
-              placeholder={`Buscar ${MANAGER_LABEL[role]} pelo nome...`}
+              placeholder="Buscar gestor pelo nome..."
               className="w-full px-4 py-3 rounded-xl border text-sm outline-none mb-2"
               style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
             />
+            <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>
+              Escolha seu chefe direto. Se ele ainda não se cadastrou, selecione o <b>Diretor</b> por enquanto — depois o gestor certo é ajustado.
+            </p>
             {managers.length === 0 ? (
               <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-                Nenhum {MANAGER_LABEL[role]} cadastrado ainda. Peça para ele(a) se cadastrar primeiro.
+                Nenhum gestor disponível ainda.
               </p>
             ) : (
               <div className="max-h-40 overflow-y-auto rounded-xl border" style={{ borderColor: "var(--border)" }}>
@@ -159,14 +163,15 @@ export default function RegisterPage() {
                     key={m.id}
                     type="button"
                     onClick={() => setManagerId(m.id)}
-                    className="w-full text-left px-4 py-2.5 text-sm border-b last:border-b-0"
+                    className="w-full text-left px-4 py-2.5 text-sm border-b last:border-b-0 flex items-center justify-between gap-2"
                     style={{
                       borderColor: "var(--border)",
                       background: managerId === m.id ? "var(--primary)" : "transparent",
                       color: managerId === m.id ? "white" : "var(--foreground)",
                     }}
                   >
-                    {m.name}
+                    <span>{m.name}</span>
+                    <span className="text-xs" style={{ opacity: 0.7 }}>{ROLE_NAME[m.role] || m.role}</span>
                   </button>
                 ))}
                 {filteredManagers.length === 0 && (

@@ -31,6 +31,17 @@ export function useCreateUser() {
   });
 }
 
+export function useUpdateUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...payload }: { id: string; managerId?: string | null; role?: UserRole; name?: string }) => {
+      const { data } = await api.put(`/users/${id}`, payload);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["users"] }),
+  });
+}
+
 export function useDeactivateUser() {
   const qc = useQueryClient();
   return useMutation({

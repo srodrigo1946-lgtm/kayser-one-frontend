@@ -10,7 +10,7 @@ import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useUpdateProfile, useUploadAvatar, avatarUrl } from "@/hooks/use-profile";
 import { useMe, useSetRecoveryCode } from "@/hooks/use-recovery";
 import { useKnowledge, useCreateKnowledge, useDeleteKnowledge, useUploadKnowledge } from "@/hooks/use-knowledge";
-import { useUsers, useCreateUser, useDeactivateUser, useActivateUser, useDeleteUser, useResetPassword, usePendingUsers, useApproveUser, useRejectUser } from "@/hooks/use-users";
+import { useUsers, useCreateUser, useUpdateUser, useDeactivateUser, useActivateUser, useDeleteUser, useResetPassword, usePendingUsers, useApproveUser, useRejectUser } from "@/hooks/use-users";
 import type { UserRole } from "@/types";
 
 const tabs = [
@@ -572,6 +572,7 @@ function PendingApprovals() {
 function UsersManager() {
   const { data: users } = useUsers();
   const create = useCreateUser();
+  const update = useUpdateUser();
   const deactivate = useDeactivateUser();
   const activate = useActivateUser();
   const del = useDeleteUser();
@@ -687,6 +688,20 @@ function UsersManager() {
               <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>{u.email}</div>
             </div>
             <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: "var(--card)", color: "var(--primary)" }}>{roleLabels[u.role] ?? u.role}</span>
+            {isDiretor && u.role !== "diretor" && (
+              <select
+                value={(u as any).managerId ?? ""}
+                onChange={(e) => update.mutate({ id: u.id, managerId: e.target.value || null })}
+                title="Chefe (a quem responde)"
+                className="text-xs px-2 py-1.5 rounded-lg border outline-none max-w-[160px]"
+                style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+              >
+                <option value="">Sem chefe (topo)</option>
+                {(users ?? []).filter((o) => o.id !== u.id).map((o) => (
+                  <option key={o.id} value={o.id}>{o.name} — {roleLabels[o.role] ?? o.role}</option>
+                ))}
+              </select>
+            )}
             <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: u.active ? "#22c55e18" : "var(--border)", color: u.active ? "#22c55e" : "var(--muted-foreground)" }}>
               {u.active ? "Ativo" : "Inativo"}
             </span>
