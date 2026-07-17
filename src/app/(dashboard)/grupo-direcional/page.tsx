@@ -20,7 +20,7 @@ const RELATORIOS = [
 export default function GrupoDirecionalPage() {
   return (
     <div>
-      <Header title="Direcional" subtitle="Relatórios (Looker Studio)" />
+      <Header title="Grupo Direcional" subtitle="Relatórios (Looker Studio)" />
       <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {RELATORIOS.map((r) => (
           <div
