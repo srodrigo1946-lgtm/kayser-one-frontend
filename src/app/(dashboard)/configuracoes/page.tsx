@@ -28,6 +28,15 @@ const roleLabels: Record<string, string> = {
   corretor: "Corretor",
 };
 
+// Nível na hierarquia (maior = mais alto). Um chefe válido tem nível acima do subordinado.
+const ROLE_RANK: Record<string, number> = {
+  diretor: 5,
+  superintendente: 4,
+  gerente_geral: 3,
+  gerente: 2,
+  corretor: 1,
+};
+
 export default function ConfiguracoesPage() {
   const [activeTab, setActiveTab] = useState("perfil");
 
@@ -697,9 +706,11 @@ function UsersManager() {
                 style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
               >
                 <option value="">Sem chefe (topo)</option>
-                {(users ?? []).filter((o) => o.id !== u.id).map((o) => (
-                  <option key={o.id} value={o.id}>{o.name} — {roleLabels[o.role] ?? o.role}</option>
-                ))}
+                {(users ?? [])
+                  .filter((o) => o.id !== u.id && (ROLE_RANK[o.role] ?? 0) > (ROLE_RANK[u.role] ?? 0))
+                  .map((o) => (
+                    <option key={o.id} value={o.id}>{o.name} — {roleLabels[o.role] ?? o.role}</option>
+                  ))}
               </select>
             )}
             <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: u.active ? "#22c55e18" : "var(--border)", color: u.active ? "#22c55e" : "var(--muted-foreground)" }}>
