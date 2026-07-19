@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import type { Lead, KanbanColumn } from "@/types";
 import { MessageSquare, Plus, Trash2, Settings2, ChevronLeft, ChevronRight } from "lucide-react";
@@ -22,12 +23,14 @@ function LeadCard({
   onOpen,
   podeExcluir,
   onExcluir,
+  onWhatsapp,
 }: {
   lead: Lead;
   onDragStart: (lead: Lead) => void;
   onOpen: (lead: Lead) => void;
   podeExcluir: boolean;
   onExcluir: (lead: Lead) => void;
+  onWhatsapp: (lead: Lead) => void;
 }) {
   const score = lead.score || 0;
   const scoreColor = score >= 80 ? "#22c55e" : score >= 60 ? "#f59e0b" : "#ef4444";
@@ -69,10 +72,16 @@ function LeadCard({
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
-          {lead.whatsapp && (
-            <span className="w-5 h-5 rounded flex items-center justify-center" style={{ background: "#22c55e18", color: "#22c55e" }}>
+          {(lead.whatsapp || lead.phone) && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onWhatsapp(lead); }}
+              className="w-5 h-5 rounded flex items-center justify-center"
+              style={{ background: "#22c55e18", color: "#22c55e" }}
+              title="Abrir conversa no WhatsApp"
+              aria-label="Abrir conversa no WhatsApp"
+            >
               <MessageSquare size={11} />
-            </span>
+            </button>
           )}
           {lead.origem && (
             <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}>
@@ -167,6 +176,15 @@ export default function KanbanPage() {
   const [editMode, setEditMode] = useState(false);
   const [detailLead, setDetailLead] = useState<Lead | null>(null);
 
+  // Abrir a conversa do lead no WhatsApp (todos os cargos) — mesmo deep-link da tela de Leads.
+  const router = useRouter();
+  const abrirWhatsapp = (lead: Lead) => {
+    const fone = (lead.whatsapp || lead.phone || "").replace(/\D/g, "");
+    const params = new URLSearchParams({ lead: lead.id });
+    if (fone) params.set("phone", fone);
+    router.push(`/whatsapp?${params.toString()}`);
+  };
+
   // Excluir lead pelo card: só o Diretor (usa o isDiretor já declarado abaixo).
   const excluirLead = useDeleteLead();
   const confirmarExcluir = (lead: Lead) => {
@@ -259,7 +277,7 @@ export default function KanbanPage() {
 
               <div className="flex-1 p-2 space-y-2 overflow-y-auto">
                 {col.leads.map((lead) => (
-                  <LeadCard key={lead.id} lead={lead} onDragStart={setDragging} onOpen={setDetailLead} podeExcluir={isDiretor} onExcluir={confirmarExcluir} />
+                  <LeadCard key={lead.id} lead={lead} onDragStart={setDragging} onOpen={setDetailLead} podeExcluir={isDiretor} onExcluir={confirmarExcluir} onWhatsapp={abrirWhatsapp} />
                 ))}
                 {col.leads.length === 0 && (
                   <div className="text-xs text-center py-8 rounded-xl border-2 border-dashed" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
