@@ -42,15 +42,31 @@ function proxima() {
 
 export default function ReunioesPage() {
   const { data: meetings = [], isLoading } = useMeetings();
+  const del = useDeleteMeeting();
   const [openId, setOpenId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [feedback, setFeedback] = useState("");
+
+  const excluir = (m: Meeting) => {
+    if (!window.confirm(`Excluir a reunião "${m.title}"? Ela sai da agenda de todos.`)) return;
+    del.mutate(m.id, {
+      onError: (err) => setFeedback(getApiErrorMessage(err, "Falha ao excluir a reunião.")),
+    });
+  };
 
   const active = meetings.find((m) => m.id === openId) || null;
 
   if (active) {
     return <MeetingRoom meeting={active} onBack={() => setOpenId(null)} />;
   }
+
+  // Separa em Próximas (ainda não terminaram) e Histórico (já passaram).
+  const agora = Date.now();
+  const fim = (m: Meeting) => new Date(m.scheduledAt).getTime() + (m.durationMin || 90) * 60000;
+  const proximas = meetings
+    .filter((m) => fim(m) >= agora)
+    .sort((a, b) => +new Date(a.scheduledAt) - +new Date(b.scheduledAt));
+  const historico = meetings.filter((m) => fim(m) < agora);
 
   return (
     <div>
@@ -79,31 +95,9 @@ export default function ReunioesPage() {
             Nenhuma reunião ainda. Clique em “Nova reunião”.
           </div>
         ) : (
-          <div className="space-y-2">
-            {meetings.map((m) => {
-              const st = STATUS[m.status] ?? STATUS.agendada;
-              return (
-                <button
-                  key={m.id}
-                  onClick={() => setOpenId(m.id)}
-                  className="w-full flex items-center gap-4 p-4 rounded-2xl border text-left"
-                  style={{ background: "var(--card)", borderColor: "var(--border)" }}
-                >
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#3b82f622", color: "#3b82f6" }}>
-                    <Video size={20} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold truncate" style={{ color: "var(--foreground)" }}>{m.title}</div>
-                    <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-                      {quando(m.scheduledAt)} · {m.durationMin} min · {(m.participantIds?.length ?? 0)} participante(s)
-                    </div>
-                  </div>
-                  <span className="text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap" style={{ background: `${st.color}22`, color: st.color }}>
-                    {st.label}
-                  </span>
-                </button>
-              );
-            })}
+          <div className="space-y-6">
+            <Secao titulo="Próximas reuniões" lista={proximas} vazio="Nenhuma reunião marcada." onOpen={setOpenId} />
+            <Secao titulo="Histórico" lista={historico} vazio="Nenhuma reunião passada ainda." onOpen={setOpenId} />
           </div>
         )}
       </div>
@@ -116,6 +110,58 @@ export default function ReunioesPage() {
         />
       )}
     </div>
+  );
+}
+
+/* ---------------- Seção da lista (Próximas / Histórico) ---------------- */
+function Secao({
+  titulo,
+  lista,
+  vazio,
+  onOpen,
+}: {
+  titulo: string;
+  lista: Meeting[];
+  vazio: string;
+  onOpen: (id: string) => void;
+}) {
+  return (
+    <div>
+      <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--muted-foreground)" }}>
+        {titulo} {lista.length > 0 && <span style={{ opacity: 0.6 }}>· {lista.length}</span>}
+      </h3>
+      {lista.length === 0 ? (
+        <p className="text-xs py-2" style={{ color: "var(--muted-foreground)" }}>{vazio}</p>
+      ) : (
+        <div className="space-y-2">
+          {lista.map((m) => <MeetingRow key={m.id} m={m} onOpen={onOpen} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MeetingRow({ m, onOpen }: { m: Meeting; onOpen: (id: string) => void }) {
+  const st = STATUS[m.status] ?? STATUS.agendada;
+  return (
+    <button
+      onClick={() => onOpen(m.id)}
+      className="w-full flex items-center gap-4 p-4 rounded-2xl border text-left"
+      style={{ background: "var(--card)", borderColor: "var(--border)" }}
+    >
+      <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#3b82f622", color: "#3b82f6" }}>
+        <Video size={20} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="font-semibold truncate" style={{ color: "var(--foreground)" }}>{m.title}</div>
+        <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+          {quando(m.scheduledAt)} · {m.durationMin} min · {(m.participantIds?.length ?? 0)} participante(s)
+        </div>
+      </div>
+      <span className="text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap" style={{ background: `${st.color}22`, color: st.color }}>
+        {st.label}
+      </span>
+    </button>
   );
 }
 
