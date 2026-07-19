@@ -11,6 +11,7 @@ import {
   type Meeting,
 } from "@/hooks/use-meetings";
 import { useUsers } from "@/hooks/use-users";
+import { getStoredUser } from "@/lib/auth";
 import { Video, Plus, X, Trash2, Copy, ArrowLeft, Users, Check, Loader2 } from "lucide-react";
 
 const STATUS: Record<string, { label: string; color: string }> = {
@@ -27,6 +28,23 @@ function quando(iso: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+/**
+ * Monta o link do Jitsi já configurado: entra direto (sem tela de pré-entrada),
+ * câmera e microfone ligados, vídeo 720p e, no celular, abre no navegador
+ * (sem o pop-up "abrir no app"). Se passar o nome, já entra identificado.
+ */
+function joinUrl(link: string, nome?: string) {
+  const cfg = [
+    "config.prejoinPageEnabled=false",
+    "config.startWithAudioMuted=false",
+    "config.startWithVideoMuted=false",
+    "config.disableDeepLinking=true",
+    "config.resolution=720",
+  ];
+  if (nome) cfg.unshift(`userInfo.displayName=${encodeURIComponent(`"${nome}"`)}`);
+  return `${link}#${cfg.join("&")}`;
 }
 
 // Data (YYYY-MM-DD) e hora (HH:mm) da próxima hora cheia, para os inputs nativos.
@@ -191,8 +209,14 @@ function MeetingRoom({ meeting, onBack }: { meeting: Meeting; onBack: () => void
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notes]);
 
+  // Eu entro já identificado; o convidado recebe o link com as mesmas configurações
+  // de som/imagem (só sem o nome, que ele preenche).
+  const meuNome = (getStoredUser() as any)?.name as string | undefined;
+  const meuLink = joinUrl(meeting.link, meuNome);
+  const linkConvidado = joinUrl(meeting.link);
+
   const copyLink = () => {
-    navigator.clipboard.writeText(meeting.link).then(() => {
+    navigator.clipboard.writeText(linkConvidado).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
@@ -240,7 +264,7 @@ function MeetingRoom({ meeting, onBack }: { meeting: Meeting; onBack: () => void
             <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>{quando(meeting.scheduledAt)} · {meeting.durationMin} min</div>
           </div>
           <a
-            href={meeting.link}
+            href={meuLink}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold"
@@ -249,7 +273,7 @@ function MeetingRoom({ meeting, onBack }: { meeting: Meeting; onBack: () => void
             <Video size={18} /> Entrar na reunião
           </a>
           <p className="text-xs max-w-xs" style={{ color: "var(--muted-foreground)" }}>
-            A sala de vídeo abre em uma nova aba (funciona no computador e no celular). Os convidados entram pelo mesmo link.
+            Abre em nova aba com <b>câmera e microfone já ligados</b> e seu nome preenchido. Funciona no computador e no celular.
           </p>
         </div>
 
