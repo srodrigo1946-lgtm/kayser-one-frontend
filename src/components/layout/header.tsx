@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, Moon, Sun, Search, AlertCircle, Clock, UserPlus, Menu, Volume2, VolumeX } from "lucide-react";
 import { somLigado, setSomLigado, tocarBip } from "@/hooks/use-new-lead-alert";
+import { getStoredUser } from "@/lib/auth";
 import { useTheme } from "@/hooks/use-theme";
 import { useAlerts } from "@/hooks/use-alerts";
 import { usePendingUsers } from "@/hooks/use-users";
@@ -20,6 +21,8 @@ export function Header({ title, subtitle }: HeaderProps) {
   const { data: pending } = usePendingUsers();
   const [open, setOpen] = useState(false);
   const [som, setSom] = useState(true);
+  // Só o Diretor liga/desliga o som — o time não pode se silenciar e perder lead.
+  const isDiretor = (getStoredUser() as any)?.role === "diretor";
 
   // Lê a preferência salva (localStorage) só no cliente.
   useEffect(() => setSom(somLigado()), []);
@@ -171,7 +174,8 @@ export function Header({ title, subtitle }: HeaderProps) {
           )}
         </div>
 
-        {/* Som de lead novo */}
+        {/* Som de lead novo — só o Diretor controla */}
+        {isDiretor && (
         <button
           onClick={alternarSom}
           className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
@@ -181,6 +185,7 @@ export function Header({ title, subtitle }: HeaderProps) {
         >
           {som ? <Volume2 size={18} /> : <VolumeX size={18} />}
         </button>
+        )}
 
         {/* Tema */}
         <button
