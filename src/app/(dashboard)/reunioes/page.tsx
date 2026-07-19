@@ -184,19 +184,31 @@ function MeetingRoom({ meeting, onBack }: { meeting: Meeting; onBack: () => void
       </div>
 
       <div className="flex-1 flex flex-col lg:flex-row min-h-0">
-        {/* Vídeo (Jitsi) */}
-        <div className="flex-1 min-h-[50vh] lg:min-h-0" style={{ background: "#000" }}>
-          <iframe
-            title={meeting.title}
-            src={meeting.link}
-            allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
-            className="w-full h-full"
-            style={{ border: 0 }}
-          />
+        {/* Entrar na reunião (abre o Jitsi em nova aba — sem limite de tempo, ótimo no celular) */}
+        <div className="lg:flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "#3b82f622", color: "#3b82f6" }}>
+            <Video size={30} />
+          </div>
+          <div>
+            <div className="font-semibold text-lg" style={{ color: "var(--foreground)" }}>{meeting.title}</div>
+            <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>{quando(meeting.scheduledAt)} · {meeting.durationMin} min</div>
+          </div>
+          <a
+            href={meeting.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold"
+            style={{ background: "var(--primary)", color: "white" }}
+          >
+            <Video size={18} /> Entrar na reunião
+          </a>
+          <p className="text-xs max-w-xs" style={{ color: "var(--muted-foreground)" }}>
+            A sala de vídeo abre em uma nova aba (funciona no computador e no celular). Os convidados entram pelo mesmo link.
+          </p>
         </div>
 
         {/* Anotações */}
-        <div className="w-full lg:w-80 flex flex-col border-t lg:border-t-0 lg:border-l" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+        <div className="flex-1 lg:flex-none w-full lg:w-80 flex flex-col border-t lg:border-t-0 lg:border-l" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
           <div className="px-4 py-3 border-b flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
             <span className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>Anotações</span>
             <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>{saved ? "Salvo ✓" : "Salvando…"}</span>
