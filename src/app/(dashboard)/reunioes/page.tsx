@@ -29,15 +29,15 @@ function quando(iso: string) {
   });
 }
 
-// Valor para <input type="datetime-local"> (hora local, sem timezone).
-function toLocalInput(d: Date) {
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
-}
-function proximaHora() {
+// Data (YYYY-MM-DD) e hora (HH:mm) da próxima hora cheia, para os inputs nativos.
+function proxima() {
   const d = new Date();
   d.setHours(d.getHours() + 1, 0, 0, 0);
-  return toLocalInput(d);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return {
+    data: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`,
+    hora: `${p(d.getHours())}:${p(d.getMinutes())}`,
+  };
 }
 
 export default function ReunioesPage() {
@@ -227,7 +227,8 @@ function MeetingForm({
   const create = useCreateMeeting();
   const { data: users = [] } = useUsers();
   const [title, setTitle] = useState("");
-  const [scheduledAt, setScheduledAt] = useState(proximaHora);
+  const [data, setData] = useState(() => proxima().data);
+  const [hora, setHora] = useState(() => proxima().hora);
   const [durationMin, setDurationMin] = useState(90);
   const [participantIds, setParticipantIds] = useState<string[]>([]);
   const [busca, setBusca] = useState("");
@@ -240,14 +241,14 @@ function MeetingForm({
     setParticipantIds((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
   const submit = async () => {
-    if (!title.trim() || !scheduledAt) {
-      onError("Informe título e data/hora.");
+    if (!title.trim() || !data || !hora) {
+      onError("Informe título, data e hora.");
       return;
     }
     try {
       const m = await create.mutateAsync({
         title: title.trim(),
-        scheduledAt: new Date(scheduledAt).toISOString(),
+        scheduledAt: new Date(`${data}T${hora}`).toISOString(),
         durationMin,
         participantIds,
       });
@@ -275,13 +276,17 @@ function MeetingForm({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs mb-1 block" style={{ color: "var(--muted-foreground)" }}>Data e hora</label>
-              <input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} className={inputCls} style={inputStyle} />
+              <label className="text-xs mb-1 block" style={{ color: "var(--muted-foreground)" }}>Data</label>
+              <input type="date" value={data} onChange={(e) => setData(e.target.value)} className={inputCls} style={inputStyle} />
             </div>
             <div>
-              <label className="text-xs mb-1 block" style={{ color: "var(--muted-foreground)" }}>Duração (min)</label>
-              <input type="number" min={15} value={durationMin} onChange={(e) => setDurationMin(Number(e.target.value))} className={inputCls} style={inputStyle} />
+              <label className="text-xs mb-1 block" style={{ color: "var(--muted-foreground)" }}>Hora</label>
+              <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} className={inputCls} style={inputStyle} />
             </div>
+          </div>
+          <div>
+            <label className="text-xs mb-1 block" style={{ color: "var(--muted-foreground)" }}>Duração (min)</label>
+            <input type="number" min={15} value={durationMin} onChange={(e) => setDurationMin(Number(e.target.value))} className={inputCls} style={inputStyle} />
           </div>
 
           <div>
