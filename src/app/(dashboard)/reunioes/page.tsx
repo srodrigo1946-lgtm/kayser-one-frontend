@@ -258,7 +258,9 @@ function MeetingForm({
     }
   };
 
-  const inputStyle = { background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" };
+  // Campos brancos (bem visíveis no fundo escuro do drawer); colorScheme light deixa
+  // os seletores nativos de data/hora também claros.
+  const inputStyle = { background: "#ffffff", borderColor: "#cbd5e1", color: "#0f172a", colorScheme: "light" as const };
   const inputCls = "w-full px-3 py-2.5 rounded-xl border text-sm outline-none";
 
   return (
