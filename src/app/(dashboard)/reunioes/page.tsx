@@ -29,6 +29,17 @@ function quando(iso: string) {
   });
 }
 
+// Valor para <input type="datetime-local"> (hora local, sem timezone).
+function toLocalInput(d: Date) {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function proximaHora() {
+  const d = new Date();
+  d.setHours(d.getHours() + 1, 0, 0, 0);
+  return toLocalInput(d);
+}
+
 export default function ReunioesPage() {
   const { data: meetings = [], isLoading } = useMeetings();
   const [openId, setOpenId] = useState<string | null>(null);
@@ -216,9 +227,14 @@ function MeetingForm({
   const create = useCreateMeeting();
   const { data: users = [] } = useUsers();
   const [title, setTitle] = useState("");
-  const [scheduledAt, setScheduledAt] = useState("");
+  const [scheduledAt, setScheduledAt] = useState(proximaHora);
   const [durationMin, setDurationMin] = useState(90);
   const [participantIds, setParticipantIds] = useState<string[]>([]);
+  const [busca, setBusca] = useState("");
+
+  const filtrados = (users as any[]).filter((u) =>
+    (u.name || "").toLowerCase().includes(busca.toLowerCase())
+  );
 
   const toggle = (id: string) =>
     setParticipantIds((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
@@ -229,7 +245,12 @@ function MeetingForm({
       return;
     }
     try {
-      const m = await create.mutateAsync({ title: title.trim(), scheduledAt, durationMin, participantIds });
+      const m = await create.mutateAsync({
+        title: title.trim(),
+        scheduledAt: new Date(scheduledAt).toISOString(),
+        durationMin,
+        participantIds,
+      });
       onCreated(m);
     } catch (err) {
       onError(getApiErrorMessage(err, "Falha ao criar reunião."));
@@ -267,11 +288,18 @@ function MeetingForm({
             <label className="text-xs mb-1 flex items-center gap-1.5" style={{ color: "var(--muted-foreground)" }}>
               <Users size={13} /> Participantes do time
             </label>
+            <input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar pessoa pelo nome…"
+              className={`${inputCls} mb-2`}
+              style={inputStyle}
+            />
             <div className="max-h-48 overflow-y-auto rounded-xl border divide-y" style={{ borderColor: "var(--border)" }}>
-              {users.length === 0 && (
-                <p className="text-xs p-3" style={{ color: "var(--muted-foreground)" }}>Nenhum usuário disponível.</p>
+              {filtrados.length === 0 && (
+                <p className="text-xs p-3" style={{ color: "var(--muted-foreground)" }}>Nenhum usuário encontrado.</p>
               )}
-              {users.map((u: any) => (
+              {filtrados.map((u: any) => (
                 <button
                   key={u.id}
                   type="button"
