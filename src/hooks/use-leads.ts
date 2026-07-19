@@ -89,6 +89,7 @@ export function useDeleteLead() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["leads"] });
+      qc.invalidateQueries({ queryKey: ["kanban"] }); // some o card na hora
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });

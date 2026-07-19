@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Header } from "@/components/layout/header";
 import type { Lead, KanbanColumn } from "@/types";
-import { MoreHorizontal, MessageSquare, Plus, Trash2, Settings2, ChevronLeft, ChevronRight } from "lucide-react";
+import { MessageSquare, Plus, Trash2, Settings2, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   useKanbanBoard,
   useMoveCard,
@@ -12,6 +12,7 @@ import {
   useDeleteColumn,
   useReorderColumns,
 } from "@/hooks/use-kanban";
+import { useDeleteLead } from "@/hooks/use-leads";
 import { getStoredUser } from "@/lib/auth";
 import { LeadDetailDrawer } from "@/components/leads/lead-detail-drawer";
 
@@ -19,10 +20,14 @@ function LeadCard({
   lead,
   onDragStart,
   onOpen,
+  podeExcluir,
+  onExcluir,
 }: {
   lead: Lead;
   onDragStart: (lead: Lead) => void;
   onOpen: (lead: Lead) => void;
+  podeExcluir: boolean;
+  onExcluir: (lead: Lead) => void;
 }) {
   const score = lead.score || 0;
   const scoreColor = score >= 80 ? "#22c55e" : score >= 60 ? "#f59e0b" : "#ef4444";
@@ -45,9 +50,17 @@ function LeadCard({
             {lead.name.split(" ").slice(0, 2).join(" ")}
           </div>
         </div>
-        <button style={{ color: "var(--muted-foreground)" }}>
-          <MoreHorizontal size={14} />
-        </button>
+        {podeExcluir && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onExcluir(lead); }}
+            className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
+            style={{ color: "#ef4444" }}
+            title="Excluir lead"
+            aria-label="Excluir lead"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
       </div>
 
       {lead.empreendimento && (
@@ -154,6 +167,14 @@ export default function KanbanPage() {
   const [editMode, setEditMode] = useState(false);
   const [detailLead, setDetailLead] = useState<Lead | null>(null);
 
+  // Excluir lead pelo card: só o Diretor.
+  const excluirLead = useDeleteLead();
+  const isDiretor = (getStoredUser() as any)?.role === "diretor";
+  const confirmarExcluir = (lead: Lead) => {
+    if (!window.confirm(`Excluir o lead "${lead.name}" de vez? Não dá para desfazer.`)) return;
+    excluirLead.mutate(lead.id);
+  };
+
   const user = getStoredUser();
   const isDiretor = user?.role === "diretor";
   const cols = board ?? [];
@@ -239,7 +260,7 @@ export default function KanbanPage() {
 
               <div className="flex-1 p-2 space-y-2 overflow-y-auto">
                 {col.leads.map((lead) => (
-                  <LeadCard key={lead.id} lead={lead} onDragStart={setDragging} onOpen={setDetailLead} />
+                  <LeadCard key={lead.id} lead={lead} onDragStart={setDragging} onOpen={setDetailLead} podeExcluir={isDiretor} onExcluir={confirmarExcluir} />
                 ))}
                 {col.leads.length === 0 && (
                   <div className="text-xs text-center py-8 rounded-xl border-2 border-dashed" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
