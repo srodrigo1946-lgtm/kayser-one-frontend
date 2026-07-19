@@ -36,6 +36,9 @@ export interface ChatMessageItem {
 export function useConversations() {
   return useQuery({
     queryKey: ["conversations"],
+    // Lista de conversas atualiza sozinha a cada 10s (mensagem nova sobe a conversa).
+    refetchInterval: 10000,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const { data } = await api.get<ConversationItem[]>("/conversations");
       return data;
@@ -47,6 +50,10 @@ export function useMessages(conversationId: string | null) {
   return useQuery({
     queryKey: ["conversations", conversationId, "messages"],
     enabled: !!conversationId,
+    // Conversa ABERTA atualiza a cada 4s — o chat parece tempo real. Só roda para
+    // a conversa aberta (enabled), então não pesa.
+    refetchInterval: 4000,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const { data } = await api.get<{ conversation: ConversationItem; messages: ChatMessageItem[] }>(
         `/conversations/${conversationId}/messages`
