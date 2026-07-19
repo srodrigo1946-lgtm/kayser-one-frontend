@@ -47,34 +47,47 @@ export function tocarBip() {
 }
 
 /**
- * Toca um bip quando chega LEAD NOVO. Consulta o lead mais recente a cada 25s
- * (a rota /leads já é escopada por hierarquia, então cada um só é avisado dos
- * leads que são dele/da equipe dele). Não toca na primeira carga.
+ * Toca um bip quando chega LEAD NOVO **ou quando um lead é TRANSFERIDO para você**.
+ * Consulta a cada 25s o lead mais recente + o total do seu escopo (a rota /leads
+ * já é escopada por hierarquia, então cada um só é avisado do que é dele/da equipe):
+ *  - id do mais recente mudou  → lead criado
+ *  - total aumentou            → algo ENTROU no seu escopo (transferência recebida)
+ * Não toca na primeira carga, nem quando um lead sai do seu escopo.
  */
 export function useNewLeadAlert(ativo = true) {
+  const iniciado = useRef(false);
   const ultimoId = useRef<string | null>(null);
+  const ultimoTotal = useRef(0);
 
   const { data } = useQuery({
     queryKey: ["leads-alerta"],
     enabled: ativo,
     refetchInterval: 25000,
     queryFn: async () =>
-      (await api.get<{ data: { id: string; name: string }[] }>("/leads", {
+      (await api.get<{ data: { id: string; name: string }[]; total: number }>("/leads", {
         params: { page: 1, limit: 1 },
       })).data,
   });
 
   useEffect(() => {
-    const novo = data?.data?.[0];
-    if (!novo) return;
+    if (!data) return;
+    const maisRecente = data.data?.[0]?.id ?? null;
+    const total = data.total ?? 0;
+
     // Primeira leitura: só memoriza (senão tocaria ao abrir o sistema).
-    if (ultimoId.current === null) {
-      ultimoId.current = novo.id;
+    if (!iniciado.current) {
+      iniciado.current = true;
+      ultimoId.current = maisRecente;
+      ultimoTotal.current = total;
       return;
     }
-    if (novo.id !== ultimoId.current) {
-      ultimoId.current = novo.id;
-      if (somLigado()) tocarBip();
-    }
+
+    const leadCriado = !!maisRecente && maisRecente !== ultimoId.current;
+    const recebeuTransferencia = total > ultimoTotal.current;
+
+    ultimoId.current = maisRecente ?? ultimoId.current;
+    ultimoTotal.current = total;
+
+    if ((leadCriado || recebeuTransferencia) && somLigado()) tocarBip();
   }, [data]);
 }
