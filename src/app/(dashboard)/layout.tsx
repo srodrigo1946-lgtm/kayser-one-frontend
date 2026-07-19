@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { CommandPalette } from "@/components/command-palette";
 import { isAuthenticated } from "@/lib/auth";
+import { useNewLeadAlert } from "@/hooks/use-new-lead-alert";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +14,8 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const [ready, setReady] = useState(false);
+  // Alerta sonoro quando cai lead novo (só depois de logado).
+  useNewLeadAlert(ready);
 
   useEffect(() => {
     if (!isAuthenticated()) {

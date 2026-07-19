@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Moon, Sun, Search, AlertCircle, Clock, UserPlus, Menu } from "lucide-react";
+import { Bell, Moon, Sun, Search, AlertCircle, Clock, UserPlus, Menu, Volume2, VolumeX } from "lucide-react";
+import { somLigado, setSomLigado, tocarBip } from "@/hooks/use-new-lead-alert";
 import { useTheme } from "@/hooks/use-theme";
 import { useAlerts } from "@/hooks/use-alerts";
 import { usePendingUsers } from "@/hooks/use-users";
@@ -18,6 +19,17 @@ export function Header({ title, subtitle }: HeaderProps) {
   const { data: alerts } = useAlerts();
   const { data: pending } = usePendingUsers();
   const [open, setOpen] = useState(false);
+  const [som, setSom] = useState(true);
+
+  // Lê a preferência salva (localStorage) só no cliente.
+  useEffect(() => setSom(somLigado()), []);
+
+  const alternarSom = () => {
+    const novo = !som;
+    setSom(novo);
+    setSomLigado(novo);
+    if (novo) tocarBip(); // toca uma amostra ao ligar
+  };
 
   const semAtendimento = alerts?.semAtendimento ?? [];
   const semContato = alerts?.semContato ?? [];
@@ -158,6 +170,17 @@ export function Header({ title, subtitle }: HeaderProps) {
             </>
           )}
         </div>
+
+        {/* Som de lead novo */}
+        <button
+          onClick={alternarSom}
+          className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+          style={{ background: "var(--secondary)", color: som ? "var(--primary)" : "var(--muted-foreground)" }}
+          title={som ? "Som de lead novo: LIGADO (clique para desligar)" : "Som de lead novo: desligado (clique para ligar)"}
+          aria-label="Alternar som de lead novo"
+        >
+          {som ? <Volume2 size={18} /> : <VolumeX size={18} />}
+        </button>
 
         {/* Tema */}
         <button
