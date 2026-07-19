@@ -167,9 +167,8 @@ export default function KanbanPage() {
   const [editMode, setEditMode] = useState(false);
   const [detailLead, setDetailLead] = useState<Lead | null>(null);
 
-  // Excluir lead pelo card: só o Diretor.
+  // Excluir lead pelo card: só o Diretor (usa o isDiretor já declarado abaixo).
   const excluirLead = useDeleteLead();
-  const isDiretor = (getStoredUser() as any)?.role === "diretor";
   const confirmarExcluir = (lead: Lead) => {
     if (!window.confirm(`Excluir o lead "${lead.name}" de vez? Não dá para desfazer.`)) return;
     excluirLead.mutate(lead.id);
