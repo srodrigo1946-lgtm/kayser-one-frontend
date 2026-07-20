@@ -74,6 +74,23 @@ export function useSendWhatsapp() {
   });
 }
 
+export function useSendWhatsappMedia() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      to: string;
+      base64: string;
+      mimetype: string;
+      fileName: string;
+      caption?: string;
+    }) => {
+      const { data } = await api.post("/whatsapp/send-media", payload);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["conversations"] }),
+  });
+}
+
 export function useAssignConversation() {
   const qc = useQueryClient();
   return useMutation({

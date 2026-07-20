@@ -1,17 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Header } from "@/components/layout/header";
-import { Search, Send, Bot, QrCode, Loader2 } from "lucide-react";
+import { Search, Send, Bot, QrCode, Loader2, Smile, Paperclip } from "lucide-react";
 import { api, getApiErrorMessage, API_URL } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 
 // Mídia protegida: o token vai na query pra funcionar dentro de <img>/<audio>/<video>.
 const mediaUrl = (id: string) => `${API_URL}/conversations/media/${id}?token=${getToken() ?? ""}`;
+
+// Emojis mais usados no atendimento — lista curta e própria (sem biblioteca extra).
+const EMOJIS = [
+  "😀", "😁", "😂", "🤣", "😊", "😉", "😍", "😘", "🤗", "🤔",
+  "👍", "👏", "🙏", "💪", "🤝", "👌", "✌️", "🙌", "👋", "🫡",
+  "❤️", "🔥", "✨", "🎉", "🥳", "✅", "❌", "⚠️", "⏰", "📅",
+  "🏠", "🏡", "🏢", "🔑", "📍", "💰", "💵", "📈", "📝", "📎",
+  "📷", "📞", "💬", "📧", "🚗", "😅", "😎", "🥰", "😢", "🤩",
+];
+
+// Limite de arquivo (base64 cresce ~33%; o backend aceita corpo de 25MB).
+const MAX_ARQUIVO_MB = 15;
 import {
   useConversations,
   useMessages,
   useSendWhatsapp,
+  useSendWhatsappMedia,
   useAssignConversation,
   useSetEtiquetas,
   type ConversationItem,
@@ -35,6 +48,9 @@ export default function WhatsAppPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data: thread } = useMessages(selectedId);
   const send = useSendWhatsapp();
+  const sendMedia = useSendWhatsappMedia();
+  const [showEmojis, setShowEmojis] = useState(false);
+  const fileRef = useRef<HTMLInputElement | null>(null);
   const assign = useAssignConversation();
   const setEtiquetas = useSetEtiquetas();
   const { data: teamUsers } = useUsers();
@@ -102,6 +118,34 @@ export default function WhatsAppPage() {
       setMessage("");
     } catch (err) {
       alert(getApiErrorMessage(err, "Falha ao enviar."));
+    }
+  };
+
+  // Anexo: imagem, PDF ou Excel. Vira base64 e sobe pelo endpoint de mídia.
+  // O texto digitado (se houver) vai junto como legenda.
+  const handleFile = async (file: File) => {
+    if (!selected?.remoteJid) return;
+    if (file.size > MAX_ARQUIVO_MB * 1024 * 1024) {
+      alert(`Arquivo muito grande. Máximo ${MAX_ARQUIVO_MB} MB.`);
+      return;
+    }
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+      await sendMedia.mutateAsync({
+        to: selected.remoteJid,
+        base64,
+        mimetype: file.type || "application/octet-stream",
+        fileName: file.name,
+        caption: message.trim() || undefined,
+      });
+      setMessage("");
+    } catch (err) {
+      alert(getApiErrorMessage(err, "Falha ao enviar o arquivo."));
     }
   };
 
@@ -290,7 +334,58 @@ export default function WhatsAppPage() {
               )}
             </div>
 
-            <div className="p-3 border-t flex items-center gap-2" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+            <div className="p-3 border-t flex items-center gap-2 relative" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+              {showEmojis && (
+                <div
+                  className="absolute bottom-16 left-3 z-20 p-2 rounded-xl border shadow-lg grid grid-cols-10 gap-1 w-[320px]"
+                  style={{ background: "var(--card)", borderColor: "var(--border)" }}
+                >
+                  {EMOJIS.map((e) => (
+                    <button
+                      key={e}
+                      type="button"
+                      onClick={() => { setMessage((m) => m + e); setShowEmojis(false); }}
+                      className="text-lg leading-none p-1 rounded hover:opacity-70"
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setShowEmojis((v) => !v)}
+                title="Emojis"
+                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}
+              >
+                <Smile size={18} />
+              </button>
+
+              {/* Anexo: imagem, PDF ou Excel */}
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*,application/pdf,.pdf,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleFile(f);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={sendMedia.isPending}
+                title="Anexar imagem, PDF ou Excel"
+                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 disabled:opacity-50"
+                style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}
+              >
+                {sendMedia.isPending ? <Loader2 size={18} className="animate-spin" /> : <Paperclip size={18} />}
+              </button>
+
               <input placeholder="Digite uma mensagem..." value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSend()} className="flex-1 px-3 py-2 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
               <button onClick={handleSend} disabled={send.isPending} className="w-9 h-9 rounded-xl flex items-center justify-center disabled:opacity-50" style={{ background: "var(--primary)", color: "white" }}>
                 <Send size={16} />
