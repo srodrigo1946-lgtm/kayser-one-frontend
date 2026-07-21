@@ -280,6 +280,11 @@ export default function LeadsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="text-sm" style={{ color: "var(--foreground)" }}>{lead.responsavel?.name || "—"}</div>
+                      {lead.responsavel?.manager?.name && (
+                        <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+                          Gerente: {lead.responsavel.manager.name}
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <ScoreBadge score={lead.score} />
