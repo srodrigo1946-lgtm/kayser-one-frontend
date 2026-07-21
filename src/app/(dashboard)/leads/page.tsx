@@ -269,7 +269,11 @@ export default function LeadsPage() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="text-sm" style={{ color: "var(--foreground)" }}>{lead.empreendimento || "—"}</div>
+                      {/* Lead de anúncio não tem empreendimento vinculado, mas tem o
+                          NOME DO ANÚNCIO em `campanha` — é a informação útil aqui. */}
+                      <div className="text-sm" style={{ color: "var(--foreground)" }}>
+                        {lead.empreendimento || lead.campanha || "—"}
+                      </div>
                       {lead.origem && (
                         <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>{lead.origem}</div>
                       )}
