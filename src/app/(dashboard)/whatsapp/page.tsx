@@ -66,6 +66,12 @@ export default function WhatsAppPage() {
     emoji: col.emoji,
   }));
 
+  // Estágio ATUAL do funil = status do lead no Kanban (fonte da verdade). A
+  // etiqueta salva na conversa pode ficar para trás quando o card é movido no
+  // Kanban; por isso lemos do lead. Fallback para a etiqueta antiga se não houver lead.
+  const estagioAtual = (conv: ConversationItem): string =>
+    (conv.lead?.status as string) || (conv.etiquetas ?? [])[0] || "";
+
   // Lista suspensa: a etiqueta representa o estágio atual do funil (single-select).
   const setEtiqueta = (conv: ConversationItem, key: string) => {
     setEtiquetas.mutate({ conversationId: conv.id, etiquetas: key ? [key] : [] });
@@ -193,14 +199,15 @@ export default function WhatsAppPage() {
                     )}
                   </div>
                   <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>{conv.lastMessage}</div>
-                  {(conv.etiquetas ?? []).length > 0 && (
-                    <div className="flex gap-1 mt-1">
-                      {(conv.etiquetas ?? []).map((k) => {
-                        const et = etiquetas.find((e) => e.key === k);
-                        return et ? <span key={k} className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: et.color }} title={et.label} /> : null;
-                      })}
-                    </div>
-                  )}
+                  {(() => {
+                    // Mesmo estágio do Kanban (status do lead), não a etiqueta salva.
+                    const et = etiquetas.find((e) => e.key === estagioAtual(conv));
+                    return et ? (
+                      <div className="flex gap-1 mt-1">
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: et.color }} title={et.label} />
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
               </button>
             ))}
@@ -257,7 +264,7 @@ export default function WhatsAppPage() {
             <div className="flex items-center gap-2 px-4 py-2 border-b" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
               <span className="text-xs flex-shrink-0" style={{ color: "var(--muted-foreground)" }}>Etiqueta:</span>
               <select
-                value={(selected.etiquetas ?? [])[0] ?? ""}
+                value={estagioAtual(selected)}
                 onChange={(e) => setEtiqueta(selected, e.target.value)}
                 disabled={setEtiquetas.isPending}
                 className="text-sm px-2 py-1.5 rounded-lg border outline-none disabled:opacity-50"
@@ -269,7 +276,7 @@ export default function WhatsAppPage() {
                 ))}
               </select>
               {(() => {
-                const atual = etiquetas.find((e) => e.key === (selected.etiquetas ?? [])[0]);
+                const atual = etiquetas.find((e) => e.key === estagioAtual(selected));
                 return atual ? (
                   <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: atual.color, color: "white" }}>
                     {atual.emoji ? `${atual.emoji} ` : ""}{atual.label}
