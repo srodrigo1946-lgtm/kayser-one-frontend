@@ -209,15 +209,18 @@ export default function FilaLeadsPage() {
           <Metric label="Estouraram o tempo" value={board?.expirados ?? 0} color="var(--warning, #f59e0b)" />
         </div>
         <div className="space-y-1">
-          {Object.entries(board?.porCargo ?? {}).map(([id, n]) => (
-            <div key={id} className="flex justify-between text-sm">
-              {/* Sem nome = usuário apagado. Mostrar o UUID cru não diz nada a ninguém. */}
-              <span style={{ color: "var(--muted-foreground)" }}>
-                {(byId.get(id) as any)?.name ?? "Usuário removido"}
-              </span>
-              <span style={{ color: "var(--foreground)" }}>{n as number}</span>
-            </div>
-          ))}
+          {/* Só quem está no rodízio HOJE. Atribuições de quem já saiu da fila
+              (ou foi apagado) poluíam o painel com "Usuário removido". */}
+          {Object.entries(board?.porCargo ?? {})
+            .filter(([id]) => members.includes(id))
+            .map(([id, n]) => (
+              <div key={id} className="flex justify-between text-sm">
+                <span style={{ color: "var(--muted-foreground)" }}>
+                  {(byId.get(id) as any)?.name ?? "Usuário removido"}
+                </span>
+                <span style={{ color: "var(--foreground)" }}>{n as number}</span>
+              </div>
+            ))}
         </div>
       </div>
     </div>
