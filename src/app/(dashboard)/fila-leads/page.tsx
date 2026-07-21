@@ -211,7 +211,10 @@ export default function FilaLeadsPage() {
         <div className="space-y-1">
           {Object.entries(board?.porCargo ?? {}).map(([id, n]) => (
             <div key={id} className="flex justify-between text-sm">
-              <span style={{ color: "var(--muted-foreground)" }}>{(byId.get(id) as any)?.name ?? id}</span>
+              {/* Sem nome = usuário apagado. Mostrar o UUID cru não diz nada a ninguém. */}
+              <span style={{ color: "var(--muted-foreground)" }}>
+                {(byId.get(id) as any)?.name ?? "Usuário removido"}
+              </span>
               <span style={{ color: "var(--foreground)" }}>{n as number}</span>
             </div>
           ))}
