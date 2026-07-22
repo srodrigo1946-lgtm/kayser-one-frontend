@@ -17,6 +17,7 @@ export interface AppSettings {
   aiAutoReply: boolean;
   aiReplyGroups: boolean;
   hasApiKey: boolean;
+  hasDirecionalImage: boolean;
 }
 
 export function useSettings() {
