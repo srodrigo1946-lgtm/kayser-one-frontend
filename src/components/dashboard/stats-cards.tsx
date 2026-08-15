@@ -74,11 +74,21 @@ export function StatsCards({
   metrics,
   followupsTotal,
   followupsPeriodo,
+  periodo,
+  leadsPeriodo,
+  visitasPeriodo,
+  vendasPeriodo,
 }: {
   metrics: DashboardMetrics;
   followupsTotal?: number;
   followupsPeriodo?: string;
+  // Período selecionado no topo. Se vier, os cards Leads/Visitas/Vendas seguem ele.
+  periodo?: string;
+  leadsPeriodo?: number;
+  visitasPeriodo?: number;
+  vendasPeriodo?: number;
 }) {
+  const rotulo = periodo ?? "no mês";
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
@@ -90,27 +100,24 @@ export function StatsCards({
         color="#3b82f6"
       />
       <StatCard
-        title="Leads no Mês"
-        value={metrics.leadsMes}
-        subtitle="Total acumulado"
+        title={`Leads · ${rotulo}`}
+        value={leadsPeriodo ?? metrics.leadsMes}
+        subtitle="Total do período"
         icon={<TrendingUp size={20} />}
-        trend={8}
         color="#8b5cf6"
       />
       <StatCard
-        title="Visitas"
-        value={metrics.visitas}
-        subtitle="Realizadas no mês"
+        title={`Visitas · ${rotulo}`}
+        value={visitasPeriodo ?? metrics.visitas}
+        subtitle="Realizadas no período"
         icon={<Eye size={20} />}
-        trend={5}
         color="#10b981"
       />
       <StatCard
-        title="Vendas"
-        value={metrics.vendas}
-        subtitle={`${metrics.conversao.toFixed(1)}% de conversão`}
+        title={`Vendas · ${rotulo}`}
+        value={vendasPeriodo ?? metrics.vendas}
+        subtitle="Fechadas no período"
         icon={<ShoppingBag size={20} />}
-        trend={15}
         color="#f59e0b"
       />
       <StatCard

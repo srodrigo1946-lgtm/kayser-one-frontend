@@ -11,6 +11,7 @@ import {
   useDashboardMetrics,
   useRanking,
   useFollowups,
+  useMonthlyData,
 } from "@/hooks/use-dashboard";
 import { useKanbanBoard } from "@/hooks/use-kanban";
 import type { DashboardMetrics } from "@/types";
@@ -42,15 +43,26 @@ export default function DashboardPage() {
   });
 
   const currentYear = new Date().getFullYear();
-  const [fuYear, setFuYear] = useState(currentYear);
-  const [fuMonth, setFuMonth] = useState(0); // 0 = ano todo consolidado
+  // UM período (ano/mês) comanda todo o dashboard. 0 = ano todo (soma dos meses).
+  const [periodYear, setPeriodYear] = useState(currentYear);
+  const [periodMonth, setPeriodMonth] = useState(0);
 
   const { data: metrics } = useDashboardMetrics();
   const { data: ranking } = useRanking();
-  const { data: followups } = useFollowups(fuYear, fuMonth || undefined);
+  const { data: followups } = useFollowups(periodYear, periodMonth || undefined);
+  const { data: monthly = [] } = useMonthlyData(periodYear);
   const { data: board } = useKanbanBoard();
 
-  const fuPeriodo = fuMonth ? MESES[fuMonth - 1] : `${fuYear}`;
+  const periodo = periodMonth ? MESES[periodMonth - 1] : `${periodYear}`;
+
+  // Cards Leads/Visitas/Vendas seguem o período: mês = aquele mês; ano todo = soma.
+  const soma = (campo: "leads" | "visitas" | "vendas") =>
+    periodMonth
+      ? ((monthly[periodMonth - 1] as any)?.[campo] ?? 0)
+      : monthly.reduce((acc, m: any) => acc + (m[campo] ?? 0), 0);
+  const leadsPeriodo = soma("leads");
+  const visitasPeriodo = soma("visitas");
+  const vendasPeriodo = soma("vendas");
 
   const abrirConversa = (f: { leadId: string; phone: string }) => {
     const params = new URLSearchParams();
@@ -98,10 +110,40 @@ export default function DashboardPage() {
       <Header title="Dashboard" subtitle={`Hoje é ${today}`} />
 
       <div className="p-6 space-y-6">
+        {/* Filtro único de período — comanda cards, VGV/campeão, gráfico e follow-ups. */}
+        <div className="flex items-center justify-end gap-2">
+          <span className="text-sm mr-1" style={{ color: "var(--muted-foreground)" }}>Período:</span>
+          <select
+            value={periodMonth}
+            onChange={(e) => setPeriodMonth(Number(e.target.value))}
+            className="text-sm px-3 py-1.5 rounded-lg border outline-none"
+            style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+          >
+            <option value={0}>Ano todo</option>
+            {MESES.map((m, i) => (
+              <option key={m} value={i + 1}>{m}</option>
+            ))}
+          </select>
+          <select
+            value={periodYear}
+            onChange={(e) => setPeriodYear(Number(e.target.value))}
+            className="text-sm px-3 py-1.5 rounded-lg border outline-none"
+            style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+          >
+            {Array.from({ length: 3 }, (_, i) => currentYear - i).map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+
         <StatsCards
           metrics={statsMetrics}
           followupsTotal={followups?.total}
-          followupsPeriodo={fuPeriodo}
+          followupsPeriodo={periodo}
+          periodo={periodo}
+          leadsPeriodo={leadsPeriodo}
+          visitasPeriodo={visitasPeriodo}
+          vendasPeriodo={vendasPeriodo}
         />
 
         {/* Follow-ups automáticos da IA — clique para abrir a conversa */}
@@ -115,31 +157,8 @@ export default function DashboardPage() {
                 <Bot size={18} style={{ color: "#a855f7" }} /> Follow-ups automáticos da IA
               </h3>
               <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
-                {followups?.total ?? 0} no período · clique para abrir a conversa
+                {followups?.total ?? 0} em {periodo} · clique para abrir a conversa
               </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <select
-                value={fuMonth}
-                onChange={(e) => setFuMonth(Number(e.target.value))}
-                className="text-sm px-3 py-1.5 rounded-lg border outline-none"
-                style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
-              >
-                <option value={0}>Ano todo</option>
-                {MESES.map((m, i) => (
-                  <option key={m} value={i + 1}>{m}</option>
-                ))}
-              </select>
-              <select
-                value={fuYear}
-                onChange={(e) => setFuYear(Number(e.target.value))}
-                className="text-sm px-3 py-1.5 rounded-lg border outline-none"
-                style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
-              >
-                {Array.from({ length: 3 }, (_, i) => currentYear - i).map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
             </div>
           </div>
           <div className="space-y-1">
@@ -172,7 +191,7 @@ export default function DashboardPage() {
             ))}
             {(followups?.items ?? []).length === 0 && (
               <div className="py-6 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
-                Nenhum follow-up da IA em {fuPeriodo}.
+                Nenhum follow-up da IA em {periodo}.
               </div>
             )}
           </div>
@@ -180,7 +199,7 @@ export default function DashboardPage() {
 
         <div className="grid lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
-            <SalesChart />
+            <SalesChart year={periodYear} month={periodMonth} />
           </div>
           <ConversionChart data={funnel} />
         </div>

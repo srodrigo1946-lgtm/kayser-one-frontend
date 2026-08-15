@@ -22,10 +22,16 @@ const MESES = [
 const formatBRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
-export function SalesChart() {
+// Quando `year`/`month` vêm por prop, o gráfico é controlado de fora (o dashboard
+// usa UM seletor pra tudo) e esconde o próprio seletor. Sem props (ex: Relatórios),
+// mantém o seletor interno.
+export function SalesChart({ year: yearProp, month: monthProp }: { year?: number; month?: number } = {}) {
   const currentYear = new Date().getFullYear();
-  const [year, setYear] = useState(currentYear);
-  const [month, setMonth] = useState(0); // 0 = ano todo
+  const [yearState, setYear] = useState(currentYear);
+  const [monthState, setMonth] = useState(0); // 0 = ano todo
+  const controlled = yearProp !== undefined;
+  const year = controlled ? yearProp! : yearState;
+  const month = controlled ? monthProp ?? 0 : monthState;
   const { data = [] } = useMonthlyData(year);
   const { data: champion } = useChampion(year, month || undefined);
   const { data: vgv } = useVgv(year, month || undefined);
@@ -52,30 +58,32 @@ export function SalesChart() {
             Leads, visitas e vendas
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={month}
-            onChange={(e) => setMonth(Number(e.target.value))}
-            className="text-sm px-3 py-1.5 rounded-lg border outline-none"
-            style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
-          >
-            <option value={0}>Ano todo</option>
-            {MESES.map((m, i) => (
-              <option key={m} value={i + 1}>{m}</option>
-            ))}
-          </select>
-          {/* Anos dinâmicos: do ano atual até 2 anos atrás (o corrente vem primeiro). */}
-          <select
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
-            className="text-sm px-3 py-1.5 rounded-lg border outline-none"
-            style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
-          >
-            {Array.from({ length: 3 }, (_, i) => currentYear - i).map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-        </div>
+        {!controlled && (
+          <div className="flex items-center gap-2">
+            <select
+              value={month}
+              onChange={(e) => setMonth(Number(e.target.value))}
+              className="text-sm px-3 py-1.5 rounded-lg border outline-none"
+              style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+            >
+              <option value={0}>Ano todo</option>
+              {MESES.map((m, i) => (
+                <option key={m} value={i + 1}>{m}</option>
+              ))}
+            </select>
+            {/* Anos dinâmicos: do ano atual até 2 anos atrás (o corrente vem primeiro). */}
+            <select
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              className="text-sm px-3 py-1.5 rounded-lg border outline-none"
+              style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+            >
+              {Array.from({ length: 3 }, (_, i) => currentYear - i).map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* VGV do período + Campeão — ambos acompanham o filtro Ano/Mês */}
