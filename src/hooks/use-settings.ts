@@ -18,6 +18,8 @@ export interface AppSettings {
   aiReplyGroups: boolean;
   hasApiKey: boolean;
   hasDirecionalImage: boolean;
+  hasMetaToken: boolean;
+  hasMetaVerify: boolean;
 }
 
 export function useSettings() {

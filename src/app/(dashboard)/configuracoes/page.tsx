@@ -2,10 +2,10 @@
 
 import { Header } from "@/components/layout/header";
 import { useEffect, useState } from "react";
-import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2, Upload, Check, X, KeyRound, UserX } from "lucide-react";
+import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2, Upload, Check, X, KeyRound, UserX, Megaphone, Copy } from "lucide-react";
 import { useRef } from "react";
 import { getStoredUser } from "@/lib/auth";
-import { getApiErrorMessage } from "@/lib/api";
+import { getApiErrorMessage, API_URL } from "@/lib/api";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useUpdateProfile, useUploadAvatar, avatarUrl } from "@/hooks/use-profile";
 import { useMe, useSetRecoveryCode } from "@/hooks/use-recovery";
@@ -17,6 +17,7 @@ const tabs = [
   { id: "perfil", label: "Perfil", icon: UserIcon },
   { id: "usuarios", label: "Usuários", icon: Users },
   { id: "ia", label: "Inteligência Artificial", icon: Bot },
+  { id: "integracoes", label: "Integrações", icon: Megaphone, diretorOnly: true },
   { id: "empresa", label: "Empresa", icon: Building2 },
 ];
 
@@ -39,6 +40,8 @@ const ROLE_RANK: Record<string, number> = {
 
 export default function ConfiguracoesPage() {
   const [activeTab, setActiveTab] = useState("perfil");
+  const isDiretor = getStoredUser()?.role === "diretor";
+  const visibleTabs = tabs.filter((t) => !(t as any).diretorOnly || isDiretor);
 
   // Permite abrir direto numa aba via ?tab= (ex.: notificação de novo cadastro → Usuários).
   useEffect(() => {
@@ -51,7 +54,7 @@ export default function ConfiguracoesPage() {
       <Header title="Configurações" subtitle="Gerencie sua conta e preferências" />
       <div className="p-6 flex gap-6">
         <div className="w-56 rounded-2xl border p-2 h-fit" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-          {tabs.map(({ id, label, icon: Icon }) => (
+          {visibleTabs.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
@@ -72,6 +75,7 @@ export default function ConfiguracoesPage() {
           {activeTab === "perfil" && <RecoveryCodeCard />}
 
           {activeTab === "ia" && <IaSettings />}
+          {activeTab === "integracoes" && isDiretor && <MetaIntegrationCard />}
           {activeTab === "usuarios" && (
             <>
               <PendingApprovals />
@@ -326,6 +330,93 @@ function IaSettings() {
       <FollowupSettings />
       <KnowledgeManager />
     </div>
+  );
+}
+
+/* ---------------- Integração Meta (anúncio/formulário) — só Diretor ---------------- */
+function MetaIntegrationCard() {
+  const { data: settings } = useSettings();
+  const update = useUpdateSettings();
+  const [pageToken, setPageToken] = useState("");
+  const [verifyToken, setVerifyToken] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [copiado, setCopiado] = useState(false);
+
+  const webhookUrl = `${API_URL}/meta/leadgen`;
+
+  const copiar = () => {
+    navigator.clipboard?.writeText(webhookUrl);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 1500);
+  };
+
+  const save = async () => {
+    setFeedback("");
+    try {
+      const payload: any = {};
+      if (pageToken) payload.metaPageToken = pageToken;
+      if (verifyToken) payload.metaVerifyToken = verifyToken;
+      await update.mutateAsync(payload);
+      setPageToken("");
+      setVerifyToken("");
+      setFeedback("Tokens salvos. Os leads de formulário passam a cair na fila.");
+    } catch (err) {
+      setFeedback(getApiErrorMessage(err, "Falha ao salvar. Apenas o Diretor pode alterar."));
+    }
+  };
+
+  const inputStyle = { background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" };
+  const labelStyle = { color: "var(--muted-foreground)" };
+
+  return (
+    <Card title="Anúncios Meta (formulário)">
+      <p className="text-sm mb-4" style={labelStyle}>
+        Cole aqui os tokens do Meta para os leads de <strong>formulário</strong> (Facebook/Instagram)
+        caírem sozinhos na fila de distribuição. Só o Diretor vê e altera.
+      </p>
+
+      {/* URL do webhook para colar no App do Meta */}
+      <label className="text-xs font-medium block mb-1.5" style={labelStyle}>URL do Webhook (cole no Meta, campo &quot;leadgen&quot;)</label>
+      <div className="flex gap-2 mb-4">
+        <input readOnly value={webhookUrl} className="flex-1 px-3 py-2.5 rounded-xl border text-sm outline-none" style={inputStyle} />
+        <button onClick={copiar} className="px-3 rounded-xl border text-sm flex items-center gap-1.5" style={{ ...inputStyle, borderColor: "var(--border)" }}>
+          {copiado ? <Check size={15} /> : <Copy size={15} />} {copiado ? "Copiado" : "Copiar"}
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs font-medium block mb-1.5" style={labelStyle}>
+            Verify Token {settings?.hasMetaVerify && <span style={{ color: "#10b981" }}>· configurado ✓</span>}
+          </label>
+          <input
+            type="password" autoComplete="new-password" placeholder={settings?.hasMetaVerify ? "•••••••• (deixe em branco para manter)" : "a senha que você define e repete no Meta"}
+            value={verifyToken} onChange={(e) => setVerifyToken(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={inputStyle}
+          />
+        </div>
+        <div>
+          <label className="text-xs font-medium block mb-1.5" style={labelStyle}>
+            Page Access Token {settings?.hasMetaToken && <span style={{ color: "#10b981" }}>· configurado ✓</span>}
+          </label>
+          <input
+            type="password" autoComplete="new-password" placeholder={settings?.hasMetaToken ? "•••••••• (deixe em branco para manter)" : "token da Página com permissão leads_retrieval"}
+            value={pageToken} onChange={(e) => setPageToken(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={inputStyle}
+          />
+        </div>
+      </div>
+
+      {feedback && <p className="text-sm mt-3" style={{ color: "var(--muted-foreground)" }}>{feedback}</p>}
+
+      <button
+        onClick={save} disabled={update.isPending}
+        className="mt-4 px-5 py-2.5 rounded-xl text-sm font-medium disabled:opacity-50"
+        style={{ background: "var(--primary)", color: "white" }}
+      >
+        {update.isPending ? "Salvando…" : "Salvar tokens"}
+      </button>
+    </Card>
   );
 }
 
