@@ -157,7 +157,7 @@ export default function WhatsAppPage() {
 
   return (
     <div className="flex flex-col h-screen">
-      <Header title="WhatsApp" subtitle="Central de mensagens" />
+      <Header title="Conversas ao vivo" subtitle="Central de mensagens" />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Lista de conversas */}
