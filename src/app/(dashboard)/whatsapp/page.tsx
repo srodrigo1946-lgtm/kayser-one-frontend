@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Header } from "@/components/layout/header";
 import { Search, Send, Bot, QrCode, Loader2, Smile, Paperclip } from "lucide-react";
 import { api, getApiErrorMessage, API_URL } from "@/lib/api";
-import { getToken } from "@/lib/auth";
+import { getToken, getStoredUser } from "@/lib/auth";
 
 // Mídia protegida: o token vai na query pra funcionar dentro de <img>/<audio>/<video>.
 const mediaUrl = (id: string) => `${API_URL}/conversations/media/${id}?token=${getToken() ?? ""}`;
@@ -46,6 +46,9 @@ function displayName(conv: ConversationItem) {
 export default function WhatsAppPage() {
   const { data: conversations } = useConversations();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Conversas rodam pela estrutura do CRM (número central). Só o Diretor conecta/
+  // reconecta o número pelo QR; os cargos não conectam WhatsApp próprio.
+  const isDiretor = getStoredUser()?.role === "diretor";
   const { data: thread } = useMessages(selectedId);
   const send = useSendWhatsapp();
   const sendMedia = useSendWhatsappMedia();
@@ -169,12 +172,14 @@ export default function WhatsAppPage() {
             </div>
           </div>
 
-          <div className="px-3 py-2 border-b" style={{ borderColor: "var(--border)" }}>
-            <button onClick={connect} disabled={connecting} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: "var(--primary)18", color: "var(--primary)" }}>
-              {connecting ? <Loader2 size={12} className="animate-spin" /> : <QrCode size={12} />}
-              Conectar WhatsApp (QR Code)
-            </button>
-          </div>
+          {isDiretor && (
+            <div className="px-3 py-2 border-b" style={{ borderColor: "var(--border)" }}>
+              <button onClick={connect} disabled={connecting} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: "var(--primary)18", color: "var(--primary)" }}>
+                {connecting ? <Loader2 size={12} className="animate-spin" /> : <QrCode size={12} />}
+                Conectar WhatsApp (QR Code)
+              </button>
+            </div>
+          )}
 
           <div className="flex-1 overflow-y-auto">
             {list.map((conv) => (
