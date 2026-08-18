@@ -43,9 +43,10 @@ export default function DashboardPage() {
   });
 
   const currentYear = new Date().getFullYear();
-  // UM período (ano/mês) comanda todo o dashboard. 0 = ano todo (soma dos meses).
+  // UM período (ano/mês) comanda todo o dashboard. Abre no MÊS VIGENTE por padrão
+  // (0 = ano todo). O usuário troca pra "Ano todo" ou outro mês quando quiser.
   const [periodYear, setPeriodYear] = useState(currentYear);
-  const [periodMonth, setPeriodMonth] = useState(0);
+  const [periodMonth, setPeriodMonth] = useState(new Date().getMonth() + 1);
 
   const { data: metrics } = useDashboardMetrics();
   const { data: ranking } = useRanking();
