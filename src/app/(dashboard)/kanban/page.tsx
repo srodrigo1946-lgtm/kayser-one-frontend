@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import type { Lead, KanbanColumn } from "@/types";
-import { MessageSquare, Plus, Trash2, Settings2, ChevronLeft, ChevronRight } from "lucide-react";
+import { MessageSquare, Plus, Trash2, Settings2, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import {
   useKanbanBoard,
   useMoveCard,
@@ -175,6 +175,19 @@ export default function KanbanPage() {
   const [dragging, setDragging] = useState<Lead | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [detailLead, setDetailLead] = useState<Lead | null>(null);
+  const [busca, setBusca] = useState("");
+
+  // Filtra os cards por nome OU telefone (só dígitos). Vazio = mostra todos.
+  const filtra = (leads: Lead[]): Lead[] => {
+    const q = busca.trim().toLowerCase();
+    if (!q) return leads;
+    const num = q.replace(/\D/g, "");
+    return leads.filter(
+      (l) =>
+        l.name?.toLowerCase().includes(q) ||
+        (!!num && `${l.phone ?? ""}${l.whatsapp ?? ""}`.replace(/\D/g, "").includes(num))
+    );
+  };
 
   // Abrir a conversa do lead no WhatsApp (todos os cargos) — mesmo deep-link da tela de Leads.
   const router = useRouter();
@@ -220,11 +233,21 @@ export default function KanbanPage() {
     <div className="h-full flex flex-col">
       <Header title="Kanban" subtitle="Fluxo comercial de leads" />
 
-      {isDiretor && (
-        <div className="px-6 pt-3 flex justify-end">
+      <div className="px-6 pt-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl border w-full max-w-sm" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+          <Search size={14} style={{ color: "var(--muted-foreground)" }} />
+          <input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar cliente por nome ou telefone..."
+            className="flex-1 bg-transparent outline-none text-sm"
+            style={{ color: "var(--foreground)" }}
+          />
+        </div>
+        {isDiretor && (
           <button
             onClick={() => setEditMode((v) => !v)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border flex-shrink-0"
             style={{
               borderColor: "var(--border)",
               background: editMode ? "var(--primary)" : "var(--card)",
@@ -233,8 +256,8 @@ export default function KanbanPage() {
           >
             <Settings2 size={14} /> {editMode ? "Concluir edição" : "Editar colunas"}
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {isLoading && <div className="p-6 text-sm" style={{ color: "var(--muted-foreground)" }}>Carregando board...</div>}
       {isError && <div className="p-6 text-sm" style={{ color: "#ef4444" }}>Erro ao carregar o board. Verifique se o backend está rodando.</div>}
@@ -269,17 +292,17 @@ export default function KanbanPage() {
                     <span>{col.emoji}</span>
                     <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>{col.title}</span>
                     <span className="text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold" style={{ background: col.color, color: "white" }}>
-                      {col.leads.length}
+                      {filtra(col.leads).length}
                     </span>
                   </div>
                 )}
               </div>
 
               <div className="flex-1 p-2 space-y-2 overflow-y-auto">
-                {col.leads.map((lead) => (
+                {filtra(col.leads).map((lead) => (
                   <LeadCard key={lead.id} lead={lead} onDragStart={setDragging} onOpen={setDetailLead} podeExcluir={isDiretor} onExcluir={confirmarExcluir} onWhatsapp={abrirWhatsapp} />
                 ))}
-                {col.leads.length === 0 && (
+                {filtra(col.leads).length === 0 && (
                   <div className="text-xs text-center py-8 rounded-xl border-2 border-dashed" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
                     Arraste leads aqui
                   </div>
