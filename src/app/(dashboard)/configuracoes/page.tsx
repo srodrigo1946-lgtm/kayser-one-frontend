@@ -705,8 +705,9 @@ function UsersManager() {
 
   // Contadores por cargo + filtro por nome/e-mail.
   const lista = users ?? [];
-  const qtdCorretores = lista.filter((u) => u.role === "corretor").length;
-  const qtdGerentes = lista.filter((u) => u.role === "gerente").length;
+  // Contadores só de ATIVOS (desativados não entram na conta).
+  const qtdCorretores = lista.filter((u) => u.role === "corretor" && u.active !== false).length;
+  const qtdGerentes = lista.filter((u) => u.role === "gerente" && u.active !== false).length;
   const q = busca.trim().toLowerCase();
   const filtrados = q
     ? lista.filter((u) => u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q))
