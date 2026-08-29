@@ -20,6 +20,8 @@ export interface AppSettings {
   hasDirecionalImage: boolean;
   hasMetaToken: boolean;
   hasMetaVerify: boolean;
+  direcionalUrl?: string;
+  tabelaRivaUrl?: string;
 }
 
 export function useSettings() {
