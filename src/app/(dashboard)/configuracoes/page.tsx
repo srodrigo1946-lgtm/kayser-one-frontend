@@ -2,7 +2,7 @@
 
 import { Header } from "@/components/layout/header";
 import { useEffect, useState } from "react";
-import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2, Upload, Check, X, KeyRound, UserX, Megaphone, Copy } from "lucide-react";
+import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2, Upload, Check, X, KeyRound, UserX, Megaphone, Copy, Search } from "lucide-react";
 import { useRef } from "react";
 import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage, API_URL } from "@/lib/api";
@@ -697,10 +697,20 @@ function UsersManager() {
     });
   };
   const [showForm, setShowForm] = useState(false);
+  const [busca, setBusca] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<UserRole>("corretor" as UserRole);
   const [managerId, setManagerId] = useState("");
+
+  // Contadores por cargo + filtro por nome/e-mail.
+  const lista = users ?? [];
+  const qtdCorretores = lista.filter((u) => u.role === "corretor").length;
+  const qtdGerentes = lista.filter((u) => u.role === "gerente").length;
+  const q = busca.trim().toLowerCase();
+  const filtrados = q
+    ? lista.filter((u) => u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q))
+    : lista;
 
   const resetForm = () => {
     setName(""); setEmail(""); setRole("corretor" as UserRole); setManagerId("");
@@ -777,8 +787,34 @@ function UsersManager() {
       )}
 
       {feedback && <p className="text-sm mb-3" style={{ color: "var(--muted-foreground)" }}>{feedback}</p>}
+
+      {/* Contadores + busca */}
+      <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+        <div className="flex items-center gap-2 text-xs">
+          <span className="px-2.5 py-1 rounded-full font-medium" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>
+            {qtdCorretores} corretor(es)
+          </span>
+          <span className="px-2.5 py-1 rounded-full font-medium" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>
+            {qtdGerentes} gerente(s) de vendas
+          </span>
+          <span className="px-2.5 py-1 rounded-full" style={{ color: "var(--muted-foreground)" }}>
+            {lista.length} no total
+          </span>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl border w-full max-w-xs" style={{ background: "var(--secondary)", borderColor: "var(--border)" }}>
+          <Search size={14} style={{ color: "var(--muted-foreground)" }} />
+          <input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar por nome ou e-mail..."
+            className="flex-1 bg-transparent outline-none text-sm"
+            style={{ color: "var(--foreground)" }}
+          />
+        </div>
+      </div>
+
       <div className="space-y-3">
-        {(users ?? []).map((u) => (
+        {filtrados.map((u) => (
           <div key={u.id} className="flex items-center gap-4 p-4 rounded-xl" style={{ background: "var(--secondary)" }}>
             <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: "var(--primary)", color: "white" }}>
               {u.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
@@ -850,8 +886,10 @@ function UsersManager() {
             )}
           </div>
         ))}
-        {(users ?? []).length === 0 && (
-          <p className="text-sm text-center py-4" style={{ color: "var(--muted-foreground)" }}>Nenhum usuário encontrado.</p>
+        {filtrados.length === 0 && (
+          <p className="text-sm text-center py-4" style={{ color: "var(--muted-foreground)" }}>
+            {q ? `Nenhum usuário para "${busca}".` : "Nenhum usuário encontrado."}
+          </p>
         )}
       </div>
     </Card>
