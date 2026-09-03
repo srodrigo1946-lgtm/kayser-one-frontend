@@ -5,7 +5,7 @@ import { Header } from "@/components/layout/header";
 import { DollarSign, Users, Target, ShoppingBag, TrendingUp, Wallet, Download } from "lucide-react";
 import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
-import { useMonthlyData, useVgv, useBreakdown } from "@/hooks/use-dashboard";
+import { useBreakdown } from "@/hooks/use-dashboard";
 import { useInvestimento, useSetInvestimento } from "@/hooks/use-investimento";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 
@@ -27,33 +27,30 @@ export default function CustoPorLeadPage() {
   const [year, setYear] = useState(currentYear);
   const [month, setMonth] = useState(new Date().getMonth() + 1); // abre no mês vigente
 
-  const { data: monthly = [] } = useMonthlyData(year);
-  const { data: vgv } = useVgv(year, month || undefined);
   const { data: invest } = useInvestimento(year, month || undefined);
   const setInvest = useSetInvestimento();
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
+  // Detalhamento por cargo (JÁ só leads PAGOS — anúncio/formulário; oferta do corretor não conta).
+  const { data: breakdown = [] } = useBreakdown(year, month || undefined);
 
   const [valorInput, setValorInput] = useState("");
   const [feedback, setFeedback] = useState("");
   useEffect(() => setValorInput(invest?.valor ? String(invest.valor) : ""), [invest?.valor, month, year]);
 
   const periodo = month ? MESES[month - 1] : `${year}`;
-  const soma = (campo: "leads" | "vendas") =>
-    month ? ((monthly[month - 1] as any)?.[campo] ?? 0) : monthly.reduce((a, m: any) => a + (m[campo] ?? 0), 0);
 
   const investimento = invest?.valor ?? 0;
-  const leads = soma("leads");
-  const vendas = soma("vendas");
-  const vgvTotal = vgv?.total ?? 0;
+  // Totais vêm do breakdown = SÓ leads pagos. Custo por lead usa esses.
+  const leads = breakdown.reduce((a, b: any) => a + b.leads, 0);
+  const vendas = breakdown.reduce((a, b: any) => a + b.vendas, 0);
+  const vgvTotal = breakdown.reduce((a, b: any) => a + (b.vgv ?? 0), 0);
 
   const custoLead = leads > 0 ? investimento / leads : 0;
   const custoVenda = vendas > 0 ? investimento / vendas : 0;
   const ticket = vendas > 0 ? vgvTotal / vendas : 0;
   const roi = investimento > 0 ? ((vgvTotal - investimento) / investimento) * 100 : null;
 
-  // Detalhamento por cargo: leads recebidos, vendas, % conversão e custo atribuído.
-  const { data: breakdown = [] } = useBreakdown(year, month || undefined);
   const linhas = breakdown
     .map((b) => ({
       ...b,
@@ -173,7 +170,7 @@ export default function CustoPorLeadPage() {
         {/* Métricas */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           <Card icon={<Wallet size={20} />} titulo="Investimento" valor={brl(investimento)} sub={periodo} cor="#f59e0b" />
-          <Card icon={<Users size={20} />} titulo="Leads" valor={leads} sub="no período" cor="#3b82f6" />
+          <Card icon={<Users size={20} />} titulo="Leads" valor={leads} sub="anúncio/formulário" cor="#3b82f6" />
           <Card icon={<Target size={20} />} titulo="Custo por Lead" valor={leads > 0 ? brl(custoLead) : "—"} sub={leads > 0 ? `${leads} leads` : "sem leads no período"} cor="#8b5cf6" />
           <Card icon={<ShoppingBag size={20} />} titulo="Vendas" valor={vendas} sub="fechadas no período" cor="#10b981" />
           <Card icon={<Target size={20} />} titulo="Custo por Venda" valor={vendas > 0 ? brl(custoVenda) : "—"} sub={vendas > 0 ? `${vendas} venda(s)` : "sem vendas no período"} cor="#ef4444" />
