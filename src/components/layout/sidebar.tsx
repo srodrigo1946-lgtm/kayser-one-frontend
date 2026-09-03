@@ -28,6 +28,7 @@ import {
   Video,
   CalendarClock,
   Wallet,
+  MessagesSquare,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { getStoredUser, logout } from "@/lib/auth";
@@ -44,6 +45,7 @@ const navItems = [
   { href: "/whatsapp", label: "Conversas ao vivo", icon: MessageSquare },
   { href: "/fila-leads", label: "Fila de Leads", icon: Megaphone, diretorOnly: true },
   { href: "/custo-por-lead", label: "Custo por Lead", icon: Wallet, unlockKey: "custoLeadVisivel" },
+  { href: "/feedback", label: "1-on-1 / Feedback", icon: MessagesSquare, roles: ["diretor", "superintendente", "gerente_geral", "gerente"] },
   { href: "/escala", label: "Escala de Atendimento", icon: CalendarClock },
   { href: "/empresas", label: "Empresas", icon: Building2, diretorOnly: true },
   { href: "/ranking-analises", label: "Ranking Análises", icon: Trophy, roles: ["diretor", "superintendente", "gerente_geral"] },

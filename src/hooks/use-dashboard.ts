@@ -128,6 +128,21 @@ export function useBreakdown(year: number, month?: number) {
   });
 }
 
+// Funil por etapa (status) de um alvo (lista de ids). Usa as colunas do Kanban no front.
+export function useFunil(ids: string[], year: number, month?: number) {
+  const idsKey = ids.join(",");
+  return useQuery({
+    queryKey: ["dashboard", "funil", idsKey, year, month ?? "all"],
+    enabled: ids.length > 0,
+    queryFn: async () => {
+      const { data } = await api.get<{ status: string; count: number }[]>("/dashboard/funil", {
+        params: { ids: idsKey, year, ...(month ? { month } : {}) },
+      });
+      return data;
+    },
+  });
+}
+
 export function useRanking() {
   return useQuery({
     queryKey: ["dashboard", "ranking"],
