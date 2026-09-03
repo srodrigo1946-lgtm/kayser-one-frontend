@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Header } from "@/components/layout/header";
-import { DollarSign, Users, Target, ShoppingBag, TrendingUp, Wallet } from "lucide-react";
+import { DollarSign, Users, Target, ShoppingBag, TrendingUp, Wallet, Download } from "lucide-react";
 import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
-import { useMonthlyData, useVgv } from "@/hooks/use-dashboard";
+import { useMonthlyData, useVgv, useBreakdown } from "@/hooks/use-dashboard";
 import { useInvestimento, useSetInvestimento } from "@/hooks/use-investimento";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 
@@ -14,6 +14,12 @@ const MESES = [
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ];
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const ROLE_LABEL: Record<string, string> = {
+  superintendente: "Superintendente",
+  gerente_geral: "Gerente Geral",
+  gerente: "Gerente",
+  corretor: "Corretor",
+};
 
 export default function CustoPorLeadPage() {
   const isDiretor = getStoredUser()?.role === "diretor";
@@ -45,6 +51,37 @@ export default function CustoPorLeadPage() {
   const custoVenda = vendas > 0 ? investimento / vendas : 0;
   const ticket = vendas > 0 ? vgvTotal / vendas : 0;
   const roi = investimento > 0 ? ((vgvTotal - investimento) / investimento) * 100 : null;
+
+  // Detalhamento por cargo: leads recebidos, vendas, % conversão e custo atribuído.
+  const { data: breakdown = [] } = useBreakdown(year, month || undefined);
+  const linhas = breakdown
+    .map((b) => ({
+      ...b,
+      conversao: b.leads > 0 ? (b.vendas / b.leads) * 100 : 0,
+      custo: custoLead * b.leads, // custo por lead global × leads dele
+    }))
+    .sort((a, b) => b.leads - a.leads);
+
+  const exportarExcel = () => {
+    const sep = ";";
+    const cab = ["Nome", "Cargo", "Leads recebidos", "Vendas", "Conversao (%)", "Custo dos leads (R$)"];
+    const linhasCsv = linhas.map((l) =>
+      [l.nome, ROLE_LABEL[l.role] ?? l.role, l.leads, l.vendas, l.conversao.toFixed(1).replace(".", ","), l.custo.toFixed(2).replace(".", ",")].join(sep)
+    );
+    const resumo = [
+      "",
+      ["TOTAL", "", leads, vendas, (leads > 0 ? (vendas / leads) * 100 : 0).toFixed(1).replace(".", ","), investimento.toFixed(2).replace(".", ",")].join(sep),
+      ["Investimento", brl(investimento)].join(sep),
+      ["Custo por lead", leads > 0 ? brl(custoLead) : "-"].join(sep),
+    ];
+    const csv = "﻿" + [cab.join(sep), ...linhasCsv, ...resumo].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `custo-por-lead-${periodo}-${year}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
 
   const salvar = async () => {
     if (!month) return;
@@ -157,6 +194,67 @@ export default function CustoPorLeadPage() {
               {roi === null ? "Informe o investimento para calcular." : `VGV ${brl(vgvTotal)} sobre ${brl(investimento)} investidos`}
             </div>
           </div>
+        </div>
+
+        {/* Detalhamento por cargo */}
+        <div className="rounded-2xl border p-5" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+            <div>
+              <div className="font-semibold text-lg" style={{ color: "var(--foreground)" }}>Detalhamento por cargo</div>
+              <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>Quem recebeu os leads e converteu · {periodo}</div>
+            </div>
+            <button
+              onClick={exportarExcel}
+              className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl border"
+              style={{ borderColor: "var(--border)", color: "var(--foreground)", background: "var(--secondary)" }}
+            >
+              <Download size={15} /> Exportar Excel
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm" style={{ minWidth: 640, borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ color: "var(--muted-foreground)" }}>
+                  <th className="text-left font-medium pb-2 pr-3">Nome</th>
+                  <th className="text-left font-medium pb-2 pr-3">Cargo</th>
+                  <th className="text-right font-medium pb-2 pr-3">Leads</th>
+                  <th className="text-right font-medium pb-2 pr-3">Vendas</th>
+                  <th className="text-left font-medium pb-2 pr-3 w-40">Conversão</th>
+                  <th className="text-right font-medium pb-2">Custo dos leads</th>
+                </tr>
+              </thead>
+              <tbody>
+                {linhas.map((l) => (
+                  <tr key={l.responsavelId} style={{ borderTop: "1px solid var(--border)" }}>
+                    <td className="py-2.5 pr-3" style={{ color: "var(--foreground)" }}>{l.nome}</td>
+                    <td className="py-2.5 pr-3">
+                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}>
+                        {ROLE_LABEL[l.role] ?? l.role}
+                      </span>
+                    </td>
+                    <td className="py-2.5 pr-3 text-right tabular-nums" style={{ color: "var(--foreground)" }}>{l.leads}</td>
+                    <td className="py-2.5 pr-3 text-right tabular-nums" style={{ color: "var(--foreground)" }}>{l.vendas}</td>
+                    <td className="py-2.5 pr-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--secondary)" }}>
+                          <div className="h-full rounded-full" style={{ width: `${Math.min(l.conversao, 100)}%`, background: l.conversao > 0 ? "#22c55e" : "transparent" }} />
+                        </div>
+                        <span className="text-xs tabular-nums w-10 text-right" style={{ color: "var(--muted-foreground)" }}>{l.conversao.toFixed(0)}%</span>
+                      </div>
+                    </td>
+                    <td className="py-2.5 text-right tabular-nums" style={{ color: "var(--muted-foreground)" }}>{l.leads > 0 ? brl(l.custo) : "—"}</td>
+                  </tr>
+                ))}
+                {linhas.length === 0 && (
+                  <tr><td colSpan={6} className="py-6 text-center" style={{ color: "var(--muted-foreground)" }}>Sem dados no período.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs mt-3" style={{ color: "var(--muted-foreground)" }}>
+            "Custo dos leads" = custo por lead do período × leads que a pessoa recebeu. Conversão = vendas ÷ leads.
+          </p>
         </div>
       </div>
     </div>

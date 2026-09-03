@@ -107,6 +107,27 @@ export function useFollowups(year: number, month?: number) {
   });
 }
 
+export interface BreakdownItem {
+  responsavelId: string;
+  nome: string;
+  role: string;
+  leads: number;
+  vendas: number;
+}
+
+// Leads/vendas por responsável no período (mês ou ano todo).
+export function useBreakdown(year: number, month?: number) {
+  return useQuery({
+    queryKey: ["dashboard", "breakdown", year, month ?? "all"],
+    queryFn: async () => {
+      const { data } = await api.get<BreakdownItem[]>("/dashboard/breakdown", {
+        params: { year, ...(month ? { month } : {}) },
+      });
+      return data;
+    },
+  });
+}
+
 export function useRanking() {
   return useQuery({
     queryKey: ["dashboard", "ranking"],
