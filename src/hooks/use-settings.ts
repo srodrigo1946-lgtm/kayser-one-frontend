@@ -22,6 +22,7 @@ export interface AppSettings {
   hasMetaVerify: boolean;
   direcionalUrl?: string;
   tabelaRivaUrl?: string;
+  custoLeadVisivel?: boolean;
 }
 
 export function useSettings() {

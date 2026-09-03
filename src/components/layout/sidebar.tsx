@@ -27,11 +27,13 @@ import {
   Table,
   Video,
   CalendarClock,
+  Wallet,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { getStoredUser, logout } from "@/lib/auth";
 import { avatarUrl } from "@/hooks/use-profile";
 import { useSupportUnread } from "@/hooks/use-support";
+import { useSettings } from "@/hooks/use-settings";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -41,6 +43,7 @@ const navItems = [
   { href: "/kanban", label: "Kanban", icon: Kanban },
   { href: "/whatsapp", label: "Conversas ao vivo", icon: MessageSquare },
   { href: "/fila-leads", label: "Fila de Leads", icon: Megaphone, diretorOnly: true },
+  { href: "/custo-por-lead", label: "Custo por Lead", icon: Wallet, unlockKey: "custoLeadVisivel" },
   { href: "/escala", label: "Escala de Atendimento", icon: CalendarClock },
   { href: "/empresas", label: "Empresas", icon: Building2, diretorOnly: true },
   { href: "/ranking-analises", label: "Ranking Análises", icon: Trophy, roles: ["diretor", "superintendente", "gerente_geral"] },
@@ -69,6 +72,7 @@ export function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const user = getStoredUser() ?? { name: "Usuário", role: "corretor" };
   const isDiretor = (user as any).role === "diretor";
+  const { data: settings } = useSettings();
   const { data: supportUnread } = useSupportUnread(isDiretor);
 
   // O botão hambúrguer do Header dispara este evento (mesmo padrão da busca ⌘K).
@@ -185,6 +189,10 @@ export function Sidebar() {
             if ((user as any).empresaId) return item.href === "/pastas";
             // Itens com lista de cargos: só os cargos permitidos veem.
             if ((item as any).roles) return (item as any).roles.includes(user.role);
+            // Itens liberáveis pelo Diretor (toggle nas settings): Diretor sempre vê;
+            // os cargos só quando ele libera.
+            if ((item as any).unlockKey)
+              return user.role === "diretor" || !!(settings as any)?.[(item as any).unlockKey];
             return !(item as any).diretorOnly || user.role === "diretor";
           })
           .map(({ href, label, icon: Icon }) => {
