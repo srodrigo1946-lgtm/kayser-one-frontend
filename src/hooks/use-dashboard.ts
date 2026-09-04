@@ -143,6 +143,20 @@ export function useFunil(ids: string[], year: number, month?: number) {
   });
 }
 
+// Leads pagos por dia do mês (para o gráfico diário da aba Custo por Lead).
+export function useDaily(year: number, month: number) {
+  return useQuery({
+    queryKey: ["dashboard", "daily", year, month],
+    enabled: month > 0,
+    queryFn: async () => {
+      const { data } = await api.get<{ dia: number; leads: number }[]>("/dashboard/daily", {
+        params: { year, month },
+      });
+      return data;
+    },
+  });
+}
+
 export function useRanking() {
   return useQuery({
     queryKey: ["dashboard", "ranking"],

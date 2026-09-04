@@ -5,7 +5,8 @@ import { Header } from "@/components/layout/header";
 import { DollarSign, Users, Target, ShoppingBag, TrendingUp, Wallet, Download } from "lucide-react";
 import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
-import { useBreakdown } from "@/hooks/use-dashboard";
+import { useBreakdown, useDaily } from "@/hooks/use-dashboard";
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useInvestimento, useSetInvestimento } from "@/hooks/use-investimento";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 
@@ -45,6 +46,22 @@ export default function CustoPorLeadPage() {
   const leads = breakdown.reduce((a, b: any) => a + b.leads, 0);
   const vendas = breakdown.reduce((a, b: any) => a + b.vendas, 0);
   const vgvTotal = breakdown.reduce((a, b: any) => a + (b.vgv ?? 0), 0);
+
+  // Série diária (01..fim do mês): leads pagos por dia + gasto médio diário + custo por lead do dia.
+  const { data: daily = [] } = useDaily(year, month);
+  const diasNoMes = month ? new Date(year, month, 0).getDate() : 0;
+  const gastoDia = diasNoMes > 0 ? investimento / diasNoMes : 0;
+  const leadsPorDia = new Map(daily.map((d) => [d.dia, d.leads]));
+  const serieDiaria = Array.from({ length: diasNoMes }, (_, i) => {
+    const dia = i + 1;
+    const leadsDia = leadsPorDia.get(dia) ?? 0;
+    return {
+      dia: String(dia).padStart(2, "0"),
+      leads: leadsDia,
+      gasto: Math.round(gastoDia),
+      custo: leadsDia > 0 ? Math.round(gastoDia / leadsDia) : null,
+    };
+  });
 
   const custoLead = leads > 0 ? investimento / leads : 0;
   const custoVenda = vendas > 0 ? investimento / vendas : 0;
@@ -192,6 +209,39 @@ export default function CustoPorLeadPage() {
             </div>
           </div>
         </div>
+
+        {/* Gráfico diário (01..fim do mês) — gasto × custo por lead */}
+        {month ? (
+          <div className="rounded-2xl border p-5" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+            <div className="mb-1 font-semibold text-lg" style={{ color: "var(--foreground)" }}>
+              Custo por lead — dia a dia · {periodo}
+            </div>
+            <div className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
+              Barras = leads pagos do dia · Linha = custo por lead do dia. Dia com poucos leads = custo alto → hora de ajustar ou pausar o anúncio.
+            </div>
+            <ResponsiveContainer width="100%" height={280}>
+              <ComposedChart data={serieDiaria} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="dia" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} interval={1} />
+                <YAxis yAxisId="l" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <YAxis yAxisId="r" orientation="right" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => brl(v)} />
+                <Tooltip
+                  contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", color: "var(--foreground)" }}
+                  formatter={(value: any, name: any) =>
+                    name === "Leads" ? [value, name] : [value == null ? "—" : brl(Number(value)), name]
+                  }
+                  labelFormatter={(l) => `Dia ${l}`}
+                />
+                <Legend />
+                <Bar yAxisId="l" dataKey="leads" name="Leads" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={22} />
+                <Line yAxisId="r" type="monotone" dataKey="custo" name="Custo por lead" stroke="#f59e0b" strokeWidth={2} dot={false} connectNulls />
+              </ComposedChart>
+            </ResponsiveContainer>
+            <p className="text-xs mt-3" style={{ color: "var(--muted-foreground)" }}>
+              Gasto médio diário: <strong style={{ color: "var(--foreground)" }}>{brl(gastoDia)}</strong> (investimento do mês ÷ {diasNoMes} dias). Quando o gasto real por dia vier do Facebook (FiqOn), o custo por dia fica exato.
+            </p>
+          </div>
+        ) : null}
 
         {/* Detalhamento por cargo */}
         <div className="rounded-2xl border p-5" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
