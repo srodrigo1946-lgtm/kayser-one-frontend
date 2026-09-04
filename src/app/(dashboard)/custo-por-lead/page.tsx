@@ -6,7 +6,7 @@ import { DollarSign, Users, Target, ShoppingBag, TrendingUp, Wallet, Download } 
 import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
 import { useBreakdown, useDaily } from "@/hooks/use-dashboard";
-import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useInvestimento, useSetInvestimento } from "@/hooks/use-investimento";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 
@@ -221,7 +221,14 @@ export default function CustoPorLeadPage() {
             </div>
             <ResponsiveContainer width="100%" height={280}>
               <ComposedChart data={serieDiaria} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <defs>
+                  <linearGradient id="areaLeads" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                {/* Grade só horizontal, estilo Facebook Insights */}
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="dia" tick={{ fill: "var(--muted-foreground)", fontSize: 10 }} axisLine={false} tickLine={false} interval={0} />
                 <YAxis yAxisId="l" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <YAxis yAxisId="r" orientation="right" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => brl(v)} />
@@ -233,7 +240,7 @@ export default function CustoPorLeadPage() {
                   labelFormatter={(l) => `Dia ${l}`}
                 />
                 <Legend />
-                <Bar yAxisId="l" dataKey="leads" name="Leads" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={22} />
+                <Area yAxisId="l" type="monotone" dataKey="leads" name="Leads" stroke="#3b82f6" strokeWidth={2.5} fill="url(#areaLeads)" />
                 <Line yAxisId="r" type="monotone" dataKey="custo" name="Custo por lead" stroke="#f59e0b" strokeWidth={2} dot={false} connectNulls />
                 <Line yAxisId="r" type="monotone" dataKey="gasto" name="Gasto/dia" stroke="#10b981" strokeWidth={2} strokeDasharray="5 4" dot={false} />
               </ComposedChart>
