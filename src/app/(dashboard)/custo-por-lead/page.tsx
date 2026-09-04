@@ -222,7 +222,7 @@ export default function CustoPorLeadPage() {
             <ResponsiveContainer width="100%" height={280}>
               <ComposedChart data={serieDiaria} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="dia" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} interval={1} />
+                <XAxis dataKey="dia" tick={{ fill: "var(--muted-foreground)", fontSize: 10 }} axisLine={false} tickLine={false} interval={0} />
                 <YAxis yAxisId="l" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <YAxis yAxisId="r" orientation="right" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => brl(v)} />
                 <Tooltip
@@ -235,6 +235,7 @@ export default function CustoPorLeadPage() {
                 <Legend />
                 <Bar yAxisId="l" dataKey="leads" name="Leads" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={22} />
                 <Line yAxisId="r" type="monotone" dataKey="custo" name="Custo por lead" stroke="#f59e0b" strokeWidth={2} dot={false} connectNulls />
+                <Line yAxisId="r" type="monotone" dataKey="gasto" name="Gasto/dia" stroke="#10b981" strokeWidth={2} strokeDasharray="5 4" dot={false} />
               </ComposedChart>
             </ResponsiveContainer>
             <p className="text-xs mt-3" style={{ color: "var(--muted-foreground)" }}>
