@@ -35,6 +35,17 @@ function agoraBrasilia() {
   return { dia: DIAS[p.weekday], hhmm: `${hh}:${p.minute}` };
 }
 
+// "Sábado, 05/09" em horário de Brasília, com a inicial maiúscula.
+function dataHojeBrasilia() {
+  const s = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+  }).format(new Date());
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 export default function FilaLeadsPage() {
   const user = getStoredUser();
   const { data: settings } = useQueueSettings();
@@ -157,8 +168,14 @@ export default function FilaLeadsPage() {
         </div>
 
         <div className="pt-2 border-t" style={{ borderColor: "var(--border)" }}>
-          <div className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>
-            Plantão agora {turnoAtivo ? `(${turnoAtivo.horaInicio}–${turnoAtivo.horaFim})` : ""}:
+          <div className="text-xs mb-2 flex items-center gap-2 flex-wrap" style={{ color: "var(--muted-foreground)" }}>
+            <span
+              className="px-2 py-0.5 rounded-md font-medium"
+              style={{ background: "var(--secondary)", color: "var(--foreground)" }}
+            >
+              {dataHojeBrasilia()}
+            </span>
+            <span>Plantão agora {turnoAtivo ? `(${turnoAtivo.horaInicio}–${turnoAtivo.horaFim})` : ""}:</span>
           </div>
           {plantaoAgora.length > 0 ? (
             <div className="flex flex-wrap gap-2">
