@@ -26,3 +26,34 @@ export function useSetInvestimento() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["investimento"] }),
   });
 }
+
+export interface DiaValor {
+  dia: number;
+  valor: number;
+  fonte?: string;
+}
+
+// Gasto por dia do mês (para o editor manual e o gráfico diário).
+export function useInvestDays(year: number, month: number) {
+  return useQuery({
+    queryKey: ["investimento", "dias", year, month],
+    enabled: month > 0,
+    queryFn: async () => {
+      const { data } = await api.get<DiaValor[]>("/investimento/dias", {
+        params: { year, month },
+      });
+      return data;
+    },
+  });
+}
+
+export function useSetInvestDays() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ ano, mes, dias }: { ano: number; mes: number; dias: { dia: number; valor: number }[] }) => {
+      const { data } = await api.put("/investimento/dias", { ano, mes, dias });
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["investimento"] }),
+  });
+}

@@ -7,7 +7,7 @@ import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
 import { useBreakdown, useDaily } from "@/hooks/use-dashboard";
 import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { useInvestimento, useSetInvestimento } from "@/hooks/use-investimento";
+import { useInvestimento, useSetInvestimento, useInvestDays, useSetInvestDays } from "@/hooks/use-investimento";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 
 const MESES = [
@@ -47,21 +47,51 @@ export default function CustoPorLeadPage() {
   const vendas = breakdown.reduce((a, b: any) => a + b.vendas, 0);
   const vgvTotal = breakdown.reduce((a, b: any) => a + (b.vgv ?? 0), 0);
 
-  // Série diária (01..fim do mês): leads pagos por dia + gasto médio diário + custo por lead do dia.
+  // Série diária (01..fim do mês): leads pagos por dia + gasto/dia + custo por lead do dia.
   const { data: daily = [] } = useDaily(year, month);
+  const { data: investDaysData } = useInvestDays(year, month);
+  const investDays = investDaysData ?? [];
+  const setDays = useSetInvestDays();
   const diasNoMes = month ? new Date(year, month, 0).getDate() : 0;
-  const gastoDia = diasNoMes > 0 ? investimento / diasNoMes : 0;
+  const gastoDia = diasNoMes > 0 ? investimento / diasNoMes : 0; // média (usada só quando NÃO há gasto por dia)
   const leadsPorDia = new Map(daily.map((d) => [d.dia, d.leads]));
+  const mapGasto = new Map(investDays.map((d) => [d.dia, d.valor]));
+  const temDiario = investDays.length > 0; // se digitou gasto por dia, usa o real
   const serieDiaria = Array.from({ length: diasNoMes }, (_, i) => {
     const dia = i + 1;
     const leadsDia = leadsPorDia.get(dia) ?? 0;
+    const gastoDoDia = mapGasto.has(dia) ? (mapGasto.get(dia) as number) : temDiario ? 0 : gastoDia;
     return {
       dia: String(dia).padStart(2, "0"),
       leads: leadsDia,
-      gasto: Math.round(gastoDia),
-      custo: leadsDia > 0 ? Math.round(gastoDia / leadsDia) : null,
+      gasto: Math.round(gastoDoDia),
+      custo: leadsDia > 0 ? Math.round(gastoDoDia / leadsDia) : null,
     };
   });
+
+  // Editor de gasto por dia (manual).
+  const [diasInput, setDiasInput] = useState<Record<number, string>>({});
+  const [showDias, setShowDias] = useState(false);
+  const [feedbackDias, setFeedbackDias] = useState("");
+  useEffect(() => {
+    const m: Record<number, string> = {};
+    (investDaysData ?? []).forEach((d) => { m[d.dia] = String(d.valor); });
+    setDiasInput(m);
+  }, [investDaysData, month, year]);
+
+  const salvarDias = async () => {
+    if (!month) return;
+    setFeedbackDias("");
+    const dias = Object.entries(diasInput)
+      .filter(([, v]) => v !== "" && v != null)
+      .map(([d, v]) => ({ dia: Number(d), valor: Number(v) || 0 }));
+    try {
+      await setDays.mutateAsync({ ano: year, mes: month, dias });
+      setFeedbackDias("Gasto por dia salvo.");
+    } catch (err) {
+      setFeedbackDias(getApiErrorMessage(err, "Falha ao salvar. Apenas o Diretor pode alterar."));
+    }
+  };
 
   const custoLead = leads > 0 ? investimento / leads : 0;
   const custoVenda = vendas > 0 ? investimento / vendas : 0;
@@ -158,7 +188,11 @@ export default function CustoPorLeadPage() {
           {month ? (
             <>
               <div className="text-sm mb-3" style={{ color: "var(--muted-foreground)" }}>
-                {isDiretor ? "Digite o valor gasto no Facebook Ads neste mês." : "Definido pela direção."}
+                {temDiario
+                  ? "Você está usando gasto por dia (abaixo) — o total do mês é a soma dos dias."
+                  : isDiretor
+                    ? "Digite o valor total do mês, ou detalhe por dia no gráfico abaixo."
+                    : "Definido pela direção."}
               </div>
               {isDiretor ? (
                 <div className="flex items-center gap-2 flex-wrap">
@@ -246,8 +280,59 @@ export default function CustoPorLeadPage() {
               </ComposedChart>
             </ResponsiveContainer>
             <p className="text-xs mt-3" style={{ color: "var(--muted-foreground)" }}>
-              Gasto médio diário: <strong style={{ color: "var(--foreground)" }}>{brl(gastoDia)}</strong> (investimento do mês ÷ {diasNoMes} dias). Quando o gasto real por dia vier do Facebook (FiqOn), o custo por dia fica exato.
+              {temDiario ? (
+                <>Linha verde = <strong style={{ color: "var(--foreground)" }}>gasto real de cada dia</strong> (digitado ou automático). O custo por lead do dia é exato.</>
+              ) : (
+                <>Gasto médio diário: <strong style={{ color: "var(--foreground)" }}>{brl(gastoDia)}</strong> (investimento do mês ÷ {diasNoMes} dias). Digite o gasto por dia abaixo pra ficar exato.</>
+              )}
             </p>
+
+            {/* Editor de gasto por dia (só Diretor) */}
+            {isDiretor && (
+              <div className="mt-4 pt-4 border-t" style={{ borderColor: "var(--border)" }}>
+                <button
+                  onClick={() => setShowDias((v) => !v)}
+                  className="text-sm px-3 py-1.5 rounded-lg border"
+                  style={{ borderColor: "var(--border)", color: "var(--foreground)", background: "var(--secondary)" }}
+                >
+                  {showDias ? "Ocultar" : "Digitar gasto por dia"}
+                </button>
+                {showDias && (
+                  <div className="mt-3">
+                    <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                      {Array.from({ length: diasNoMes }, (_, i) => i + 1).map((dia) => (
+                        <div key={dia} className="flex items-center gap-1">
+                          <span className="text-xs w-5 text-right tabular-nums" style={{ color: "var(--muted-foreground)" }}>{String(dia).padStart(2, "0")}</span>
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            value={diasInput[dia] ?? ""}
+                            onChange={(e) => setDiasInput((s) => ({ ...s, [dia]: e.target.value }))}
+                            placeholder="R$"
+                            className="w-full px-2 py-1 rounded-lg border text-sm outline-none"
+                            style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2 mt-3">
+                      <button
+                        onClick={salvarDias}
+                        disabled={setDays.isPending}
+                        className="text-sm px-4 py-2 rounded-xl font-medium disabled:opacity-60"
+                        style={{ background: "var(--primary)", color: "white" }}
+                      >
+                        {setDays.isPending ? "Salvando…" : "Salvar gasto por dia"}
+                      </button>
+                      {feedbackDias && <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>{feedbackDias}</span>}
+                    </div>
+                    <p className="text-xs mt-2" style={{ color: "var(--muted-foreground)" }}>
+                      Ao salvar, o total do mês (Investimento, Custo por Lead, ROI) passa a ser a <strong>soma dos dias</strong>. Deixe em branco os dias sem gasto.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : null}
 
