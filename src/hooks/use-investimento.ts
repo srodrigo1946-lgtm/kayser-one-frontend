@@ -57,3 +57,15 @@ export function useSetInvestDays() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["investimento"] }),
   });
 }
+
+// Apaga o gasto por dia do mês (volta ao valor único mensal).
+export function useClearInvestDays() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ ano, mes }: { ano: number; mes: number }) => {
+      const { data } = await api.delete("/investimento/dias", { params: { year: ano, month: mes } });
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["investimento"] }),
+  });
+}

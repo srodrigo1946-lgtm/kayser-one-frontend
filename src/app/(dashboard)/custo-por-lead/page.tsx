@@ -7,7 +7,7 @@ import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
 import { useBreakdown, useDaily } from "@/hooks/use-dashboard";
 import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { useInvestimento, useSetInvestimento, useInvestDays, useSetInvestDays } from "@/hooks/use-investimento";
+import { useInvestimento, useSetInvestimento, useInvestDays, useSetInvestDays, useClearInvestDays } from "@/hooks/use-investimento";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 
 const MESES = [
@@ -54,6 +54,7 @@ export default function CustoPorLeadPage() {
   const { data: investDaysData } = useInvestDays(year, month);
   const investDays = investDaysData ?? [];
   const setDays = useSetInvestDays();
+  const clearDays = useClearInvestDays();
   const diasNoMes = month ? new Date(year, month, 0).getDate() : 0;
   const gastoDia = diasNoMes > 0 ? investimento / diasNoMes : 0; // média (usada só quando NÃO há gasto por dia)
   const leadsPorDia = new Map(daily.map((d) => [d.dia, d.leads]));
@@ -92,6 +93,19 @@ export default function CustoPorLeadPage() {
       setFeedbackDias("Gasto por dia salvo.");
     } catch (err) {
       setFeedbackDias(getApiErrorMessage(err, "Falha ao salvar. Apenas o Diretor pode alterar."));
+    }
+  };
+
+  const voltarValorUnico = async () => {
+    if (!month) return;
+    if (!confirm("Apagar o gasto por dia e voltar ao valor único do mês?")) return;
+    setFeedbackDias("");
+    try {
+      await clearDays.mutateAsync({ ano: year, mes: month });
+      setDiasInput({});
+      setFeedbackDias("Voltou ao valor único do mês.");
+    } catch (err) {
+      setFeedbackDias(getApiErrorMessage(err, "Falha ao limpar. Apenas o Diretor pode alterar."));
     }
   };
 
@@ -196,7 +210,10 @@ export default function CustoPorLeadPage() {
                     ? "Digite o valor total do mês, ou detalhe por dia no gráfico abaixo."
                     : "Definido pela direção."}
               </div>
-              {isDiretor ? (
+              {temDiario ? (
+                // Modo gasto por dia: o total é a soma dos dias (só leitura aqui).
+                <div className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>{brl(investimento)}</div>
+              ) : isDiretor ? (
                 <div className="flex items-center gap-2 flex-wrap">
                   <span style={{ color: "var(--muted-foreground)" }}>R$</span>
                   <input
@@ -326,6 +343,16 @@ export default function CustoPorLeadPage() {
                       >
                         {setDays.isPending ? "Salvando…" : "Salvar gasto por dia"}
                       </button>
+                      {temDiario && (
+                        <button
+                          onClick={voltarValorUnico}
+                          disabled={clearDays.isPending}
+                          className="text-sm px-3 py-2 rounded-xl border disabled:opacity-60"
+                          style={{ borderColor: "var(--border)", color: "var(--foreground)", background: "var(--secondary)" }}
+                        >
+                          {clearDays.isPending ? "Limpando…" : "Voltar ao valor único do mês"}
+                        </button>
+                      )}
                       {feedbackDias && <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>{feedbackDias}</span>}
                     </div>
                     <p className="text-xs mt-2" style={{ color: "var(--muted-foreground)" }}>
