@@ -394,6 +394,19 @@ export default function CustoPorLeadPage() {
                   <tr><td colSpan={7} className="py-6 text-center" style={{ color: "var(--muted-foreground)" }}>Sem dados no período.</td></tr>
                 )}
               </tbody>
+              {linhas.length > 0 && (
+                <tfoot>
+                  <tr style={{ borderTop: "2px solid var(--border)" }}>
+                    <td className="py-2.5 pr-3 font-semibold" style={{ color: "var(--foreground)" }}>Total</td>
+                    <td className="py-2.5 pr-3" />
+                    <td className="py-2.5 pr-3 text-right font-semibold tabular-nums" style={{ color: "var(--foreground)" }}>{leads}</td>
+                    <td className="py-2.5 pr-3 text-right font-semibold tabular-nums" style={{ color: "var(--foreground)" }}>{vendas}</td>
+                    <td className="py-2.5 pr-3" />
+                    <td className="py-2.5 pr-3 text-right tabular-nums" style={{ color: "var(--muted-foreground)" }}>{leads > 0 ? brl2(custoLead) : "—"}</td>
+                    <td className="py-2.5 text-right font-bold tabular-nums" style={{ color: "var(--foreground)" }}>{brl(linhas.reduce((a, l) => a + l.custo, 0))}</td>
+                  </tr>
+                </tfoot>
+              )}
             </table>
           </div>
           <p className="text-xs mt-3" style={{ color: "var(--muted-foreground)" }}>
