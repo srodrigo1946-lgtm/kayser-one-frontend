@@ -52,6 +52,15 @@ export function useDistribuirLead() {
   });
 }
 
+// Atribuições pendentes (leadId + prazo) para o relógio de contagem no card do Kanban.
+export function usePendentes() {
+  return useQuery({
+    queryKey: ["lead-queue", "pendentes"],
+    refetchInterval: 30_000,
+    queryFn: async () => (await api.get<{ leadId: string; dueAt: string }[]>("/lead-queue/pendentes")).data,
+  });
+}
+
 export function useQueueBoard(enabled = true) {
   return useQuery({
     queryKey: ["lead-queue", "board"],

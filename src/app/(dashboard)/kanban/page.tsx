@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import type { Lead, KanbanColumn } from "@/types";
-import { MessageSquare, Plus, Trash2, Settings2, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { MessageSquare, Plus, Trash2, Settings2, ChevronLeft, ChevronRight, Search, Clock } from "lucide-react";
 import {
   useKanbanBoard,
   useMoveCard,
@@ -14,11 +14,36 @@ import {
   useReorderColumns,
 } from "@/hooks/use-kanban";
 import { useDeleteLead } from "@/hooks/use-leads";
+import { usePendentes } from "@/hooks/use-lead-queue";
 import { getStoredUser } from "@/lib/auth";
 import { LeadDetailDrawer } from "@/components/leads/lead-detail-drawer";
 
+// Relógio de contagem regressiva do SLA (tempo pra atender antes de passar pro próximo).
+function Countdown({ dueAt }: { dueAt: string }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const restante = Math.max(0, Math.floor((new Date(dueAt).getTime() - now) / 1000));
+  const mm = String(Math.floor(restante / 60)).padStart(2, "0");
+  const ss = String(restante % 60).padStart(2, "0");
+  const acabou = restante <= 0;
+  const cor = acabou ? "#ef4444" : restante <= 120 ? "#f59e0b" : "#22c55e";
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-xs font-semibold px-1.5 py-0.5 rounded"
+      style={{ color: cor, background: `${cor}18` }}
+      title={acabou ? "Tempo esgotado — vai passar pro próximo da fila" : "Tempo para atender antes de passar pro próximo"}
+    >
+      <Clock size={11} /> {acabou ? "Esgotado" : `${mm}:${ss}`}
+    </span>
+  );
+}
+
 function LeadCard({
   lead,
+  dueAt,
   onDragStart,
   onOpen,
   podeExcluir,
@@ -26,6 +51,7 @@ function LeadCard({
   onWhatsapp,
 }: {
   lead: Lead;
+  dueAt?: string;
   onDragStart: (lead: Lead) => void;
   onOpen: (lead: Lead) => void;
   podeExcluir: boolean;
@@ -65,6 +91,10 @@ function LeadCard({
           </button>
         )}
       </div>
+
+      {dueAt && (
+        <div className="mb-2"><Countdown dueAt={dueAt} /></div>
+      )}
 
       {lead.empreendimento && (
         <div className="text-xs mb-2 truncate" style={{ color: "var(--muted-foreground)" }}>🏢 {lead.empreendimento}</div>
@@ -167,6 +197,8 @@ function ColumnEditor({
 
 export default function KanbanPage() {
   const { data: board, isLoading, isError } = useKanbanBoard();
+  const { data: pendentes } = usePendentes();
+  const dueByLead = new Map((pendentes ?? []).map((p) => [p.leadId, p.dueAt]));
   const moveCard = useMoveCard();
   const createColumn = useCreateColumn();
   const updateColumn = useUpdateColumn();
@@ -300,7 +332,7 @@ export default function KanbanPage() {
 
               <div className="flex-1 p-2 space-y-2 overflow-y-auto">
                 {filtra(col.leads).map((lead) => (
-                  <LeadCard key={lead.id} lead={lead} onDragStart={setDragging} onOpen={setDetailLead} podeExcluir={isDiretor} onExcluir={confirmarExcluir} onWhatsapp={abrirWhatsapp} />
+                  <LeadCard key={lead.id} lead={lead} dueAt={dueByLead.get(lead.id)} onDragStart={setDragging} onOpen={setDetailLead} podeExcluir={isDiretor} onExcluir={confirmarExcluir} onWhatsapp={abrirWhatsapp} />
                 ))}
                 {filtra(col.leads).length === 0 && (
                   <div className="text-xs text-center py-8 rounded-xl border-2 border-dashed" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
