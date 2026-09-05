@@ -151,6 +151,7 @@ function LeadEditForm({
   onSaved: (updated: Partial<Lead>) => void;
 }) {
   const updateLead = useUpdateLead();
+  const isDiretor = getStoredUser()?.role === "diretor";
   const { data: properties } = useProperties();
   const { data: teamUsers } = useUsers();
   const [saving, setSaving] = useState(false);
@@ -350,15 +351,17 @@ function LeadEditForm({
         )}
       </Field>
 
-      <Field label="Origem (conta no Custo por Lead?)">
-        <select value={form.source} onChange={(e) => set("source", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle}>
-          <option value="anuncio">Anúncio — conta no custo</option>
-          <option value="formulario_meta">Formulário Meta — conta no custo</option>
-          <option value="manual">Manual / oferta do corretor — não conta</option>
-          <option value="whatsapp">WhatsApp orgânico — não conta</option>
-        </select>
-        <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>Só "Anúncio" e "Formulário Meta" entram na conta de custo por lead.</div>
-      </Field>
+      {isDiretor && (
+        <Field label="Origem (conta no Custo por Lead?)">
+          <select value={form.source} onChange={(e) => set("source", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle}>
+            <option value="anuncio">Anúncio — conta no custo</option>
+            <option value="formulario_meta">Formulário Meta — conta no custo</option>
+            <option value="manual">Manual / oferta do corretor — não conta</option>
+            <option value="whatsapp">WhatsApp orgânico — não conta</option>
+          </select>
+          <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>Só o Diretor mexe aqui. Só "Anúncio" e "Formulário Meta" entram na conta de custo por lead.</div>
+        </Field>
+      )}
 
       <Field label="Origem (texto livre)"><input value={form.origem} onChange={(e) => set("origem", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
       <div className="grid grid-cols-2 gap-3">
