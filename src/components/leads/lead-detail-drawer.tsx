@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { X, Pencil, Loader2, Search } from "lucide-react";
+import { X, Pencil, Loader2, Search, Shuffle } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { getApiErrorMessage } from "@/lib/api";
+import { getStoredUser } from "@/lib/auth";
 import { useLeadHistory, useUpdateLead } from "@/hooks/use-leads";
+import { useDistribuirLead } from "@/hooks/use-lead-queue";
 import { useProperties } from "@/hooks/use-properties";
 import { useUsers } from "@/hooks/use-users";
 import type { Lead } from "@/types";
@@ -13,6 +15,36 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
   const [current, setCurrent] = useState<Lead>(lead);
   const [editing, setEditing] = useState(false);
   const { data: history, isLoading } = useLeadHistory(current.id);
+  const isDiretor = getStoredUser()?.role === "diretor";
+  const distribuir = useDistribuirLead();
+  const { data: allUsers } = useUsers();
+  const [filaMsg, setFilaMsg] = useState("");
+
+  const handleDistribuir = async () => {
+    setFilaMsg("");
+    try {
+      const r = await distribuir.mutateAsync(current.id);
+      if (r.status === "distribuido") {
+        const u = (allUsers ?? []).find((x) => x.id === r.assignedToId);
+        setFilaMsg(`Distribuído para ${u?.name ?? "corretor de plantão"}.`);
+        setCurrent((c) => ({
+          ...c,
+          responsavelId: r.assignedToId,
+          responsavel: u ? { id: u.id, name: u.name } : c.responsavel,
+        }));
+      } else if (r.status === "aguardando") {
+        setFilaMsg("Ninguém de plantão agora — ficou aguardando e será distribuído quando abrir o turno.");
+      } else if (r.status === "ja_na_fila") {
+        setFilaMsg("Esse lead já está na fila.");
+      } else if (r.status === "sem_telefone") {
+        setFilaMsg("Lead sem telefone — não dá para distribuir.");
+      } else {
+        setFilaMsg("A fila está desligada. Ligue em Fila de Leads.");
+      }
+    } catch (err) {
+      setFilaMsg(getApiErrorMessage(err, "Falha ao distribuir o lead."));
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end" style={{ background: "rgba(0,0,0,0.4)" }} onClick={onClose}>
@@ -66,6 +98,23 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
               <Detail label="Estado civil" value={current.estadoCivil || "—"} />
               <Detail label="Endereço" value={[current.logradouro, current.numero, current.bairro, current.cidade, current.estado].filter(Boolean).join(", ") || "—"} />
             </div>
+
+            {isDiretor && (
+              <div className="mb-6 p-3 rounded-xl border" style={{ borderColor: "var(--border)", background: "var(--secondary)" }}>
+                <button
+                  onClick={handleDistribuir}
+                  disabled={distribuir.isPending}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium disabled:opacity-60"
+                  style={{ background: "var(--primary)", color: "white" }}
+                >
+                  {distribuir.isPending ? <Loader2 size={16} className="animate-spin" /> : <Shuffle size={16} />}
+                  Distribuir pela fila (rodízio de plantão)
+                </button>
+                {filaMsg && (
+                  <div className="text-xs mt-2 text-center" style={{ color: "var(--muted-foreground)" }}>{filaMsg}</div>
+                )}
+              </div>
+            )}
 
             <h4 className="font-semibold mb-3" style={{ color: "var(--foreground)" }}>Histórico</h4>
             {isLoading && <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>Carregando...</p>}

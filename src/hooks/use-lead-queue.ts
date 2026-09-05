@@ -34,6 +34,24 @@ export function useUpdateQueue() {
   });
 }
 
+export interface DistribuirResult {
+  status: "distribuido" | "aguardando" | "ja_na_fila" | "sem_telefone" | "fila_desligada";
+  assignedToId?: string;
+}
+
+// Joga um lead manual no rodízio de plantão (só Diretor).
+export function useDistribuirLead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (leadId: string) =>
+      (await api.post<DistribuirResult>(`/lead-queue/distribuir/${leadId}`)).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["lead-queue", "board"] });
+      qc.invalidateQueries({ queryKey: ["leads"] });
+    },
+  });
+}
+
 export function useQueueBoard(enabled = true) {
   return useQuery({
     queryKey: ["lead-queue", "board"],
