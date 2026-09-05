@@ -15,6 +15,8 @@ const MESES = [
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ];
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+// Com centavos — para o custo por lead (valor real de 1 lead).
+const brl2 = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const ROLE_LABEL: Record<string, string> = {
   superintendente: "Superintendente",
   gerente_geral: "Gerente Geral",
@@ -108,13 +110,13 @@ export default function CustoPorLeadPage() {
 
   const exportarExcel = () => {
     const sep = ";";
-    const cab = ["Nome", "Cargo", "Leads recebidos", "Vendas", "Conversao (%)", "Custo dos leads (R$)"];
+    const cab = ["Nome", "Cargo", "Leads recebidos", "Vendas", "Conversao (%)", "Custo por lead (R$)", "Custo dos leads (R$)"];
     const linhasCsv = linhas.map((l) =>
-      [l.nome, ROLE_LABEL[l.role] ?? l.role, l.leads, l.vendas, l.conversao.toFixed(1).replace(".", ","), l.custo.toFixed(2).replace(".", ",")].join(sep)
+      [l.nome, ROLE_LABEL[l.role] ?? l.role, l.leads, l.vendas, l.conversao.toFixed(1).replace(".", ","), custoLead.toFixed(2).replace(".", ","), l.custo.toFixed(2).replace(".", ",")].join(sep)
     );
     const resumo = [
       "",
-      ["TOTAL", "", leads, vendas, (leads > 0 ? (vendas / leads) * 100 : 0).toFixed(1).replace(".", ","), investimento.toFixed(2).replace(".", ",")].join(sep),
+      ["TOTAL", "", leads, vendas, (leads > 0 ? (vendas / leads) * 100 : 0).toFixed(1).replace(".", ","), (leads > 0 ? custoLead : 0).toFixed(2).replace(".", ","), investimento.toFixed(2).replace(".", ",")].join(sep),
       ["Investimento", brl(investimento)].join(sep),
       ["Custo por lead", leads > 0 ? brl(custoLead) : "-"].join(sep),
     ];
@@ -361,6 +363,7 @@ export default function CustoPorLeadPage() {
                   <th className="text-right font-medium pb-2 pr-3">Leads</th>
                   <th className="text-right font-medium pb-2 pr-3">Vendas</th>
                   <th className="text-left font-medium pb-2 pr-3 w-40">Conversão</th>
+                  <th className="text-right font-medium pb-2 pr-3">Custo por lead</th>
                   <th className="text-right font-medium pb-2">Custo dos leads</th>
                 </tr>
               </thead>
@@ -383,17 +386,18 @@ export default function CustoPorLeadPage() {
                         <span className="text-xs tabular-nums w-10 text-right" style={{ color: "var(--muted-foreground)" }}>{l.conversao.toFixed(0)}%</span>
                       </div>
                     </td>
+                    <td className="py-2.5 pr-3 text-right tabular-nums" style={{ color: "var(--foreground)" }}>{l.leads > 0 ? brl2(custoLead) : "—"}</td>
                     <td className="py-2.5 text-right tabular-nums" style={{ color: "var(--muted-foreground)" }}>{l.leads > 0 ? brl(l.custo) : "—"}</td>
                   </tr>
                 ))}
                 {linhas.length === 0 && (
-                  <tr><td colSpan={6} className="py-6 text-center" style={{ color: "var(--muted-foreground)" }}>Sem dados no período.</td></tr>
+                  <tr><td colSpan={7} className="py-6 text-center" style={{ color: "var(--muted-foreground)" }}>Sem dados no período.</td></tr>
                 )}
               </tbody>
             </table>
           </div>
           <p className="text-xs mt-3" style={{ color: "var(--muted-foreground)" }}>
-            "Custo dos leads" = custo por lead do período × leads que a pessoa recebeu. Conversão = vendas ÷ leads.
+            "Custo por lead" = investimento ÷ total de leads pagos (o valor real de 1 lead). "Custo dos leads" = custo por lead × leads da pessoa. Conversão = vendas ÷ leads.
           </p>
         </div>
       </div>
