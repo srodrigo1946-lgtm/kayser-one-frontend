@@ -17,8 +17,11 @@ export default function EscalaPage() {
   const [abrindo, setAbrindo] = useState<string | null>(null); // id do turno com o seletor aberto
 
   const byId = new Map((users ?? []).map((u: any) => [u.id, u]));
-  // Atendentes elegíveis: todos menos o Diretor (que não entra no rodízio).
-  const elegiveis = (users ?? []).filter((u: any) => u.role !== "diretor" && u.approved !== false);
+  // Só CORRETOR entra no plantão (regra do Rodrigo: gerente pra cima não recebe lead).
+  // Empresa parceira (corretor + empresaId) também fica de fora.
+  const elegiveis = (users ?? []).filter(
+    (u: any) => u.role === "corretor" && u.approved !== false && !u.empresaId
+  );
 
   const turnosDoDia = (dia: number): EscalaTurno[] =>
     (grade ?? []).filter((t) => t.diaSemana === dia).sort((a, b) => a.turno - b.turno);

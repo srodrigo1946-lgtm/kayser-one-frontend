@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Megaphone, ChevronUp, ChevronDown, Loader2, Check, Search } from "lucide-react";
+import Link from "next/link";
+import { Megaphone, Loader2, Check, CalendarClock } from "lucide-react";
 import { useQueueSettings, useUpdateQueue, useQueueBoard } from "@/hooks/use-lead-queue";
 import { useUsers } from "@/hooks/use-users";
+import { useEscala } from "@/hooks/use-escala";
 import { getStoredUser } from "@/lib/auth";
 
 const roleLabels: Record<string, string> = {
@@ -14,24 +16,41 @@ const roleLabels: Record<string, string> = {
   corretor: "Corretor",
 };
 
+// Turno ativo AGORA em horário de Brasília (mesma regra do backend), independente
+// do fuso do computador de quem abre a tela.
+function agoraBrasilia() {
+  const p = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Sao_Paulo",
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    })
+      .formatToParts(new Date())
+      .map((x) => [x.type, x.value])
+  );
+  const DIAS: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  const hh = p.hour === "24" ? "00" : p.hour;
+  return { dia: DIAS[p.weekday], hhmm: `${hh}:${p.minute}` };
+}
+
 export default function FilaLeadsPage() {
   const user = getStoredUser();
   const { data: settings } = useQueueSettings();
   const { data: users } = useUsers();
+  const { data: grade } = useEscala();
   const { data: board } = useQueueBoard(user?.role === "diretor");
   const update = useUpdateQueue();
 
   const [enabled, setEnabled] = useState(false);
   const [slaMinutes, setSlaMinutes] = useState(5);
-  const [members, setMembers] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
-  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (settings) {
       setEnabled(settings.enabled);
       setSlaMinutes(settings.slaMinutes);
-      setMembers(settings.memberIds ?? []);
     }
   }, [settings]);
 
@@ -45,25 +64,21 @@ export default function FilaLeadsPage() {
     );
   }
 
-  // Cargos elegíveis para a fila (aprovados, exceto o Diretor).
-  const eligible = (users ?? []).filter((u: any) => u.role !== "diretor" && u.approved !== false);
   const byId = new Map((users ?? []).map((u: any) => [u.id, u]));
 
-  const toggleMember = (id: string) =>
-    setMembers((m) => (m.includes(id) ? m.filter((x) => x !== id) : [...m, id]));
-
-  const move = (idx: number, dir: -1 | 1) =>
-    setMembers((m) => {
-      const j = idx + dir;
-      if (j < 0 || j >= m.length) return m;
-      const copy = [...m];
-      [copy[idx], copy[j]] = [copy[j], copy[idx]];
-      return copy;
-    });
+  // Plantão AGORA = atendentes do turno ativo (puxado da Escala).
+  const { dia, hhmm } = agoraBrasilia();
+  const turnoAtivo = (grade ?? []).find(
+    (t) => t.diaSemana === dia && t.horaInicio <= hhmm && hhmm < t.horaFim
+  );
+  // Só corretor recebe lead (gerente pra cima não entra), igual à regra do backend.
+  const plantaoAgora = (turnoAtivo?.atendenteIds ?? [])
+    .map((id) => byId.get(id))
+    .filter((u: any) => u && u.role === "corretor" && !u.empresaId) as any[];
 
   const salvar = async () => {
     setSaved(false);
-    await update.mutateAsync({ enabled, slaMinutes, memberIds: members });
+    await update.mutateAsync({ enabled, slaMinutes });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
   };
@@ -81,7 +96,8 @@ export default function FilaLeadsPage() {
       </div>
       <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
         Quando ligada, os leads que chegam pelo número central (Diretor) via anúncio
-        "Clique para WhatsApp" são distribuídos automaticamente em rodízio entre os cargos.
+        "Clique para WhatsApp" são distribuídos automaticamente em rodízio — mas
+        <strong> só entre quem está de plantão na Escala de Atendimento</strong> naquele horário.
         Se o cargo não atender dentro do tempo, o lead passa para o próximo.
       </p>
 
@@ -122,71 +138,45 @@ export default function FilaLeadsPage() {
         </div>
       </div>
 
-      {/* Cargos na fila */}
+      {/* Quem recebe = Escala (não é mais lista manual) */}
       <div className="rounded-2xl border p-4 space-y-3" style={card}>
-        <div className="font-medium" style={{ color: "var(--foreground)" }}>Cargos na fila (ordem do rodízio)</div>
-
-        {/* Selecionados, na ordem */}
-        <div className="space-y-1.5">
-          {members.map((id, idx) => {
-            const u: any = byId.get(id);
-            if (!u) return null;
-            return (
-              <div key={id} className="flex items-center gap-2 p-2 rounded-lg border" style={{ borderColor: "var(--border)" }}>
-                <span className="text-xs w-6 text-center" style={{ color: "var(--muted-foreground)" }}>{idx + 1}º</span>
-                <span className="flex-1 text-sm" style={{ color: "var(--foreground)" }}>
-                  {u.name} <span style={{ color: "var(--muted-foreground)" }}>· {roleLabels[u.role] ?? u.role}</span>
-                </span>
-                <button onClick={() => move(idx, -1)} disabled={idx === 0} className="p-1 disabled:opacity-30" style={{ color: "var(--muted-foreground)" }}><ChevronUp size={16} /></button>
-                <button onClick={() => move(idx, 1)} disabled={idx === members.length - 1} className="p-1 disabled:opacity-30" style={{ color: "var(--muted-foreground)" }}><ChevronDown size={16} /></button>
-                <button onClick={() => toggleMember(id)} className="text-xs px-2 py-1 rounded" style={{ color: "var(--destructive, #ef4444)" }}>Remover</button>
-              </div>
-            );
-          })}
-          {members.length === 0 && (
-            <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Nenhum cargo na fila ainda. Adicione abaixo.</p>
-          )}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div>
+            <div className="font-medium" style={{ color: "var(--foreground)" }}>Quem recebe os leads</div>
+            <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+              A distribuição é automática pela <strong>Escala de Atendimento</strong> — só recebe quem está de plantão no horário.
+            </div>
+          </div>
+          <Link
+            href="/escala"
+            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border"
+            style={{ borderColor: "var(--border)", color: "var(--foreground)", background: "var(--secondary)" }}
+          >
+            <CalendarClock size={15} /> Editar Escala
+          </Link>
         </div>
 
-        {/* Disponíveis */}
         <div className="pt-2 border-t" style={{ borderColor: "var(--border)" }}>
-          <div className="text-xs mb-1.5" style={{ color: "var(--muted-foreground)" }}>Adicionar à fila:</div>
-          <div className="relative mb-2">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: "var(--muted-foreground)" }} />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Pesquisar cargo por nome..."
-              className="w-full pl-8 pr-2 py-1.5 rounded-lg border text-sm outline-none"
-              style={input}
-            />
+          <div className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>
+            Plantão agora {turnoAtivo ? `(${turnoAtivo.horaInicio}–${turnoAtivo.horaFim})` : ""}:
           </div>
-          <div className="flex flex-wrap gap-2">
-            {(() => {
-              const disponiveis = eligible.filter(
-                (u: any) =>
-                  !members.includes(u.id) &&
-                  (u.name ?? "").toLowerCase().includes(search.trim().toLowerCase())
-              );
-              if (disponiveis.length === 0) {
-                return (
-                  <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-                    {search ? "Nenhum cargo encontrado." : "Todos os cargos já estão na fila."}
-                  </span>
-                );
-              }
-              return disponiveis.map((u: any) => (
-                <button
+          {plantaoAgora.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {plantaoAgora.map((u) => (
+                <span
                   key={u.id}
-                  onClick={() => toggleMember(u.id)}
                   className="text-xs px-2.5 py-1.5 rounded-lg border"
                   style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
                 >
-                  + {u.name} <span style={{ color: "var(--muted-foreground)" }}>({roleLabels[u.role] ?? u.role})</span>
-                </button>
-              ));
-            })()}
-          </div>
+                  {u.name} <span style={{ color: "var(--muted-foreground)" }}>({roleLabels[u.role] ?? u.role})</span>
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs" style={{ color: "var(--warning, #f59e0b)" }}>
+              Ninguém de plantão agora — os leads ficam aguardando até abrir um turno com atendentes. Adicione pessoas na Escala.
+            </p>
+          )}
         </div>
       </div>
 
@@ -209,10 +199,8 @@ export default function FilaLeadsPage() {
           <Metric label="Estouraram o tempo" value={board?.expirados ?? 0} color="var(--warning, #f59e0b)" />
         </div>
         <div className="space-y-1">
-          {/* Só quem está no rodízio HOJE. Atribuições de quem já saiu da fila
-              (ou foi apagado) poluíam o painel com "Usuário removido". */}
           {Object.entries(board?.porCargo ?? {})
-            .filter(([id]) => members.includes(id))
+            .filter(([id]) => !!id)
             .map(([id, n]) => (
               <div key={id} className="flex justify-between text-sm">
                 <span style={{ color: "var(--muted-foreground)" }}>
