@@ -166,6 +166,7 @@ function LeadEditForm({
     responsavelId: lead.responsavelId ?? lead.responsavel?.id ?? "",
     propertyId: lead.propertyId ?? "",
     empreendimento: lead.empreendimento ?? "",
+    source: lead.source ?? "",
     origem: lead.origem ?? "",
     cidade: lead.cidade ?? "",
     renda: lead.renda != null ? String(lead.renda) : "",
@@ -242,6 +243,7 @@ function LeadEditForm({
       email: form.email.trim() || undefined,
       propertyId: form.propertyId || undefined,
       empreendimento: form.empreendimento.trim() || undefined,
+      source: form.source || undefined,
       origem: form.origem.trim() || undefined,
       cidade: form.cidade.trim() || undefined,
       renda: form.renda !== "" ? Number(form.renda) : undefined,
@@ -348,7 +350,17 @@ function LeadEditForm({
         )}
       </Field>
 
-      <Field label="Origem"><input value={form.origem} onChange={(e) => set("origem", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
+      <Field label="Origem (conta no Custo por Lead?)">
+        <select value={form.source} onChange={(e) => set("source", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle}>
+          <option value="anuncio">Anúncio — conta no custo</option>
+          <option value="formulario_meta">Formulário Meta — conta no custo</option>
+          <option value="manual">Manual / oferta do corretor — não conta</option>
+          <option value="whatsapp">WhatsApp orgânico — não conta</option>
+        </select>
+        <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>Só "Anúncio" e "Formulário Meta" entram na conta de custo por lead.</div>
+      </Field>
+
+      <Field label="Origem (texto livre)"><input value={form.origem} onChange={(e) => set("origem", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Renda (R$)"><input type="number" value={form.renda} onChange={(e) => set("renda", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
         <Field label="FGTS (R$)"><input type="number" value={form.fgts} onChange={(e) => set("fgts", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>

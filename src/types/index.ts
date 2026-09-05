@@ -38,6 +38,7 @@ export interface Lead {
   propertyId?: string | null;
   origem?: string;
   campanha?: string;
+  source?: string;
   responsavel?: { id: string; name: string; manager?: { id: string; name: string } | null } | null;
   responsavelId?: string;
   cidade?: string;
