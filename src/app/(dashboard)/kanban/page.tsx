@@ -332,7 +332,7 @@ export default function KanbanPage() {
 
               <div className="flex-1 p-2 space-y-2 overflow-y-auto">
                 {filtra(col.leads).map((lead) => (
-                  <LeadCard key={lead.id} lead={lead} dueAt={dueByLead.get(lead.id)} onDragStart={setDragging} onOpen={setDetailLead} podeExcluir={isDiretor} onExcluir={confirmarExcluir} onWhatsapp={abrirWhatsapp} />
+                  <LeadCard key={lead.id} lead={lead} dueAt={col.id === "novo_lead" ? dueByLead.get(lead.id) : undefined} onDragStart={setDragging} onOpen={setDetailLead} podeExcluir={isDiretor} onExcluir={confirmarExcluir} onWhatsapp={abrirWhatsapp} />
                 ))}
                 {filtra(col.leads).length === 0 && (
                   <div className="text-xs text-center py-8 rounded-xl border-2 border-dashed" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
