@@ -191,37 +191,73 @@ export default function FilaLeadsPage() {
         </div>
       </div>
 
-      <button
-        onClick={salvar}
-        disabled={update.isPending}
-        className="text-sm px-4 py-2.5 rounded-lg font-medium flex items-center gap-1.5 disabled:opacity-60"
-        style={{ background: "var(--primary)", color: "white" }}
-      >
-        {update.isPending ? <Loader2 size={14} className="animate-spin" /> : saved ? <Check size={14} /> : null}
-        {saved ? "Salvo" : "Salvar configuração"}
-      </button>
+      {isDiretor && (
+        <button
+          onClick={salvar}
+          disabled={update.isPending}
+          className="text-sm px-4 py-2.5 rounded-lg font-medium flex items-center gap-1.5 disabled:opacity-60"
+          style={{ background: "var(--primary)", color: "white" }}
+        >
+          {update.isPending ? <Loader2 size={14} className="animate-spin" /> : saved ? <Check size={14} /> : null}
+          {saved ? "Salvo" : "Salvar configuração"}
+        </button>
+      )}
 
-      {/* Painel do dia */}
+      {/* Ordem da fila (rodízio) — TODOS os cargos veem, só leitura */}
       <div className="rounded-2xl border p-4" style={card}>
-        <div className="font-medium mb-3" style={{ color: "var(--foreground)" }}>Hoje</div>
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          <Metric label="Recebidos" value={board?.recebidos ?? 0} color="var(--foreground)" />
-          <Metric label="Atendidos" value={board?.atendidos ?? 0} color="var(--success, #22c55e)" />
-          <Metric label="Estouraram o tempo" value={board?.expirados ?? 0} color="var(--warning, #f59e0b)" />
+        <div className="flex items-center gap-2 mb-3">
+          <ListOrdered size={16} style={{ color: "var(--primary)" }} />
+          <div className="font-medium" style={{ color: "var(--foreground)" }}>Ordem da fila (rodízio de plantão)</div>
         </div>
-        <div className="space-y-1">
-          {Object.entries(board?.porCargo ?? {})
-            .filter(([id]) => !!id)
-            .map(([id, n]) => (
-              <div key={id} className="flex justify-between text-sm">
-                <span style={{ color: "var(--muted-foreground)" }}>
-                  {(byId.get(id) as any)?.name ?? "Usuário removido"}
-                </span>
-                <span style={{ color: "var(--foreground)" }}>{n as number}</span>
+        {ordem?.turnoAtivo && (ordem.ordem?.length ?? 0) > 0 ? (
+          <div className="space-y-1.5">
+            {ordem.ordem.map((o, i) => (
+              <div
+                key={o.userId}
+                className="flex items-center gap-2 p-2 rounded-lg border"
+                style={{ borderColor: o.proximo ? "var(--primary)" : "var(--border)", background: o.proximo ? "var(--primary)10" : "transparent" }}
+              >
+                <span className="text-xs w-6 text-center" style={{ color: "var(--muted-foreground)" }}>{i + 1}º</span>
+                <span className="flex-1 text-sm" style={{ color: "var(--foreground)" }}>{o.nome}</span>
+                {o.proximo && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ background: "var(--primary)", color: "white" }}>PRÓXIMO</span>
+                )}
               </div>
             ))}
-        </div>
+          </div>
+        ) : (
+          <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Ninguém de plantão agora.</p>
+        )}
+        {(ordem?.aguardando ?? 0) > 0 && (
+          <div className="mt-3 text-xs px-2.5 py-1.5 rounded-lg" style={{ background: "#f59e0b18", color: "var(--warning, #f59e0b)" }}>
+            ⏳ {ordem?.aguardando} lead(s) aguardando abrir o turno pra distribuir.
+          </div>
+        )}
       </div>
+
+      {/* Painel do dia — só Diretor */}
+      {isDiretor && (
+        <div className="rounded-2xl border p-4" style={card}>
+          <div className="font-medium mb-3" style={{ color: "var(--foreground)" }}>Hoje</div>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <Metric label="Recebidos" value={board?.recebidos ?? 0} color="var(--foreground)" />
+            <Metric label="Atendidos" value={board?.atendidos ?? 0} color="var(--success, #22c55e)" />
+            <Metric label="Estouraram o tempo" value={board?.expirados ?? 0} color="var(--warning, #f59e0b)" />
+          </div>
+          <div className="space-y-1">
+            {Object.entries(board?.porCargo ?? {})
+              .filter(([id]) => !!id)
+              .map(([id, n]) => (
+                <div key={id} className="flex justify-between text-sm">
+                  <span style={{ color: "var(--muted-foreground)" }}>
+                    {(byId.get(id) as any)?.name ?? "Usuário removido"}
+                  </span>
+                  <span style={{ color: "var(--foreground)" }}>{n as number}</span>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
