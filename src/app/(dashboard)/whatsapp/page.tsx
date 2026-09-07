@@ -249,20 +249,6 @@ export default function WhatsAppPage() {
                   Atendente: {selected.assignedTo?.name ?? "não atribuído"}
                 </div>
               </div>
-              {(teamUsers ?? []).length > 0 && (
-                <select
-                  value={selected.assignedToId ?? ""}
-                  onChange={(e) => assign.mutate({ conversationId: selected.id, userId: e.target.value || null })}
-                  className="text-xs px-2 py-1.5 rounded-lg border outline-none flex-shrink-0"
-                  style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
-                  title="Atribuir atendente"
-                >
-                  <option value="">Sem atendente</option>
-                  {(teamUsers ?? []).map((u) => (
-                    <option key={u.id} value={u.id}>{u.name}</option>
-                  ))}
-                </select>
-              )}
             </div>
 
             {/* Etiqueta = estágio do funil (lista suspensa). Move o card no Kanban. */}
@@ -289,6 +275,30 @@ export default function WhatsAppPage() {
                 ) : null;
               })()}
             </div>
+
+            {/* Transferir a conversa (e o lead junto) para outro corretor — tudo dentro
+                do Kayser One. O histórico fica; o cliente continua no WhatsApp dele. */}
+            {(teamUsers ?? []).length > 0 && (
+              <div className="flex items-center gap-2 px-4 py-2 border-b flex-wrap" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+                <span className="text-xs flex-shrink-0" style={{ color: "var(--muted-foreground)" }}>Transferir para:</span>
+                <select
+                  value={selected.assignedToId ?? ""}
+                  onChange={(e) => assign.mutate({ conversationId: selected.id, userId: e.target.value || null })}
+                  disabled={assign.isPending}
+                  className="text-sm px-2 py-1.5 rounded-lg border outline-none disabled:opacity-50"
+                  style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+                  title="Transferir a conversa e o lead"
+                >
+                  <option value="">— Sem atendente —</option>
+                  {(teamUsers ?? []).map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </select>
+                <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+                  A conversa (com histórico) e o lead vão junto.
+                </span>
+              </div>
+            )}
 
             <DocRequestPanel
               conversationId={selected.id}
