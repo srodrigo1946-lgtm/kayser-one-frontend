@@ -281,6 +281,11 @@ export default function WhatsAppPage() {
                 </div>
                 <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>
                   Atendente: {selected.assignedTo?.name ?? "não atribuído"}
+                  {(() => {
+                    const a = (teamUsers ?? []).find((u) => u.id === selected.assignedToId);
+                    const ger = a?.managerId ? (teamUsers ?? []).find((u) => u.id === a.managerId)?.name : null;
+                    return ger ? <span> · Gerente de vendas: <strong style={{ color: "var(--foreground)" }}>{ger.split(" ").slice(0, 2).join(" ")}</strong></span> : null;
+                  })()}
                 </div>
               </div>
             </div>
