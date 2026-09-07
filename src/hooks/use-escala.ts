@@ -32,3 +32,14 @@ export function useSetTurno() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["escala"] }),
   });
 }
+
+export function useSetHorario() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, horaInicio, horaFim }: { id: string; horaInicio: string; horaFim: string }) => {
+      const { data } = await api.put(`/escala/${id}/horario`, { horaInicio, horaFim });
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["escala"] }),
+  });
+}

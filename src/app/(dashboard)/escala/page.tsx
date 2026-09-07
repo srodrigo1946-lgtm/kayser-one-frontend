@@ -5,7 +5,7 @@ import { Header } from "@/components/layout/header";
 import { Plus, X } from "lucide-react";
 import { getStoredUser } from "@/lib/auth";
 import { useUsers } from "@/hooks/use-users";
-import { useEscala, useSetTurno, type EscalaTurno } from "@/hooks/use-escala";
+import { useEscala, useSetTurno, useSetHorario, type EscalaTurno } from "@/hooks/use-escala";
 
 const DIAS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
@@ -14,6 +14,7 @@ export default function EscalaPage() {
   const { data: grade } = useEscala();
   const { data: users } = useUsers();
   const setTurno = useSetTurno();
+  const setHorario = useSetHorario();
   const [abrindo, setAbrindo] = useState<string | null>(null); // id do turno com o seletor aberto
 
   const byId = new Map((users ?? []).map((u: any) => [u.id, u]));
@@ -46,9 +47,29 @@ export default function EscalaPage() {
               </div>
               {turnosDoDia(dia).map((t) => (
                 <div key={t.id} className="rounded-xl border p-3 flex flex-col gap-2" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-                  <div className="text-xs font-medium" style={{ color: "var(--muted-foreground)" }}>
-                    {t.horaInicio}–{t.horaFim}
-                  </div>
+                  {isDiretor ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="time"
+                        defaultValue={t.horaInicio}
+                        onBlur={(e) => e.target.value && e.target.value !== t.horaInicio && setHorario.mutate({ id: t.id, horaInicio: e.target.value, horaFim: t.horaFim })}
+                        className="px-1 py-0.5 rounded border text-xs outline-none w-[70px]"
+                        style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+                      />
+                      <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>–</span>
+                      <input
+                        type="time"
+                        defaultValue={t.horaFim}
+                        onBlur={(e) => e.target.value && e.target.value !== t.horaFim && setHorario.mutate({ id: t.id, horaInicio: t.horaInicio, horaFim: e.target.value })}
+                        className="px-1 py-0.5 rounded border text-xs outline-none w-[70px]"
+                        style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-xs font-medium" style={{ color: "var(--muted-foreground)" }}>
+                      {t.horaInicio}–{t.horaFim}
+                    </div>
+                  )}
 
                   <div className="flex flex-col gap-1">
                     {t.atendenteIds.length === 0 && (
