@@ -15,7 +15,23 @@ export interface QueueBoard {
   recebidos: number;
   atendidos: number;
   expirados: number;
+  aguardando?: number;
   porCargo: Record<string, number>;
+}
+
+export interface QueueOrdem {
+  turnoAtivo: boolean;
+  ordem: { userId: string; nome: string; proximo: boolean }[];
+  aguardando: number;
+}
+
+// Ordem do rodízio agora (todos os cargos VEEM, só leitura).
+export function useQueueOrdem() {
+  return useQuery({
+    queryKey: ["lead-queue", "ordem"],
+    refetchInterval: 30_000,
+    queryFn: async () => (await api.get<QueueOrdem>("/lead-queue/ordem")).data,
+  });
 }
 
 export function useQueueSettings() {

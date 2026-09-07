@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Megaphone, Loader2, Check, CalendarClock } from "lucide-react";
-import { useQueueSettings, useUpdateQueue, useQueueBoard } from "@/hooks/use-lead-queue";
+import { Megaphone, Loader2, Check, CalendarClock, ListOrdered } from "lucide-react";
+import { useQueueSettings, useUpdateQueue, useQueueBoard, useQueueOrdem } from "@/hooks/use-lead-queue";
 import { useUsers } from "@/hooks/use-users";
 import { useEscala } from "@/hooks/use-escala";
 import { getStoredUser } from "@/lib/auth";
@@ -48,10 +48,12 @@ function dataHojeBrasilia() {
 
 export default function FilaLeadsPage() {
   const user = getStoredUser();
+  const isDiretor = user?.role === "diretor";
   const { data: settings } = useQueueSettings();
   const { data: users } = useUsers();
   const { data: grade } = useEscala();
-  const { data: board } = useQueueBoard(user?.role === "diretor");
+  const { data: board } = useQueueBoard(isDiretor);
+  const { data: ordem } = useQueueOrdem();
   const update = useUpdateQueue();
 
   const [enabled, setEnabled] = useState(false);
@@ -64,16 +66,6 @@ export default function FilaLeadsPage() {
       setSlaMinutes(settings.slaMinutes);
     }
   }, [settings]);
-
-  if (user?.role !== "diretor") {
-    return (
-      <div className="p-8">
-        <p style={{ color: "var(--muted-foreground)" }}>
-          Apenas o Diretor pode configurar a fila de leads.
-        </p>
-      </div>
-    );
-  }
 
   const byId = new Map((users ?? []).map((u: any) => [u.id, u]));
 
@@ -112,7 +104,8 @@ export default function FilaLeadsPage() {
         Se o cargo não atender dentro do tempo, o lead passa para o próximo.
       </p>
 
-      {/* Configuração */}
+      {/* Configuração — só o Diretor mexe */}
+      {isDiretor && (
       <div className="rounded-2xl border p-4 space-y-4" style={card}>
         <div className="flex items-center justify-between">
           <div>
@@ -148,6 +141,7 @@ export default function FilaLeadsPage() {
           />
         </div>
       </div>
+      )}
 
       {/* Quem recebe = Escala (não é mais lista manual) */}
       <div className="rounded-2xl border p-4 space-y-3" style={card}>

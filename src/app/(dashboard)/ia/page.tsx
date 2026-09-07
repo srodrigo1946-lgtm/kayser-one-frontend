@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/layout/header";
 import { Bot, Send, Upload, FileText, Settings, Zap, RefreshCw, Loader2, Check } from "lucide-react";
 import { useAiChat, useMyAi, useUpdateMyAi, type AiChatMessage } from "@/hooks/use-ai";
-import { useSettings } from "@/hooks/use-settings";
+import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useKnowledge, useUploadKnowledge } from "@/hooks/use-knowledge";
 import { getApiErrorMessage } from "@/lib/api";
+import { getStoredUser } from "@/lib/auth";
 
 const initialConvo: AiChatMessage[] = [
   {
@@ -312,10 +313,12 @@ function KnowledgePanel() {
 /* Automações REAIS lidas das configurações. */
 function AutomationsPanel() {
   const { data: s } = useSettings();
-  const rows = [
-    { label: "Resposta imediata (IA)", active: !!s?.aiAutoReply },
-    { label: `Follow-up ${s?.followupDays ?? 3} dias`, active: !!s?.followupEnabled },
-    { label: "IA responde em grupos", active: !!s?.aiReplyGroups },
+  const updateSettings = useUpdateSettings();
+  const isDiretor = getStoredUser()?.role === "diretor";
+  const rows: { label: string; key: "aiAutoReply" | "followupEnabled" | "aiReplyGroups"; active: boolean }[] = [
+    { label: "Resposta imediata (IA)", key: "aiAutoReply", active: !!s?.aiAutoReply },
+    { label: `Follow-up ${s?.followupDays ?? 3} dias`, key: "followupEnabled", active: !!s?.followupEnabled },
+    { label: "IA responde em grupos", key: "aiReplyGroups", active: !!s?.aiReplyGroups },
   ];
   return (
     <div className="rounded-2xl border p-4" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
@@ -323,17 +326,32 @@ function AutomationsPanel() {
         <Zap size={16} style={{ color: "#f59e0b" }} />
         <h3 className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>Automações Ativas</h3>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {rows.map((a) => (
-          <div key={a.label} className="flex items-center justify-between">
+          <div key={a.label} className="flex items-center justify-between gap-2">
             <span className="text-xs" style={{ color: "var(--foreground)" }}>{a.label}</span>
-            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: a.active ? "#22c55e18" : "var(--secondary)", color: a.active ? "#22c55e" : "var(--muted-foreground)" }}>
-              {a.active ? "Ativo" : "Inativo"}
-            </span>
+            {isDiretor ? (
+              <button
+                onClick={() => updateSettings.mutate({ [a.key]: !a.active } as any)}
+                disabled={updateSettings.isPending}
+                className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0 disabled:opacity-60"
+                style={{ background: a.active ? "#22c55e" : "var(--secondary)" }}
+                title={a.active ? "Ligado — clique para desligar" : "Desligado — clique para ligar"}
+                aria-pressed={a.active}
+              >
+                <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all" style={{ left: a.active ? "22px" : "2px" }} />
+              </button>
+            ) : (
+              <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: a.active ? "#22c55e18" : "var(--secondary)", color: a.active ? "#22c55e" : "var(--muted-foreground)" }}>
+                {a.active ? "Ativo" : "Inativo"}
+              </span>
+            )}
           </div>
         ))}
       </div>
-      <p className="text-[11px] mt-3" style={{ color: "var(--muted-foreground)" }}>Configuráveis em Configurações → IA.</p>
+      <p className="text-[11px] mt-3" style={{ color: "var(--muted-foreground)" }}>
+        {isDiretor ? "Toque no interruptor para ligar/desligar. Também em Configurações → IA." : "Configuráveis em Configurações → IA."}
+      </p>
     </div>
   );
 }
