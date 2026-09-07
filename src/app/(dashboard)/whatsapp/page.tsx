@@ -43,6 +43,15 @@ function displayName(conv: ConversationItem) {
   return conv.lead?.name || conv.contactName || conv.remoteJid || "Contato";
 }
 
+// Selo da plataforma do anúncio (origem do lead): Facebook / Instagram / TikTok.
+function plataforma(origem?: string | null): { label: string; emoji: string; fg: string } | null {
+  const o = (origem || "").toLowerCase();
+  if (o.includes("insta")) return { label: "Instagram", emoji: "📸", fg: "#E1306C" };
+  if (o.includes("face")) return { label: "Facebook", emoji: "📘", fg: "#1877F2" };
+  if (o.includes("tiktok")) return { label: "TikTok", emoji: "🎵", fg: "#25F4EE" };
+  return null;
+}
+
 export default function WhatsAppPage() {
   const { data: conversations } = useConversations();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -202,6 +211,16 @@ export default function WhatsAppPage() {
                     {conv.fromAd && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: "var(--primary)", color: "white" }} title="Lead de anúncio">🎯 Anúncio</span>
                     )}
+                    {conv.fromAd && plataforma(conv.lead?.origem) && (
+                      (() => {
+                        const p = plataforma(conv.lead?.origem)!;
+                        return (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${p.fg}22`, color: p.fg }} title={`Origem: ${p.label}`}>
+                            {p.emoji} {p.label}
+                          </span>
+                        );
+                      })()
+                    )}
                   </div>
                   <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>{conv.lastMessage}</div>
                   {(() => {
@@ -244,7 +263,22 @@ export default function WhatsAppPage() {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm truncate" style={{ color: "var(--foreground)" }}>{displayName(selected)}</div>
+                <div className="font-medium text-sm truncate flex items-center gap-1.5" style={{ color: "var(--foreground)" }}>
+                  <span className="truncate">{displayName(selected)}</span>
+                  {selected.fromAd && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: "var(--primary)", color: "white" }} title="Lead de anúncio">🎯 Anúncio</span>
+                  )}
+                  {selected.fromAd && plataforma(selected.lead?.origem) && (
+                    (() => {
+                      const p = plataforma(selected.lead?.origem)!;
+                      return (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${p.fg}22`, color: p.fg }} title={`Origem: ${p.label}`}>
+                          {p.emoji} {p.label}
+                        </span>
+                      );
+                    })()
+                  )}
+                </div>
                 <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>
                   Atendente: {selected.assignedTo?.name ?? "não atribuído"}
                 </div>
