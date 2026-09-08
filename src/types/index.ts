@@ -11,6 +11,10 @@ export interface User {
   active: boolean;
   firstLogin: boolean;
   createdAt: string;
+  managerId?: string | null;
+  manager?: { id: string; name: string } | null;
+  approved?: boolean;
+  empresaId?: string | null;
 }
 
 export type LeadStatus =
