@@ -26,6 +26,15 @@ import {
   Eye,
 } from "lucide-react";
 
+// Selo da plataforma de origem do lead (Facebook / Instagram / TikTok).
+function plataforma(origem?: string | null): { label: string; emoji: string; fg: string } | null {
+  const o = (origem || "").toLowerCase();
+  if (o.includes("insta")) return { label: "Instagram", emoji: "📸", fg: "#E1306C" };
+  if (o.includes("face")) return { label: "Facebook", emoji: "📘", fg: "#1877F2" };
+  if (o.includes("tiktok")) return { label: "TikTok", emoji: "🎵", fg: "#25F4EE" };
+  return null;
+}
+
 const statusLabels: Record<LeadStatus, string> = {
   novo_lead: "Novo Lead",
   primeiro_contato: "Primeiro Contato",
@@ -255,7 +264,15 @@ export default function LeadsPage() {
                           {lead.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
                         </div>
                         <div>
-                          <div className="font-medium text-sm" style={{ color: "var(--foreground)" }}>{lead.name}</div>
+                          <div className="font-medium text-sm flex items-center gap-1.5 flex-wrap" style={{ color: "var(--foreground)" }}>
+                            <span>{lead.name}</span>
+                            {(() => {
+                              const p = plataforma(lead.origem);
+                              return p ? (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: `${p.fg}22`, color: p.fg }}>{p.emoji} {p.label}</span>
+                              ) : null;
+                            })()}
+                          </div>
                           {lead.cidade && (
                             <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>{lead.cidade}</div>
                           )}
