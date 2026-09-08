@@ -126,10 +126,11 @@ export default function LeadsPage() {
     if (!window.confirm("Puxar todos os leads SEM responsável (antigos/removidos) para o Diretor?")) return;
     setAdotando(true);
     try {
-      const { data } = await api.post<{ leads: number }>("/users/adotar-orfaos");
+      const { data } = await api.post<{ leads: number; conversas: number }>("/users/adotar-orfaos");
       qc.invalidateQueries({ queryKey: ["leads"] });
       qc.invalidateQueries({ queryKey: ["conversations"] });
-      alert(data.leads > 0 ? `${data.leads} lead(s) sem responsável foram para o Diretor.` : "Nenhum lead órfão encontrado.");
+      const total = (data.leads || 0) + (data.conversas || 0);
+      alert(total > 0 ? `${data.leads} lead(s) e ${data.conversas} conversa(s) sem atendente foram para o Diretor.` : "Nenhum lead/conversa órfão encontrado.");
     } catch (err) {
       alert(getApiErrorMessage(err, "Falha ao puxar os leads órfãos."));
     } finally {
