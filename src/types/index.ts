@@ -50,6 +50,7 @@ export interface Lead {
   fgts?: number;
   entrada?: number;
   valorVenda?: number;
+  dataVenda?: string;
   cpf?: string;
   dataNascimento?: string;
   estadoCivil?: string;

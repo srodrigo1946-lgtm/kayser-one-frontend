@@ -94,6 +94,7 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
               <Detail label="Renda" value={current.renda ? formatCurrency(current.renda) : "—"} />
               <Detail label="FGTS" value={current.fgts ? formatCurrency(current.fgts) : "—"} />
               <Detail label="Valor da venda" value={current.valorVenda ? formatCurrency(current.valorVenda) : "—"} />
+              <Detail label="Data da venda" value={current.dataVenda ? new Date(String(current.dataVenda).slice(0, 10) + "T00:00:00").toLocaleDateString("pt-BR") : "—"} />
               <Detail label="CPF" value={current.cpf || "—"} />
               <Detail label="Estado civil" value={current.estadoCivil || "—"} />
               <Detail label="Endereço" value={[current.logradouro, current.numero, current.bairro, current.cidade, current.estado].filter(Boolean).join(", ") || "—"} />
@@ -173,6 +174,7 @@ function LeadEditForm({
     renda: lead.renda != null ? String(lead.renda) : "",
     fgts: lead.fgts != null ? String(lead.fgts) : "",
     valorVenda: lead.valorVenda != null ? String(lead.valorVenda) : "",
+    dataVenda: lead.dataVenda ? String(lead.dataVenda).slice(0, 10) : "",
     cpf: lead.cpf ?? "",
     dataNascimento: lead.dataNascimento ?? "",
     estadoCivil: lead.estadoCivil ?? "",
@@ -250,6 +252,7 @@ function LeadEditForm({
       renda: form.renda !== "" ? Number(form.renda) : undefined,
       fgts: form.fgts !== "" ? Number(form.fgts) : undefined,
       valorVenda: form.valorVenda !== "" ? Number(form.valorVenda) : undefined,
+      dataVenda: form.dataVenda || undefined,
       cpf: form.cpf.trim() || undefined,
       dataNascimento: form.dataNascimento || undefined,
       estadoCivil: form.estadoCivil || undefined,
@@ -392,10 +395,15 @@ function LeadEditForm({
         <Field label="Renda (R$)"><input type="number" value={form.renda} onChange={(e) => set("renda", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
         <Field label="FGTS (R$)"><input type="number" value={form.fgts} onChange={(e) => set("fgts", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
       </div>
-      <Field label="Valor da venda (R$)">
-        <input type="number" value={form.valorVenda} onChange={(e) => set("valorVenda", e.target.value)} placeholder="Preencha ao fechar a venda" className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} />
-        <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>Usado no VGV e no campeão do dashboard (some as vendas ganhas).</div>
-      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Valor da venda (R$)">
+          <input type="number" value={form.valorVenda} onChange={(e) => set("valorVenda", e.target.value)} placeholder="Preencha ao fechar a venda" className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} />
+        </Field>
+        <Field label="Data da venda">
+          <input type="date" value={form.dataVenda} onChange={(e) => set("dataVenda", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} />
+        </Field>
+      </div>
+      <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>Valor + data usados no VGV/campeão. A data preenche sozinha ao mover pra "Venda Ganha".</div>
       {/* Cadastro completo (financiamento / Subir Pasta para Análise) */}
       <div className="pt-2 mt-1 border-t space-y-3" style={{ borderColor: "var(--border)" }}>
         <div className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Cadastro completo (financiamento)</div>
