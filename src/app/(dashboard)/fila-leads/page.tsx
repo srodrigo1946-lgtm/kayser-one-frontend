@@ -252,6 +252,7 @@ export default function FilaLeadsPage() {
             <Metric label="Atendidos" value={board?.atendidos ?? 0} color="var(--success, #22c55e)" />
             <Metric label="Estouraram o tempo" value={board?.expirados ?? 0} color="var(--warning, #f59e0b)" />
           </div>
+          <div className="text-xs font-medium mb-1" style={{ color: "var(--muted-foreground)" }}>Leads atendidos por corretor:</div>
           <div className="space-y-1">
             {Object.entries(board?.porCargo ?? {})
               .filter(([id]) => !!id)
