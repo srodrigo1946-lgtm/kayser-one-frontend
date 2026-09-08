@@ -229,8 +229,16 @@ export default function FilaLeadsPage() {
           <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Ninguém de plantão agora.</p>
         )}
         {(ordem?.aguardando ?? 0) > 0 && (
-          <div className="mt-3 text-xs px-2.5 py-1.5 rounded-lg" style={{ background: "#f59e0b18", color: "var(--warning, #f59e0b)" }}>
-            ⏳ {ordem?.aguardando} lead(s) aguardando abrir o turno pra distribuir.
+          <div className="mt-3 text-xs px-2.5 py-2 rounded-lg" style={{ background: "#f59e0b18", color: "var(--warning, #f59e0b)" }}>
+            <div className="font-medium mb-1">⏳ {ordem?.aguardando} lead(s) aguardando abrir o turno:</div>
+            <div className="space-y-0.5">
+              {(ordem?.aguardandoLeads ?? []).map((l, i) => (
+                <div key={i} className="flex items-center justify-between gap-2" style={{ color: "var(--foreground)" }}>
+                  <span className="truncate">{l.nome}</span>
+                  {l.phone && <span className="tabular-nums" style={{ color: "var(--muted-foreground)" }}>{l.phone}</span>}
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

@@ -23,6 +23,7 @@ export interface QueueOrdem {
   turnoAtivo: boolean;
   ordem: { userId: string; nome: string; proximo: boolean }[];
   aguardando: number;
+  aguardandoLeads?: { nome: string; phone: string }[];
 }
 
 // Ordem do rodízio agora (todos os cargos VEEM, só leitura).
