@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import { formatDate } from "@/lib/utils";
-import { getApiErrorMessage } from "@/lib/api";
+import { getApiErrorMessage, api } from "@/lib/api";
+import { getStoredUser } from "@/lib/auth";
+import { useQueryClient } from "@tanstack/react-query";
 import type { LeadStatus } from "@/types";
 import {
   useLeads,
@@ -116,6 +118,24 @@ export default function LeadsPage() {
   const { data, isLoading, isError } = useLeads({ search, status: filterStatus });
   const createLead = useCreateLead();
   const deleteLead = useDeleteLead();
+  const isDiretor = getStoredUser()?.role === "diretor";
+  const qc = useQueryClient();
+  const [adotando, setAdotando] = useState(false);
+
+  const handleAdotarOrfaos = async () => {
+    if (!window.confirm("Puxar todos os leads SEM responsável (antigos/removidos) para o Diretor?")) return;
+    setAdotando(true);
+    try {
+      const { data } = await api.post<{ leads: number }>("/users/adotar-orfaos");
+      qc.invalidateQueries({ queryKey: ["leads"] });
+      qc.invalidateQueries({ queryKey: ["conversations"] });
+      alert(data.leads > 0 ? `${data.leads} lead(s) sem responsável foram para o Diretor.` : "Nenhum lead órfão encontrado.");
+    } catch (err) {
+      alert(getApiErrorMessage(err, "Falha ao puxar os leads órfãos."));
+    } finally {
+      setAdotando(false);
+    }
+  };
   const importLeads = useImportLeads();
 
   const leads = data?.data ?? [];
@@ -224,6 +244,17 @@ export default function LeadsPage() {
               <Download size={16} />
               Exportar
             </button>
+            {isDiretor && (
+              <button
+                onClick={handleAdotarOrfaos}
+                disabled={adotando}
+                title="Puxa pro Diretor os leads antigos que ficaram sem responsável"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium disabled:opacity-60"
+                style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+              >
+                {adotando ? "Puxando…" : "Puxar órfãos"}
+              </button>
+            )}
             <button
               onClick={handleNewLead}
               disabled={createLead.isPending}
