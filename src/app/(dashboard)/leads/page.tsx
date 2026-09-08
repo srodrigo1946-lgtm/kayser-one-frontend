@@ -35,6 +35,19 @@ function plataforma(origem?: string | null): { label: string; emoji: string; fg:
   return null;
 }
 
+// Rótulo de origem para QUALQUER lead (plataforma, anúncio, formulário, manual, whatsapp).
+function origemInfo(lead: { origem?: string | null; source?: string | null }): { label: string; emoji: string; fg: string } {
+  const p = plataforma(lead.origem);
+  if (p) return p;
+  const src = (lead.source || "").toLowerCase();
+  const o = (lead.origem || "").toLowerCase();
+  if (src === "anuncio" || o === "anuncio") return { label: "Anúncio", emoji: "🎯", fg: "#8b5cf6" };
+  if (src === "formulario_meta" || o.includes("formul") || o.includes("meta")) return { label: "Formulário Meta", emoji: "📝", fg: "#0ea5e9" };
+  if (src === "whatsapp" || o === "whatsapp") return { label: "WhatsApp", emoji: "💬", fg: "#22c55e" };
+  if (src === "manual" || o === "manual") return { label: "Manual", emoji: "✋", fg: "#94a3b8" };
+  return { label: lead.origem || "—", emoji: "", fg: "#94a3b8" };
+}
+
 const statusLabels: Record<LeadStatus, string> = {
   novo_lead: "Novo Lead",
   primeiro_contato: "Primeiro Contato",
@@ -241,7 +254,7 @@ export default function LeadsPage() {
             <table className="w-full">
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                  {["Nome", "Contato", "Empreendimento", "Responsável", "Score", "Status", "Cadastro", "Ações"].map((h) => (
+                  {["Nome", "Contato", "Origem", "Empreendimento", "Responsável", "Score", "Status", "Cadastro", "Ações"].map((h) => (
                     <th
                       key={h}
                       className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider"
@@ -264,15 +277,7 @@ export default function LeadsPage() {
                           {lead.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
                         </div>
                         <div>
-                          <div className="font-medium text-sm flex items-center gap-1.5 flex-wrap" style={{ color: "var(--foreground)" }}>
-                            <span>{lead.name}</span>
-                            {(() => {
-                              const p = plataforma(lead.origem);
-                              return p ? (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: `${p.fg}22`, color: p.fg }}>{p.emoji} {p.label}</span>
-                              ) : null;
-                            })()}
-                          </div>
+                          <div className="font-medium text-sm" style={{ color: "var(--foreground)" }}>{lead.name}</div>
                           {lead.cidade && (
                             <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>{lead.cidade}</div>
                           )}
@@ -286,14 +291,21 @@ export default function LeadsPage() {
                       )}
                     </td>
                     <td className="px-4 py-3">
+                      {(() => {
+                        const oi = origemInfo(lead);
+                        return (
+                          <span className="text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap" style={{ background: `${oi.fg}22`, color: oi.fg }}>
+                            {oi.emoji ? `${oi.emoji} ` : ""}{oi.label}
+                          </span>
+                        );
+                      })()}
+                    </td>
+                    <td className="px-4 py-3">
                       {/* Lead de anúncio não tem empreendimento vinculado, mas tem o
                           NOME DO ANÚNCIO em `campanha` — é a informação útil aqui. */}
                       <div className="text-sm" style={{ color: "var(--foreground)" }}>
                         {lead.empreendimento || lead.campanha || "—"}
                       </div>
-                      {lead.origem && (
-                        <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>{lead.origem}</div>
-                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="text-sm" style={{ color: "var(--foreground)" }}>{lead.responsavel?.name || "—"}</div>
