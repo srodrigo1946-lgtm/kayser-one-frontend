@@ -130,11 +130,13 @@ export default function WhatsAppPage() {
   };
 
   const handleSend = async () => {
-    if (!message.trim() || !selected?.remoteJid) return;
+    const texto = message.trim();
+    if (!texto || !selected?.remoteJid) return;
+    setMessage(""); // limpa na hora; a mensagem já aparece pelo eco otimista
     try {
-      await send.mutateAsync({ to: selected.remoteJid, text: message.trim() });
-      setMessage("");
+      await send.mutateAsync({ to: selected.remoteJid, text: texto, conversationId: selected.id });
     } catch (err) {
+      setMessage(texto); // devolve o texto se falhar
       alert(getApiErrorMessage(err, "Falha ao enviar."));
     }
   };
@@ -428,7 +430,7 @@ export default function WhatsAppPage() {
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/*,application/pdf,.pdf,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                accept="image/*,video/*,.mp4,.mov,application/pdf,.pdf,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];

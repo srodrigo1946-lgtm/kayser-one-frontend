@@ -51,9 +51,9 @@ export function useMessages(conversationId: string | null) {
   return useQuery({
     queryKey: ["conversations", conversationId, "messages"],
     enabled: !!conversationId,
-    // Conversa ABERTA atualiza a cada 3s — o chat parece tempo real. Só roda para
+    // Conversa ABERTA atualiza a cada 2s — o chat parece tempo real. Só roda para
     // a conversa aberta (enabled), então não pesa.
-    refetchInterval: 3000,
+    refetchInterval: 2000,
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: true,
     queryFn: async () => {
@@ -68,11 +68,37 @@ export function useMessages(conversationId: string | null) {
 export function useSendWhatsapp() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ to, text }: { to: string; text: string }) => {
+    mutationFn: async ({ to, text }: { to: string; text: string; conversationId?: string }) => {
       const { data } = await api.post("/whatsapp/send", { to, text });
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["conversations"] }),
+    // Eco imediato: a mensagem enviada aparece na hora, sem esperar o refetch.
+    onMutate: async ({ text, conversationId }) => {
+      if (!conversationId) return {};
+      const key = ["conversations", conversationId, "messages"];
+      await qc.cancelQueries({ queryKey: key });
+      const prev = qc.getQueryData<any>(key);
+      const otimista: ChatMessageItem = {
+        id: `temp-${Date.now()}`,
+        conversationId,
+        content: text,
+        direction: "out",
+        isAI: false,
+        createdAt: new Date().toISOString(),
+      };
+      qc.setQueryData<any>(key, (old: any) =>
+        old ? { ...old, messages: [...(old.messages ?? []), otimista] } : old
+      );
+      return { prev, key };
+    },
+    onError: (_e, _v, ctx: any) => {
+      if (ctx?.prev && ctx?.key) qc.setQueryData(ctx.key, ctx.prev);
+    },
+    onSettled: (_d, _e, vars: any) => {
+      qc.invalidateQueries({ queryKey: ["conversations"] });
+      if (vars?.conversationId)
+        qc.invalidateQueries({ queryKey: ["conversations", vars.conversationId, "messages"] });
+    },
   });
 }
 
