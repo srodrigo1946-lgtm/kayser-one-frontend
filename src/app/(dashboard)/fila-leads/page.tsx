@@ -7,6 +7,8 @@ import { useQueueSettings, useUpdateQueue, useQueueBoard, useQueueOrdem } from "
 import { useUsers } from "@/hooks/use-users";
 import { useEscala } from "@/hooks/use-escala";
 import { getStoredUser } from "@/lib/auth";
+import { api, getApiErrorMessage } from "@/lib/api";
+import { Mail } from "lucide-react";
 
 const roleLabels: Record<string, string> = {
   diretor: "Diretor",
@@ -59,6 +61,21 @@ export default function FilaLeadsPage() {
   const [enabled, setEnabled] = useState(false);
   const [slaMinutes, setSlaMinutes] = useState(5);
   const [saved, setSaved] = useState(false);
+  const [emailTeste, setEmailTeste] = useState("");
+  const [testando, setTestando] = useState(false);
+
+  const testarEmail = async () => {
+    setTestando(true);
+    setEmailTeste("");
+    try {
+      const { data } = await api.post<{ ok: boolean; to?: string; motivo?: string }>("/lead-queue/testar-email");
+      setEmailTeste(data.ok ? `E-mail enviado para ${data.to} — confira a caixa de entrada (e o spam).` : (data.motivo || "Não foi possível enviar."));
+    } catch (err) {
+      setEmailTeste(getApiErrorMessage(err, "Falha ao testar o e-mail."));
+    } finally {
+      setTestando(false);
+    }
+  };
 
   useEffect(() => {
     if (settings) {
@@ -139,6 +156,21 @@ export default function FilaLeadsPage() {
             className="w-20 px-2 py-1.5 rounded-lg border text-sm outline-none"
             style={input}
           />
+        </div>
+
+        <div className="pt-3 border-t" style={{ borderColor: "var(--border)" }}>
+          <div className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>
+            O corretor recebe um <strong>aviso por e-mail</strong> quando cai um lead pra ele (sem dados do cliente — só o aviso).
+          </div>
+          <button
+            onClick={testarEmail}
+            disabled={testando}
+            className="flex items-center gap-2 text-sm px-3 py-2 rounded-lg border disabled:opacity-60"
+            style={{ borderColor: "var(--border)", color: "var(--foreground)", background: "var(--secondary)" }}
+          >
+            <Mail size={15} /> {testando ? "Enviando…" : "Testar e-mail (envia pra você)"}
+          </button>
+          {emailTeste && <div className="text-xs mt-2" style={{ color: "var(--muted-foreground)" }}>{emailTeste}</div>}
         </div>
       </div>
       )}
