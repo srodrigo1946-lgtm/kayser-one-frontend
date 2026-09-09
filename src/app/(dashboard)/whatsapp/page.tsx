@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header";
 import { Search, Send, Bot, QrCode, Loader2, Smile, Paperclip } from "lucide-react";
 import { api, getApiErrorMessage, API_URL } from "@/lib/api";
 import { getToken, getStoredUser } from "@/lib/auth";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Mídia protegida: o token vai na query pra funcionar dentro de <img>/<audio>/<video>.
 const mediaUrl = (id: string) => `${API_URL}/conversations/media/${id}?token=${getToken() ?? ""}`;
@@ -58,6 +59,22 @@ export default function WhatsAppPage() {
   // Conversas rodam pela estrutura do CRM (número central). Só o Diretor conecta/
   // reconecta o número pelo QR; os cargos não conectam WhatsApp próprio.
   const isDiretor = getStoredUser()?.role === "diretor";
+  const podeNaoLead = ["diretor", "superintendente", "gerente_geral", "gerente"].includes(getStoredUser()?.role ?? "");
+  const qcNaoLead = useQueryClient();
+  const [naoLeadBusy, setNaoLeadBusy] = useState(false);
+  const marcarNaoLead = async (id: string) => {
+    if (!window.confirm("Marcar como \"não é lead\" (contato pessoal)? Some do CRM e as próximas mensagens desse número não viram lead.")) return;
+    setNaoLeadBusy(true);
+    try {
+      await api.patch(`/conversations/${id}/nao-lead`);
+      setSelectedId(null);
+      qcNaoLead.invalidateQueries({ queryKey: ["conversations"] });
+    } catch (err) {
+      alert(getApiErrorMessage(err, "Falha ao marcar como não é lead."));
+    } finally {
+      setNaoLeadBusy(false);
+    }
+  };
   const { data: thread } = useMessages(selectedId);
   const send = useSendWhatsapp();
   const sendMedia = useSendWhatsappMedia();
@@ -290,6 +307,17 @@ export default function WhatsAppPage() {
                   })()}
                 </div>
               </div>
+              {podeNaoLead && (
+                <button
+                  onClick={() => marcarNaoLead(selected.id)}
+                  disabled={naoLeadBusy}
+                  title="Contato pessoal — remover do CRM e não virar lead"
+                  className="text-xs px-2.5 py-1.5 rounded-lg border flex-shrink-0 disabled:opacity-60"
+                  style={{ borderColor: "var(--border)", color: "var(--muted-foreground)", background: "var(--secondary)" }}
+                >
+                  {naoLeadBusy ? "…" : "Não é lead"}
+                </button>
+              )}
             </div>
 
             {/* Etiqueta = estágio do funil (lista suspensa). Move o card no Kanban. */}
