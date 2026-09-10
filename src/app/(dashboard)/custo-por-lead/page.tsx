@@ -78,16 +78,22 @@ export default function CustoPorLeadPage() {
   const [feedbackDias, setFeedbackDias] = useState("");
   useEffect(() => {
     const m: Record<number, string> = {};
-    (investDaysData ?? []).forEach((d) => { m[d.dia] = String(d.valor); });
+    // Dia zerado aparece vazio (não mostra "0"); só valores reais preenchem.
+    (investDaysData ?? []).forEach((d) => { if (d.valor) m[d.dia] = String(d.valor); });
     setDiasInput(m);
   }, [investDaysData, month, year]);
 
   const salvarDias = async () => {
     if (!month) return;
     setFeedbackDias("");
-    const dias = Object.entries(diasInput)
-      .filter(([, v]) => v !== "" && v != null)
-      .map(([d, v]) => ({ dia: Number(d), valor: Number(v) || 0 }));
+    // Manda TODOS os dias do mês (dia vazio = 0), pra que dias que você APAGOU
+    // sejam zerados no banco — senão o valor antigo continuava contando na soma.
+    // Aceita vírgula ou ponto no valor.
+    const parse = (v?: string) => Number(String(v ?? "").replace(",", ".").trim()) || 0;
+    const dias = Array.from({ length: diasNoMes }, (_, i) => i + 1).map((dia) => ({
+      dia,
+      valor: parse(diasInput[dia]),
+    }));
     try {
       await setDays.mutateAsync({ ano: year, mes: month, dias });
       setFeedbackDias("Gasto por dia salvo.");
