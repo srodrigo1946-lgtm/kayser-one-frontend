@@ -23,7 +23,7 @@ export interface QueueOrdem {
   turnoAtivo: boolean;
   ordem: { userId: string; nome: string; proximo: boolean }[];
   aguardando: number;
-  aguardandoLeads?: { nome: string; phone: string }[];
+  aguardandoLeads?: { nome: string; phone: string; agendadoPara?: string }[];
 }
 
 // Ordem do rodízio agora (todos os cargos VEEM, só leitura).
@@ -64,6 +64,24 @@ export function useDistribuirLead() {
       (await api.post<DistribuirResult>(`/lead-queue/distribuir/${leadId}`)).data,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["lead-queue", "board"] });
+      qc.invalidateQueries({ queryKey: ["leads"] });
+    },
+  });
+}
+
+export interface AgendarResult {
+  status: "agendado" | "ja_na_fila" | "sem_telefone" | "fila_desligada" | "horario_invalido";
+  agendadoPara?: string;
+}
+
+// Agenda um lead pra cair no rodízio num horário futuro (só Diretor).
+export function useAgendarLead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ leadId, quando }: { leadId: string; quando: string }) =>
+      (await api.post<AgendarResult>(`/lead-queue/agendar/${leadId}`, { quando })).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["lead-queue", "ordem"] });
       qc.invalidateQueries({ queryKey: ["leads"] });
     },
   });

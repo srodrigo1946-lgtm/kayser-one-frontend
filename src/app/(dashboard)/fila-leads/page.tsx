@@ -266,7 +266,14 @@ export default function FilaLeadsPage() {
             <div className="space-y-0.5">
               {(ordem?.aguardandoLeads ?? []).map((l, i) => (
                 <div key={i} className="flex items-center justify-between gap-2" style={{ color: "var(--foreground)" }}>
-                  <span className="truncate">{l.nome}</span>
+                  <span className="truncate">
+                    {l.nome}
+                    {l.agendadoPara && (
+                      <span className="ml-1" style={{ color: "var(--muted-foreground)" }}>
+                        🕒 {new Date(l.agendadoPara).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    )}
+                  </span>
                   {l.phone && <span className="tabular-nums" style={{ color: "var(--muted-foreground)" }}>{l.phone}</span>}
                 </div>
               ))}

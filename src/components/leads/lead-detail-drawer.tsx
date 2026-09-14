@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { X, Pencil, Loader2, Search, Shuffle } from "lucide-react";
+import { X, Pencil, Loader2, Search, Shuffle, Clock } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 import { useLeadHistory, useUpdateLead } from "@/hooks/use-leads";
-import { useDistribuirLead } from "@/hooks/use-lead-queue";
+import { useDistribuirLead, useAgendarLead } from "@/hooks/use-lead-queue";
 import { useProperties } from "@/hooks/use-properties";
 import { useUsers } from "@/hooks/use-users";
 import type { Lead } from "@/types";
@@ -17,8 +17,10 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
   const { data: history, isLoading } = useLeadHistory(current.id);
   const isDiretor = getStoredUser()?.role === "diretor";
   const distribuir = useDistribuirLead();
+  const agendar = useAgendarLead();
   const { data: allUsers } = useUsers();
   const [filaMsg, setFilaMsg] = useState("");
+  const [quando, setQuando] = useState("");
 
   const handleDistribuir = async () => {
     setFilaMsg("");
@@ -43,6 +45,33 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
       }
     } catch (err) {
       setFilaMsg(getApiErrorMessage(err, "Falha ao distribuir o lead."));
+    }
+  };
+
+  const handleAgendar = async () => {
+    setFilaMsg("");
+    if (!quando) {
+      setFilaMsg("Escolha a data e a hora para agendar.");
+      return;
+    }
+    // datetime-local vem sem fuso ("2026-09-14T15:30") → vira ISO no fuso do navegador.
+    const iso = new Date(quando).toISOString();
+    try {
+      const r = await agendar.mutateAsync({ leadId: current.id, quando: iso });
+      if (r.status === "agendado") {
+        setFilaMsg(`Agendado para ${new Date(quando).toLocaleString("pt-BR")}. Cai no rodízio nesse horário (se houver plantão).`);
+        setQuando("");
+      } else if (r.status === "horario_invalido") {
+        setFilaMsg("Escolha um horário no futuro.");
+      } else if (r.status === "ja_na_fila") {
+        setFilaMsg("Esse lead já está na fila.");
+      } else if (r.status === "sem_telefone") {
+        setFilaMsg("Lead sem telefone — não dá para agendar.");
+      } else {
+        setFilaMsg("A fila está desligada. Ligue em Fila de Leads.");
+      }
+    } catch (err) {
+      setFilaMsg(getApiErrorMessage(err, "Falha ao agendar o lead."));
     }
   };
 
@@ -111,6 +140,31 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
                   {distribuir.isPending ? <Loader2 size={16} className="animate-spin" /> : <Shuffle size={16} />}
                   Distribuir pela fila (rodízio de plantão)
                 </button>
+
+                <div className="mt-3 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
+                  <div className="text-xs mb-1.5" style={{ color: "var(--muted-foreground)" }}>
+                    Agendar para um horário (cai no rodízio na hora marcada):
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="datetime-local"
+                      value={quando}
+                      onChange={(e) => setQuando(e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-lg border text-sm outline-none"
+                      style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+                    />
+                    <button
+                      onClick={handleAgendar}
+                      disabled={agendar.isPending}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-60"
+                      style={{ background: "var(--secondary)", color: "var(--foreground)", borderColor: "var(--border)", borderWidth: 1 }}
+                    >
+                      {agendar.isPending ? <Loader2 size={16} className="animate-spin" /> : <Clock size={16} />}
+                      Agendar
+                    </button>
+                  </div>
+                </div>
+
                 {filaMsg && (
                   <div className="text-xs mt-2 text-center" style={{ color: "var(--muted-foreground)" }}>{filaMsg}</div>
                 )}
