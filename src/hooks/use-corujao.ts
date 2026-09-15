@@ -21,6 +21,8 @@ export interface CorujaoConfig {
   colunas: { key: string; title: string }[];
   corretores: { id: string; name: string; corujao: boolean }[];
   poolCount: number;
+  naoLiberados: number;
+  autoQtd: number;
 }
 
 export interface CorujaoPool {
@@ -60,8 +62,19 @@ export function useCorujaoConfig(enabled = true) {
 export function useSetCorujaoConfig() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (dto: Partial<Pick<CorujaoConfig, "enabled" | "hora" | "status" | "incluirDiretor">>) =>
-      (await api.put<CorujaoConfig>("/corujao/config", dto)).data,
+    mutationFn: async (
+      dto: Partial<Pick<CorujaoConfig, "enabled" | "hora" | "status" | "incluirDiretor" | "autoQtd">>
+    ) => (await api.put<CorujaoConfig>("/corujao/config", dto)).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["corujao"] }),
+  });
+}
+
+// Diretor libera N leads da fila pro pool do repique.
+export function useLiberarCorujao() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (qtd: number) =>
+      (await api.post<{ released: number; noPool: number; naoLiberados: number }>("/corujao/liberar", { qtd })).data,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["corujao"] }),
   });
 }

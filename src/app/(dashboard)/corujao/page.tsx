@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Check, Send, Phone } from "lucide-react";
+import { Loader2, Check, Send, Phone, Rocket } from "lucide-react";
 import { Coruja } from "@/components/icons/coruja";
 import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
@@ -12,7 +12,10 @@ import {
   useSetCorujaoConfig,
   useAtivarCorretorCorujao,
   usePuxarCorujao,
+  useLiberarCorujao,
 } from "@/hooks/use-corujao";
+
+const LOTES = [2, 5, 10, 20, 30, 50];
 
 export default function CorujaoPage() {
   const isDiretor = getStoredUser()?.role === "diretor";
@@ -123,8 +126,20 @@ function ConfigPanel() {
   const setCfg = useSetCorujaoConfig();
   const ativar = useAtivarCorretorCorujao();
   const puxar = usePuxarCorujao();
+  const liberar = useLiberarCorujao();
   const [hora, setHora] = useState("14:00");
   const [puxouMsg, setPuxouMsg] = useState("");
+  const [libMsg, setLibMsg] = useState("");
+
+  const handleLiberar = async (n: number) => {
+    setLibMsg("");
+    try {
+      const r = await liberar.mutateAsync(n);
+      setLibMsg(`Liberados ${r.released} 🚀 · ${r.noPool} no pool · ${r.naoLiberados} ainda na fila.`);
+    } catch (err) {
+      setLibMsg(getApiErrorMessage(err, "Falha ao liberar leads."));
+    }
+  };
 
   useEffect(() => {
     if (cfg?.hora) setHora(cfg.hora);
@@ -162,6 +177,53 @@ function ConfigPanel() {
           {puxar.isPending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
           Puxar e enviar agora
         </button>
+      </div>
+
+      {/* Liberar leads aos poucos pro pool do Corujão */}
+      <div className="mb-4 p-3 rounded-lg" style={{ background: "var(--secondary)" }}>
+        <div className="flex items-center gap-2 mb-2">
+          <Rocket size={15} style={{ color: "var(--primary)" }} />
+          <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>Liberar leads pro repique</span>
+        </div>
+        <div className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>
+          {cfg?.poolCount ?? 0} no pool · {cfg?.naoLiberados ?? 0} na fila esperando liberação
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {LOTES.map((n) => (
+            <button
+              key={n}
+              onClick={() => handleLiberar(n)}
+              disabled={liberar.isPending || (cfg?.naoLiberados ?? 0) === 0}
+              className="px-3 py-1.5 rounded-lg border text-sm font-medium disabled:opacity-50"
+              style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+            >
+              +{n}
+            </button>
+          ))}
+          <button
+            onClick={() => handleLiberar(cfg?.naoLiberados ?? 0)}
+            disabled={liberar.isPending || (cfg?.naoLiberados ?? 0) === 0}
+            className="px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50"
+            style={{ background: "var(--primary)", color: "white" }}
+          >
+            Liberar todos
+          </button>
+        </div>
+        <div className="flex items-center gap-2 mt-3 text-sm" style={{ color: "var(--foreground)" }}>
+          <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>Automático por dia (no horário):</span>
+          <select
+            value={String(cfg?.autoQtd ?? 0)}
+            onChange={(e) => setCfg.mutate({ autoQtd: Number(e.target.value) })}
+            className="px-2 py-1 rounded-lg border text-sm outline-none"
+            style={inputStyle}
+          >
+            <option value="0">Desligado</option>
+            {LOTES.map((n) => (
+              <option key={n} value={String(n)}>{n} por dia</option>
+            ))}
+          </select>
+        </div>
+        {libMsg && <div className="text-xs mt-2" style={{ color: "var(--muted-foreground)" }}>{libMsg}</div>}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
