@@ -22,11 +22,11 @@ export default function CorujaoPage() {
   const aceitar = useAceitarCorujao();
   const [msg, setMsg] = useState("");
 
-  const handleAceitar = async (id: string, nome: string) => {
+  const handleAceitar = async (id: string) => {
     setMsg("");
     try {
       await aceitar.mutateAsync(id);
-      setMsg(`Você aceitou o lead "${nome}". Ele já está com você em Novo Lead.`);
+      setMsg("Lead aceito! 🎉 Já está com você em Novo Lead — abra o CRM/WhatsApp pra falar com o cliente.");
     } catch (err) {
       setMsg(getApiErrorMessage(err, "Falha ao aceitar o lead."));
     }
@@ -41,6 +41,23 @@ export default function CorujaoPage() {
       <p className="text-sm mb-5" style={{ color: "var(--muted-foreground)" }}>
         Leads sem interesse (e os que estão com o Diretor) voltam pra cá. Clique em <b>Aceitar</b> pra assumir — o lead vira seu e volta pra “Novo Lead”.
       </p>
+
+      {/* Foguete voando: chama o corretor quando tem lead liberado no Corujão. */}
+      {podePegar && leads.length > 0 && (
+        <>
+          <div aria-hidden className="corujao-rocket">🚀</div>
+          <style>{`
+            .corujao-rocket{position:fixed;left:-60px;bottom:48px;font-size:40px;z-index:40;pointer-events:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3));animation:corujaoFly 5s linear infinite;}
+            @keyframes corujaoFly{
+              0%{transform:translate(0,0) rotate(-28deg);opacity:0;}
+              8%{opacity:1;}
+              88%{opacity:1;}
+              100%{transform:translate(108vw,-78vh) rotate(-28deg);opacity:0;}
+            }
+            @media (prefers-reduced-motion: reduce){ .corujao-rocket{display:none;} }
+          `}</style>
+        </>
+      )}
 
       {isDiretor && <ConfigPanel />}
 
@@ -69,7 +86,7 @@ export default function CorujaoPage() {
         <div className="grid gap-2 sm:grid-cols-2">
           {leads.map((l) => (
             <div key={l.id} className="p-3 rounded-xl border" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
-              <div className="font-medium" style={{ color: "var(--foreground)" }}>{l.name}</div>
+              <div className="font-medium" style={{ color: "var(--foreground)" }}>{l.name || "🔒 Lead disponível"}</div>
               {l.phone && (
                 <div className="text-xs flex items-center gap-1 mt-0.5" style={{ color: "var(--muted-foreground)" }}>
                   <Phone size={12} /> {l.phone}
@@ -85,7 +102,7 @@ export default function CorujaoPage() {
               )}
               {podePegar && (
                 <button
-                  onClick={() => handleAceitar(l.id, l.name)}
+                  onClick={() => handleAceitar(l.id)}
                   disabled={aceitar.isPending}
                   className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-60"
                   style={{ background: "var(--primary)", color: "white" }}

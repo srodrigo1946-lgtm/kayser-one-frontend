@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 
 export interface CorujaoLead {
   id: string;
-  name: string;
+  name?: string; // só vem para o Diretor; corretor/gerente veem "Lead disponível"
   phone?: string; // só vem para o Diretor (corretor/gerente não veem no pool)
   empreendimento: string;
   origem: string;
