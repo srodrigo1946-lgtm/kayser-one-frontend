@@ -23,6 +23,7 @@ export interface AppSettings {
   direcionalUrl?: string;
   tabelaRivaUrl?: string;
   custoLeadVisivel?: boolean;
+  leadOrigens?: string[];
 }
 
 export function useSettings() {

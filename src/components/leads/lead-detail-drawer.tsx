@@ -9,6 +9,7 @@ import { useLeadHistory, useUpdateLead } from "@/hooks/use-leads";
 import { useDistribuirLead, useAgendarLead } from "@/hooks/use-lead-queue";
 import { useProperties } from "@/hooks/use-properties";
 import { useUsers } from "@/hooks/use-users";
+import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import type { Lead } from "@/types";
 
 // Times (captação/oferta do corretor). Marcados na origem do lead — não contam
@@ -213,10 +214,18 @@ function LeadEditForm({
   const isDiretor = getStoredUser()?.role === "diretor";
   const { data: properties } = useProperties();
   const { data: teamUsers } = useUsers();
+  const { data: settings } = useSettings();
+  const updateSettings = useUpdateSettings();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [respOpen, setRespOpen] = useState(false);
   const [respQuery, setRespQuery] = useState("");
+
+  // Origens extras (times) cadastradas pelo Diretor; fallback pros times padrão.
+  const origens =
+    settings?.leadOrigens && settings.leadOrigens.length
+      ? settings.leadOrigens
+      : TIMES.map((n) => `Time ${n}`);
 
   const [form, setForm] = useState({
     name: lead.name ?? "",
@@ -412,54 +421,91 @@ function LeadEditForm({
         )}
       </Field>
 
-      {isDiretor && (
-        <Field label="Origem do lead (conta no Custo por Lead?)">
-          <select
-            value={(() => {
-              if (form.source === "anuncio")
-                return form.origem === "instagram" ? "instagram" : form.origem === "facebook" ? "facebook" : form.origem === "tiktok" ? "tiktok" : "anuncio";
-              const t = TIMES.find((n) => (form.origem || "").toLowerCase() === `time ${n.toLowerCase()}`);
-              if (t) return `time_${t.toLowerCase()}`;
-              return form.source || "manual";
-            })()}
-            onChange={(e) => {
-              const v = e.target.value;
-              const mapa: Record<string, { source: string; origem: string }> = {
-                facebook: { source: "anuncio", origem: "facebook" },
-                instagram: { source: "anuncio", origem: "instagram" },
-                tiktok: { source: "anuncio", origem: "tiktok" },
-                anuncio: { source: "anuncio", origem: "anuncio" },
-                formulario_meta: { source: "formulario_meta", origem: "formulario_meta" },
-                manual: { source: "manual", origem: "manual" },
-                whatsapp: { source: "whatsapp", origem: "whatsapp" },
-                // Times: oferta do corretor → não conta no custo, só identifica o time.
-                ...Object.fromEntries(
-                  TIMES.map((n) => [`time_${n.toLowerCase()}`, { source: "manual", origem: `Time ${n}` }])
-                ),
-              };
-              const m = mapa[v] ?? mapa.manual;
-              set("source", m.source);
-              set("origem", m.origem);
-            }}
-            className="w-full px-3 py-2 rounded-lg border text-sm outline-none"
-            style={inputStyle}
-          >
-            <option value="facebook">📘 Facebook (anúncio) — conta no custo</option>
-            <option value="instagram">📸 Instagram (anúncio) — conta no custo</option>
-            <option value="tiktok">🎵 TikTok (anúncio) — conta no custo</option>
-            <option value="anuncio">🎯 Anúncio/Ads (outro) — conta no custo</option>
-            <option value="formulario_meta">📝 Formulário Meta — conta no custo</option>
-            <option value="manual">✋ Manual / oferta do corretor — não conta</option>
-            <option value="whatsapp">💬 WhatsApp orgânico — não conta</option>
-            <optgroup label="Times (oferta — não conta no custo)">
-              {TIMES.map((n) => (
-                <option key={n} value={`time_${n.toLowerCase()}`}>👥 Time {n}</option>
+      <Field label="Origem do lead (de onde veio / time)">
+        <select
+          value={(() => {
+            if (form.source === "anuncio")
+              return form.origem === "instagram" ? "instagram" : form.origem === "facebook" ? "facebook" : form.origem === "tiktok" ? "tiktok" : "anuncio";
+            if (origens.some((o) => o.toLowerCase() === (form.origem || "").toLowerCase())) return `custom:${form.origem}`;
+            return form.source || "manual";
+          })()}
+          onChange={(e) => {
+            const v = e.target.value;
+            // Origem custom (time): oferta → não conta no custo, só identifica de onde veio.
+            if (v.startsWith("custom:")) {
+              set("source", "manual");
+              set("origem", v.slice(7));
+              return;
+            }
+            const mapa: Record<string, { source: string; origem: string }> = {
+              facebook: { source: "anuncio", origem: "facebook" },
+              instagram: { source: "anuncio", origem: "instagram" },
+              tiktok: { source: "anuncio", origem: "tiktok" },
+              anuncio: { source: "anuncio", origem: "anuncio" },
+              formulario_meta: { source: "formulario_meta", origem: "formulario_meta" },
+              manual: { source: "manual", origem: "manual" },
+              whatsapp: { source: "whatsapp", origem: "whatsapp" },
+            };
+            const m = mapa[v] ?? mapa.manual;
+            set("source", m.source);
+            set("origem", m.origem);
+          }}
+          className="w-full px-3 py-2 rounded-lg border text-sm outline-none"
+          style={inputStyle}
+        >
+          {/* Origens PAGAS (contam no Custo por Lead) — só o Diretor marca. */}
+          {isDiretor && (
+            <optgroup label="Anúncio pago (conta no custo)">
+              <option value="facebook">📘 Facebook (anúncio)</option>
+              <option value="instagram">📸 Instagram (anúncio)</option>
+              <option value="tiktok">🎵 TikTok (anúncio)</option>
+              <option value="anuncio">🎯 Anúncio/Ads (outro)</option>
+              <option value="formulario_meta">📝 Formulário Meta</option>
+            </optgroup>
+          )}
+          <optgroup label="Sem custo">
+            <option value="manual">✋ Manual / oferta do corretor</option>
+            <option value="whatsapp">💬 WhatsApp orgânico</option>
+          </optgroup>
+          {origens.length > 0 && (
+            <optgroup label="Times / captação (não conta no custo)">
+              {origens.map((o) => (
+                <option key={o} value={`custom:${o}`}>👥 {o}</option>
               ))}
             </optgroup>
-          </select>
-          <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>Só o Diretor mexe. Facebook/Instagram/TikTok/Anúncio/Formulário Meta entram na conta de custo por lead.</div>
-        </Field>
-      )}
+          )}
+        </select>
+        {isDiretor && (
+          <button
+            type="button"
+            onClick={async () => {
+              const novo = window.prompt("Nome da nova origem (ex.: Time João, Indicação, Placa):")?.trim();
+              if (!novo) return;
+              if (origens.some((o) => o.toLowerCase() === novo.toLowerCase())) {
+                set("source", "manual");
+                set("origem", novo);
+                return;
+              }
+              try {
+                await updateSettings.mutateAsync({ leadOrigens: [...origens, novo] });
+                set("source", "manual");
+                set("origem", novo);
+              } catch {
+                setError("Falha ao adicionar a origem.");
+              }
+            }}
+            className="text-xs mt-1.5 underline"
+            style={{ color: "var(--primary)" }}
+          >
+            ＋ Adicionar origem
+          </button>
+        )}
+        <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>
+          {isDiretor
+            ? "Anúncio pago entra no Custo por Lead. Times/captação não contam. Use ＋ para criar novas origens."
+            : "Marque de qual time/captação veio o lead."}
+        </div>
+      </Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Renda (R$)"><input type="number" value={form.renda} onChange={(e) => set("renda", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
         <Field label="FGTS (R$)"><input type="number" value={form.fgts} onChange={(e) => set("fgts", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
