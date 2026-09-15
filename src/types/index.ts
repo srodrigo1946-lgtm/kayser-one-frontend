@@ -51,6 +51,7 @@ export interface Lead {
   entrada?: number;
   valorVenda?: number;
   dataVenda?: string;
+  stageSince?: string; // quando entrou na coluna/etapa atual (Kanban)
   cpf?: string;
   dataNascimento?: string;
   estadoCivil?: string;

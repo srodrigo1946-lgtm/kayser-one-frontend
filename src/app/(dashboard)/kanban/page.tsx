@@ -60,6 +60,10 @@ function LeadCard({
 }) {
   const score = lead.score || 0;
   const scoreColor = score >= 80 ? "#22c55e" : score >= 60 ? "#f59e0b" : "#ef4444";
+  // Desde quando o lead está nesta etapa (data + tempo) — pra feedback com o time.
+  const desde = lead.stageSince ? new Date(lead.stageSince) : null;
+  const dias = desde ? Math.floor((Date.now() - desde.getTime()) / 86400000) : 0;
+  const tempoEtapa = desde ? (dias <= 0 ? "hoje" : dias === 1 ? "1 dia" : `${dias} dias`) : "";
 
   return (
     <div
@@ -98,6 +102,12 @@ function LeadCard({
 
       {lead.empreendimento && (
         <div className="text-xs mb-2 truncate" style={{ color: "var(--muted-foreground)" }}>🏢 {lead.empreendimento}</div>
+      )}
+
+      {desde && (
+        <div className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }} title={`Nesta etapa desde ${desde.toLocaleString("pt-BR")}`}>
+          📅 {desde.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} · {tempoEtapa} nesta etapa
+        </div>
       )}
 
       <div className="flex items-center justify-between">
