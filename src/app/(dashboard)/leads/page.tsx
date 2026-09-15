@@ -164,7 +164,7 @@ export default function LeadsPage() {
     setFeedback("");
     try {
       await createLead.mutateAsync({ name, phone });
-      setFeedback("Lead criado com sucesso.");
+      setFeedback("Lead criado (manual). Não entra na fila nem conta no Custo por Lead — é só seu.");
     } catch (err) {
       setFeedback(getApiErrorMessage(err, "Falha ao criar o lead."));
     }
@@ -381,14 +381,16 @@ export default function LeadsPage() {
                             <MessageSquare size={14} />
                           </button>
                         )}
-                        <button
-                          onClick={() => handleDelete(lead.id, lead.name)}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center"
-                          style={{ color: "#ef4444" }}
-                          title="Remover"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {isDiretor && (
+                          <button
+                            onClick={() => handleDelete(lead.id, lead.name)}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center"
+                            style={{ color: "#ef4444" }}
+                            title="Excluir lead (somente Diretor)"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
