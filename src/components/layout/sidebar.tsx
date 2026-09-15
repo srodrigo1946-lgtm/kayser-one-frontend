@@ -29,6 +29,7 @@ import {
   CalendarClock,
   Wallet,
   MessagesSquare,
+  Moon,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { getStoredUser, logout } from "@/lib/auth";
@@ -44,6 +45,7 @@ const navItems = [
   { href: "/kanban", label: "Kanban", icon: Kanban },
   { href: "/whatsapp", label: "Conversas ao vivo", icon: MessageSquare },
   { href: "/fila-leads", label: "Fila de Leads", icon: Megaphone, diretorOnly: true },
+  { href: "/corujao", label: "Corujão (repique)", icon: Moon, roles: ["diretor", "corretor"] },
   { href: "/custo-por-lead", label: "Custo por Lead", icon: Wallet, unlockKey: "custoLeadVisivel" },
   { href: "/feedback", label: "1-on-1 / Feedback", icon: MessagesSquare, roles: ["diretor", "superintendente", "gerente_geral", "gerente"] },
   { href: "/escala", label: "Escala de Atendimento", icon: CalendarClock },
