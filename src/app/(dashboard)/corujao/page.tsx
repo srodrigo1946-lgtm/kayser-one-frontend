@@ -16,7 +16,9 @@ import {
 
 export default function CorujaoPage() {
   const isDiretor = getStoredUser()?.role === "diretor";
-  const { data: pool, isLoading, isError, error } = useCorujaoPool();
+  const { data: pool, isLoading } = useCorujaoPool();
+  const leads = pool?.leads ?? [];
+  const podePegar = !!pool?.podePegar;
   const aceitar = useAceitarCorujao();
   const [msg, setMsg] = useState("");
 
@@ -29,8 +31,6 @@ export default function CorujaoPage() {
       setMsg(getApiErrorMessage(err, "Falha ao aceitar o lead."));
     }
   };
-
-  const naoAtivado = isError && (error as any)?.response?.status === 403;
 
   return (
     <div className="p-4 lg:p-6 max-w-5xl mx-auto">
@@ -48,25 +48,26 @@ export default function CorujaoPage() {
         <div className="text-sm mb-4 px-3 py-2 rounded-lg" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>{msg}</div>
       )}
 
-      <h2 className="font-semibold mb-2" style={{ color: "var(--foreground)" }}>
-        Leads para pegar {pool ? `(${pool.length})` : ""}
+      <h2 className="font-semibold mb-1" style={{ color: "var(--foreground)" }}>
+        Leads para pegar {pool ? `(${leads.length})` : ""}
       </h2>
+      {!podePegar && !isDiretor && (
+        <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>
+          Só corretores ativados no Corujão pegam os leads. Você está vendo em modo consulta.
+        </p>
+      )}
 
-      {naoAtivado ? (
-        <div className="p-4 rounded-xl border text-sm" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
-          Você ainda não está ativado no Corujão. Peça ao Diretor para te ativar na fila do repique.
-        </div>
-      ) : isLoading ? (
+      {isLoading ? (
         <div className="flex items-center gap-2 text-sm" style={{ color: "var(--muted-foreground)" }}>
           <Loader2 size={16} className="animate-spin" /> Carregando…
         </div>
-      ) : (pool ?? []).length === 0 ? (
+      ) : leads.length === 0 ? (
         <div className="p-4 rounded-xl border text-sm" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
           Nenhum lead no repique agora. 🎉
         </div>
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
-          {(pool ?? []).map((l) => (
+          {leads.map((l) => (
             <div key={l.id} className="p-3 rounded-xl border" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
               <div className="font-medium" style={{ color: "var(--foreground)" }}>{l.name}</div>
               <div className="text-xs flex items-center gap-1 mt-0.5" style={{ color: "var(--muted-foreground)" }}>
@@ -80,14 +81,16 @@ export default function CorujaoPage() {
                   {l.origem || "—"}{l.responsavel ? ` · atual: ${l.responsavel}` : ""}
                 </div>
               )}
-              <button
-                onClick={() => handleAceitar(l.id, l.name)}
-                disabled={aceitar.isPending}
-                className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-60"
-                style={{ background: "var(--primary)", color: "white" }}
-              >
-                <Check size={15} /> Aceitar
-              </button>
+              {podePegar && (
+                <button
+                  onClick={() => handleAceitar(l.id, l.name)}
+                  disabled={aceitar.isPending}
+                  className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-60"
+                  style={{ background: "var(--primary)", color: "white" }}
+                >
+                  <Check size={15} /> Aceitar
+                </button>
+              )}
             </div>
           ))}
         </div>

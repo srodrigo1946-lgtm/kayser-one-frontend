@@ -23,13 +23,17 @@ export interface CorujaoConfig {
   poolCount: number;
 }
 
-// Leads do repique (Diretor ou corretor ativado). 403 = não ativado.
+export interface CorujaoPool {
+  podePegar: boolean; // só corretor ativado pode aceitar
+  leads: CorujaoLead[];
+}
+
+// Leads do repique — todos os cargos VEEM; só corretor ativado PEGA.
 export function useCorujaoPool() {
   return useQuery({
     queryKey: ["corujao", "pool"],
     refetchInterval: 20_000,
-    retry: false,
-    queryFn: async () => (await api.get<CorujaoLead[]>("/corujao/pool")).data,
+    queryFn: async () => (await api.get<CorujaoPool>("/corujao/pool")).data,
   });
 }
 
