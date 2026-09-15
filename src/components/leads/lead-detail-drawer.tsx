@@ -11,6 +11,10 @@ import { useProperties } from "@/hooks/use-properties";
 import { useUsers } from "@/hooks/use-users";
 import type { Lead } from "@/types";
 
+// Times (captação/oferta do corretor). Marcados na origem do lead — não contam
+// no Custo por Lead (source "manual"), só identificam de qual time veio o lead.
+const TIMES = ["Tati", "Helen", "Allan", "Marisa", "Isabelle", "Isaac", "Andre", "Edjane"];
+
 export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () => void }) {
   const [current, setCurrent] = useState<Lead>(lead);
   const [editing, setEditing] = useState(false);
@@ -411,11 +415,13 @@ function LeadEditForm({
       {isDiretor && (
         <Field label="Origem do lead (conta no Custo por Lead?)">
           <select
-            value={
-              form.source === "anuncio"
-                ? (form.origem === "instagram" ? "instagram" : form.origem === "facebook" ? "facebook" : form.origem === "tiktok" ? "tiktok" : "anuncio")
-                : form.source || "manual"
-            }
+            value={(() => {
+              if (form.source === "anuncio")
+                return form.origem === "instagram" ? "instagram" : form.origem === "facebook" ? "facebook" : form.origem === "tiktok" ? "tiktok" : "anuncio";
+              const t = TIMES.find((n) => (form.origem || "").toLowerCase() === `time ${n.toLowerCase()}`);
+              if (t) return `time_${t.toLowerCase()}`;
+              return form.source || "manual";
+            })()}
             onChange={(e) => {
               const v = e.target.value;
               const mapa: Record<string, { source: string; origem: string }> = {
@@ -426,6 +432,10 @@ function LeadEditForm({
                 formulario_meta: { source: "formulario_meta", origem: "formulario_meta" },
                 manual: { source: "manual", origem: "manual" },
                 whatsapp: { source: "whatsapp", origem: "whatsapp" },
+                // Times: oferta do corretor → não conta no custo, só identifica o time.
+                ...Object.fromEntries(
+                  TIMES.map((n) => [`time_${n.toLowerCase()}`, { source: "manual", origem: `Time ${n}` }])
+                ),
               };
               const m = mapa[v] ?? mapa.manual;
               set("source", m.source);
@@ -441,6 +451,11 @@ function LeadEditForm({
             <option value="formulario_meta">📝 Formulário Meta — conta no custo</option>
             <option value="manual">✋ Manual / oferta do corretor — não conta</option>
             <option value="whatsapp">💬 WhatsApp orgânico — não conta</option>
+            <optgroup label="Times (oferta — não conta no custo)">
+              {TIMES.map((n) => (
+                <option key={n} value={`time_${n.toLowerCase()}`}>👥 Time {n}</option>
+              ))}
+            </optgroup>
           </select>
           <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>Só o Diretor mexe. Facebook/Instagram/TikTok/Anúncio/Formulário Meta entram na conta de custo por lead.</div>
         </Field>
