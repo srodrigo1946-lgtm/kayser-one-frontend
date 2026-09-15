@@ -70,9 +70,11 @@ export default function CorujaoPage() {
           {leads.map((l) => (
             <div key={l.id} className="p-3 rounded-xl border" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
               <div className="font-medium" style={{ color: "var(--foreground)" }}>{l.name}</div>
-              <div className="text-xs flex items-center gap-1 mt-0.5" style={{ color: "var(--muted-foreground)" }}>
-                <Phone size={12} /> {l.phone || "—"}
-              </div>
+              {l.phone && (
+                <div className="text-xs flex items-center gap-1 mt-0.5" style={{ color: "var(--muted-foreground)" }}>
+                  <Phone size={12} /> {l.phone}
+                </div>
+              )}
               {l.empreendimento && (
                 <div className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>🏢 {l.empreendimento}</div>
               )}
