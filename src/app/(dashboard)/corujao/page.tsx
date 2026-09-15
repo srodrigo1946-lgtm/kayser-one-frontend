@@ -130,6 +130,7 @@ function ConfigPanel() {
   const [hora, setHora] = useState("14:00");
   const [puxouMsg, setPuxouMsg] = useState("");
   const [libMsg, setLibMsg] = useState("");
+  const [agendar, setAgendar] = useState("");
 
   const handleLiberar = async (n: number) => {
     setLibMsg("");
@@ -209,7 +210,7 @@ function ConfigPanel() {
             Liberar todos
           </button>
         </div>
-        <div className="flex items-center gap-2 mt-3 text-sm" style={{ color: "var(--foreground)" }}>
+        <div className="flex items-center gap-2 mt-3 text-sm flex-wrap" style={{ color: "var(--foreground)" }}>
           <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>Automático por dia (no horário):</span>
           <select
             value={String(cfg?.autoQtd ?? 0)}
@@ -222,6 +223,45 @@ function ConfigPanel() {
               <option key={n} value={String(n)}>{n} por dia</option>
             ))}
           </select>
+        </div>
+
+        {/* Agendar liberação automática para uma data e hora específica (1 disparo) */}
+        <div className="mt-3">
+          <div className="text-xs mb-1" style={{ color: "var(--muted-foreground)" }}>
+            Agendar liberação automática (data e hora):
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <input
+              type="datetime-local"
+              value={agendar}
+              onChange={(e) => setAgendar(e.target.value)}
+              className="px-3 py-2 rounded-lg border text-sm outline-none"
+              style={inputStyle}
+            />
+            <button
+              onClick={() => {
+                if (!agendar) return;
+                setCfg.mutate({ agendadoPara: new Date(agendar).toISOString() });
+                setLibMsg("Liberação agendada. No horário marcado o Corujão libera e avisa os corretores.");
+              }}
+              className="px-3 py-2 rounded-lg text-sm font-medium"
+              style={{ background: "var(--primary)", color: "white" }}
+            >
+              Agendar
+            </button>
+          </div>
+          {cfg?.agendadoPara && (
+            <div className="text-xs mt-1.5 flex items-center gap-2" style={{ color: "var(--muted-foreground)" }}>
+              🗓️ Agendado para {new Date(cfg.agendadoPara).toLocaleString("pt-BR")}
+              <button
+                onClick={() => { setCfg.mutate({ agendadoPara: "" }); setAgendar(""); }}
+                className="underline"
+                style={{ color: "var(--primary)" }}
+              >
+                cancelar
+              </button>
+            </div>
+          )}
         </div>
         {libMsg && <div className="text-xs mt-2" style={{ color: "var(--muted-foreground)" }}>{libMsg}</div>}
       </div>

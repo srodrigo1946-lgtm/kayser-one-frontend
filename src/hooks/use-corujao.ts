@@ -23,6 +23,7 @@ export interface CorujaoConfig {
   poolCount: number;
   naoLiberados: number;
   autoQtd: number;
+  agendadoPara?: string | null;
 }
 
 export interface CorujaoPool {
@@ -63,7 +64,9 @@ export function useSetCorujaoConfig() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (
-      dto: Partial<Pick<CorujaoConfig, "enabled" | "hora" | "status" | "incluirDiretor" | "autoQtd">>
+      dto: Partial<Pick<CorujaoConfig, "enabled" | "hora" | "status" | "incluirDiretor" | "autoQtd">> & {
+        agendadoPara?: string;
+      }
     ) => (await api.put<CorujaoConfig>("/corujao/config", dto)).data,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["corujao"] }),
   });
