@@ -1,7 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Moon, Loader2, Check, Send, Phone } from "lucide-react";
+import { Loader2, Check, Send, Phone } from "lucide-react";
+
+// Coruja do Corujão (SVG inline — sem depender de arquivo externo).
+function Coruja({ size = 56 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-label="Corujão" role="img">
+      {/* lua atrás */}
+      <path d="M54 14a12 12 0 1 1-9-11 9 9 0 0 0 9 11Z" fill="#f59e0b" opacity="0.9" />
+      {/* orelhas */}
+      <path d="M15 18l9 8-11 3z" fill="var(--primary)" />
+      <path d="M49 18l-9 8 11 3z" fill="var(--primary)" />
+      {/* corpo/cabeça */}
+      <ellipse cx="32" cy="36" rx="22" ry="23" fill="var(--primary)" />
+      {/* barriga */}
+      <path d="M32 22c9 0 15 8 15 18s-6 16-15 16-15-6-15-16 6-18 15-18z" fill="#ffffff" opacity="0.14" />
+      {/* olhos */}
+      <circle cx="23" cy="31" r="10" fill="#fff" />
+      <circle cx="41" cy="31" r="10" fill="#fff" />
+      <circle cx="23" cy="32" r="4.5" fill="#111827" />
+      <circle cx="41" cy="32" r="4.5" fill="#111827" />
+      <circle cx="24.6" cy="30.4" r="1.4" fill="#fff" />
+      <circle cx="42.6" cy="30.4" r="1.4" fill="#fff" />
+      {/* bico */}
+      <path d="M32 36l4 6h-8z" fill="#f59e0b" />
+      {/* pés */}
+      <path d="M26 58l-2 4M32 59v4M38 58l2 4" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
 import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
 import {
@@ -33,8 +61,8 @@ export default function CorujaoPage() {
 
   return (
     <div className="p-4 lg:p-6 max-w-5xl mx-auto">
-      <div className="flex items-center gap-2 mb-1">
-        <Moon size={22} style={{ color: "var(--primary)" }} />
+      <div className="flex items-center gap-3 mb-1">
+        <Coruja size={52} />
         <h1 className="text-xl font-bold" style={{ color: "var(--foreground)" }}>Corujão — repique de leads</h1>
       </div>
       <p className="text-sm mb-5" style={{ color: "var(--muted-foreground)" }}>
@@ -74,9 +102,11 @@ export default function CorujaoPage() {
               {l.empreendimento && (
                 <div className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>🏢 {l.empreendimento}</div>
               )}
-              <div className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
-                {l.origem || "—"} · atual: {l.responsavel}
-              </div>
+              {(l.origem || l.responsavel) && (
+                <div className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
+                  {l.origem || "—"}{l.responsavel ? ` · atual: ${l.responsavel}` : ""}
+                </div>
+              )}
               <button
                 onClick={() => handleAceitar(l.id, l.name)}
                 disabled={aceitar.isPending}

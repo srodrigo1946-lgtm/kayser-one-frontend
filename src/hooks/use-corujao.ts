@@ -9,8 +9,8 @@ export interface CorujaoLead {
   phone: string;
   empreendimento: string;
   origem: string;
-  responsavel: string;
   status: string;
+  responsavel?: string; // só vem para o Diretor
 }
 
 export interface CorujaoConfig {
