@@ -13,6 +13,7 @@ import {
   useAtivarCorretorCorujao,
   usePuxarCorujao,
   useLiberarCorujao,
+  useRemoverPoolCorujao,
 } from "@/hooks/use-corujao";
 
 const LOTES = [2, 5, 10, 20, 30, 50];
@@ -127,6 +128,7 @@ function ConfigPanel() {
   const ativar = useAtivarCorretorCorujao();
   const puxar = usePuxarCorujao();
   const liberar = useLiberarCorujao();
+  const removerPool = useRemoverPoolCorujao();
   const [hora, setHora] = useState("14:00");
   const [puxouMsg, setPuxouMsg] = useState("");
   const [libMsg, setLibMsg] = useState("");
@@ -208,6 +210,22 @@ function ConfigPanel() {
             style={{ background: "var(--primary)", color: "white" }}
           >
             Liberar todos
+          </button>
+          <button
+            onClick={async () => {
+              setLibMsg("");
+              try {
+                const r = await removerPool.mutateAsync();
+                setLibMsg(`Removidos ${r.removidos} do pool · voltaram pra fila (${r.naoLiberados}).`);
+              } catch (err) {
+                setLibMsg(getApiErrorMessage(err, "Falha ao remover do pool."));
+              }
+            }}
+            disabled={removerPool.isPending || (cfg?.poolCount ?? 0) === 0}
+            className="px-3 py-1.5 rounded-lg border text-sm font-medium disabled:opacity-50"
+            style={{ borderColor: "#ef4444", color: "#ef4444" }}
+          >
+            Remover do pool ({cfg?.poolCount ?? 0})
           </button>
         </div>
         <div className="flex items-center gap-2 mt-3 text-sm flex-wrap" style={{ color: "var(--foreground)" }}>

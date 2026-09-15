@@ -82,6 +82,16 @@ export function useLiberarCorujao() {
   });
 }
 
+// Diretor tira do pool os leads liberados (voltam pra fila).
+export function useRemoverPoolCorujao() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () =>
+      (await api.post<{ removidos: number; noPool: number; naoLiberados: number }>("/corujao/remover-pool")).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["corujao"] }),
+  });
+}
+
 export function useAtivarCorretorCorujao() {
   const qc = useQueryClient();
   return useMutation({
