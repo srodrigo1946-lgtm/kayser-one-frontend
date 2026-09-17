@@ -14,6 +14,23 @@ export function useKanbanBoard() {
   });
 }
 
+export interface KanbanColumnInfo {
+  id: string;
+  key: string;
+  title: string;
+  emoji: string;
+  color: string;
+  position: number;
+}
+
+// Só as colunas (ordenadas) — leve, p/ mover o lead pela esteira no drawer.
+export function useKanbanColumns() {
+  return useQuery({
+    queryKey: ["kanban", "columns"],
+    queryFn: async () => (await api.get<KanbanColumnInfo[]>("/kanban/columns")).data,
+  });
+}
+
 export function useMoveCard() {
   const qc = useQueryClient();
   return useMutation({
@@ -32,6 +49,7 @@ export function useMoveCard() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["kanban"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["leads"] });
     },
   });
 }

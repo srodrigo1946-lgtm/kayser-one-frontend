@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { X, Pencil, Loader2, Search, Shuffle, Clock } from "lucide-react";
+import { X, Pencil, Loader2, Search, Shuffle, Clock, ChevronRight } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 import { useLeadHistory, useUpdateLead } from "@/hooks/use-leads";
 import { useDistribuirLead, useAgendarLead } from "@/hooks/use-lead-queue";
+import { useKanbanColumns, useMoveCard } from "@/hooks/use-kanban";
 import { useProperties } from "@/hooks/use-properties";
 import { useUsers } from "@/hooks/use-users";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
@@ -24,8 +25,26 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
   const distribuir = useDistribuirLead();
   const agendar = useAgendarLead();
   const { data: allUsers } = useUsers();
+  const { data: colunas } = useKanbanColumns();
+  const mover = useMoveCard();
   const [filaMsg, setFilaMsg] = useState("");
   const [quando, setQuando] = useState("");
+
+  // Esteira do Kanban: mover o lead pela pipeline sem sair do drawer.
+  const cols = colunas ?? [];
+  const idxAtual = cols.findIndex((c) => c.key === current.status);
+  const colAtual = idxAtual >= 0 ? cols[idxAtual] : undefined;
+  const proxima = idxAtual >= 0 && idxAtual < cols.length - 1 ? cols[idxAtual + 1] : undefined;
+
+  const moverPara = async (status: string) => {
+    if (!status || status === current.status) return;
+    try {
+      await mover.mutateAsync({ leadId: current.id, status, order: 0 });
+      setCurrent((c) => ({ ...c, status: status as Lead["status"] }));
+    } catch {
+      /* silencioso — o board revalida sozinho */
+    }
+  };
 
   const handleDistribuir = async () => {
     setFilaMsg("");
@@ -118,6 +137,41 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
           />
         ) : (
           <>
+            {/* Esteira do Kanban — muda a etapa sem sair daqui (arrastar no board segue valendo). */}
+            {cols.length > 0 && (
+              <div className="mb-5 p-3 rounded-xl border" style={{ borderColor: "var(--border)", background: "var(--secondary)" }}>
+                <div className="text-xs mb-1.5" style={{ color: "var(--muted-foreground)" }}>Etapa no Kanban</div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <select
+                    value={current.status}
+                    onChange={(e) => moverPara(e.target.value)}
+                    disabled={mover.isPending}
+                    className="flex-1 min-w-[10rem] px-3 py-2 rounded-lg border text-sm outline-none"
+                    style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+                  >
+                    {cols.map((c) => (
+                      <option key={c.key} value={c.key}>{c.emoji} {c.title}</option>
+                    ))}
+                  </select>
+                  {proxima && (
+                    <button
+                      onClick={() => moverPara(proxima.key)}
+                      disabled={mover.isPending}
+                      className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-60 whitespace-nowrap"
+                      style={{ background: "var(--primary)", color: "white" }}
+                      title={`Avançar para ${proxima.title}`}
+                    >
+                      {mover.isPending ? <Loader2 size={15} className="animate-spin" /> : <ChevronRight size={15} />}
+                      {proxima.emoji} {proxima.title}
+                    </button>
+                  )}
+                </div>
+                <div className="text-xs mt-1.5" style={{ color: "var(--muted-foreground)" }}>
+                  {colAtual ? `Está em "${colAtual.title}".` : ""} {proxima ? `Clique pra avançar pra "${proxima.title}".` : "Última etapa."}
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-3 mb-6 text-sm">
               <Detail label="Telefone" value={current.phone} />
               <Detail label="E-mail" value={current.email || "—"} />
