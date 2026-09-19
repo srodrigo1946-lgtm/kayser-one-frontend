@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Header } from "@/components/layout/header";
-import { Search, Send, Bot, QrCode, Loader2, Smile, Paperclip } from "lucide-react";
+import { Search, Send, Bot, QrCode, Loader2, Smile, Paperclip, RefreshCw } from "lucide-react";
 import { api, getApiErrorMessage, API_URL } from "@/lib/api";
 import { getToken, getStoredUser } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -130,10 +130,17 @@ export default function WhatsAppPage() {
   );
   const selected: ConversationItem | undefined = list.find((c) => c.id === selectedId) ?? thread?.conversation;
 
-  const connect = async () => {
+  const connect = async (reset = false) => {
+    if (reset && !window.confirm("Reconectar do ZERO: desconecta o WhatsApp atual e gera um QR novo pra parear o número limpo (recomendado quando troca de número). Continuar?")) return;
     setConnecting(true);
     setQr(null);
     try {
+      if (reset) {
+        // Apaga a instância antiga (sessão do número velho) e recria limpa —
+        // isso re-aplica o webhook e evita o pareamento "pela metade".
+        try { await api.delete("/whatsapp/instance"); } catch { /* pode não existir ainda */ }
+        await new Promise((r) => setTimeout(r, 1500));
+      }
       await api.post("/whatsapp/instance");
       const { data } = await api.get("/whatsapp/instance/qr");
       // Evolution retorna base64 ou code dependendo da versão
@@ -201,10 +208,13 @@ export default function WhatsAppPage() {
           </div>
 
           {isDiretor && (
-            <div className="px-3 py-2 border-b" style={{ borderColor: "var(--border)" }}>
-              <button onClick={connect} disabled={connecting} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: "var(--primary)18", color: "var(--primary)" }}>
+            <div className="px-3 py-2 border-b flex flex-col gap-1.5" style={{ borderColor: "var(--border)" }}>
+              <button onClick={() => connect(false)} disabled={connecting} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: "var(--primary)18", color: "var(--primary)" }}>
                 {connecting ? <Loader2 size={12} className="animate-spin" /> : <QrCode size={12} />}
                 Conectar WhatsApp (QR Code)
+              </button>
+              <button onClick={() => connect(true)} disabled={connecting} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }} title="Use quando trocou de número ou quando parou de enviar/receber">
+                <RefreshCw size={12} /> Reconectar do zero (novo número)
               </button>
             </div>
           )}
