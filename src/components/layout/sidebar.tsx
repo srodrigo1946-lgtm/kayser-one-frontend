@@ -44,7 +44,7 @@ const navItems = [
   { href: "/pastas", label: "Subir Pasta", icon: FolderUp },
   { href: "/kanban", label: "Kanban", icon: Kanban },
   { href: "/whatsapp", label: "Conversas ao vivo", icon: MessageSquare },
-  { href: "/fila-leads", label: "Fila de Leads", icon: Megaphone, diretorOnly: true },
+  { href: "/fila-leads", label: "Fila de Leads", icon: Megaphone },
   { href: "/corujao", label: "Corujão (repique)", icon: Coruja },
   { href: "/custo-por-lead", label: "Custo por Lead", icon: Wallet, unlockKey: "custoLeadVisivel" },
   { href: "/feedback", label: "1-on-1 / Feedback", icon: MessagesSquare, roles: ["diretor", "superintendente", "gerente_geral", "gerente"] },

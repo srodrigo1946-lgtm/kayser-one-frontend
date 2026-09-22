@@ -114,12 +114,18 @@ export default function FilaLeadsPage() {
           Fila de Leads de Anúncio
         </h1>
       </div>
-      <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-        Quando ligada, os leads que chegam pelo número central (Diretor) via anúncio
-        "Clique para WhatsApp" são distribuídos automaticamente em rodízio — mas
-        <strong> só entre quem está de plantão na Escala de Atendimento</strong> naquele horário.
-        Se o cargo não atender dentro do tempo, o lead passa para o próximo.
-      </p>
+      {isDiretor ? (
+        <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+          Quando ligada, os leads que chegam pelo número central (Diretor) via anúncio
+          "Clique para WhatsApp" são distribuídos automaticamente em rodízio — mas
+          <strong> só entre quem está de plantão na Escala de Atendimento</strong> naquele horário.
+          Se o cargo não atender dentro do tempo, o lead passa para o próximo.
+        </p>
+      ) : (
+        <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+          Veja a ordem do rodízio de plantão (só leitura).
+        </p>
+      )}
 
       {/* Configuração — só o Diretor mexe */}
       {isDiretor && (
@@ -175,7 +181,8 @@ export default function FilaLeadsPage() {
       </div>
       )}
 
-      {/* Quem recebe = Escala (não é mais lista manual) */}
+      {/* Quem recebe = Escala — só o Diretor vê (cargos veem só a Ordem da fila) */}
+      {isDiretor && (
       <div className="rounded-2xl border p-4 space-y-3" style={card}>
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
@@ -222,6 +229,7 @@ export default function FilaLeadsPage() {
           )}
         </div>
       </div>
+      )}
 
       {isDiretor && (
         <button
