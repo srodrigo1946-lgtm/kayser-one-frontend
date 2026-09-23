@@ -95,6 +95,20 @@ export function useDeleteLead() {
   });
 }
 
+/** Apaga um item do histórico (ou tudo, sem historyId). Só Diretor. */
+export function useDeleteLeadHistory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ leadId, historyId }: { leadId: string; historyId?: string }) => {
+      await api.delete(historyId ? `/leads/${leadId}/history/${historyId}` : `/leads/${leadId}/history`);
+    },
+    onSuccess: (_d, { leadId }) => {
+      qc.invalidateQueries({ queryKey: ["leads", leadId, "history"] });
+      qc.invalidateQueries({ queryKey: ["kanban"] }); // data de entrada na etapa vem do histórico
+    },
+  });
+}
+
 export function useImportLeads() {
   const qc = useQueryClient();
   return useMutation({

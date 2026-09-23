@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { X, Pencil, Loader2, Search, Shuffle, Clock, ChevronRight } from "lucide-react";
+import { X, Pencil, Loader2, Search, Shuffle, Clock, ChevronRight, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
-import { useLeadHistory, useUpdateLead } from "@/hooks/use-leads";
+import { useLeadHistory, useUpdateLead, useDeleteLeadHistory } from "@/hooks/use-leads";
 import { useDistribuirLead, useAgendarLead } from "@/hooks/use-lead-queue";
 import { useKanbanColumns, useMoveCard } from "@/hooks/use-kanban";
 import { useProperties } from "@/hooks/use-properties";
@@ -29,6 +29,22 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
   const mover = useMoveCard();
   const [filaMsg, setFilaMsg] = useState("");
   const [quando, setQuando] = useState("");
+  const apagarHist = useDeleteLeadHistory();
+  const [histErro, setHistErro] = useState("");
+
+  // Só Diretor (o backend também barra). Afeta a "data na etapa" do Kanban.
+  const apagarHistorico = async (historyId?: string) => {
+    const msg = historyId
+      ? "Apagar este item do histórico? Não dá pra desfazer."
+      : "Apagar TODO o histórico deste lead? Não dá pra desfazer.";
+    if (!window.confirm(msg)) return;
+    setHistErro("");
+    try {
+      await apagarHist.mutateAsync({ leadId: current.id, historyId });
+    } catch (err) {
+      setHistErro(getApiErrorMessage(err, "Falha ao apagar o histórico."));
+    }
+  };
 
   // Esteira do Kanban: mover o lead pela pipeline sem sair do drawer.
   const cols = colunas ?? [];
@@ -230,18 +246,43 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
               </div>
             )}
 
-            <h4 className="font-semibold mb-3" style={{ color: "var(--foreground)" }}>Histórico</h4>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold" style={{ color: "var(--foreground)" }}>Histórico</h4>
+              {isDiretor && (history ?? []).length > 0 && (
+                <button
+                  onClick={() => apagarHistorico()}
+                  disabled={apagarHist.isPending}
+                  className="flex items-center gap-1 text-xs disabled:opacity-60"
+                  style={{ color: "#ef4444" }}
+                  title="Apagar todo o histórico (só Diretor)"
+                >
+                  <Trash2 size={13} /> Limpar tudo
+                </button>
+              )}
+            </div>
+            {histErro && <p className="text-xs mb-2" style={{ color: "#ef4444" }}>{histErro}</p>}
             {isLoading && <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>Carregando...</p>}
             <div className="space-y-3">
               {(history ?? []).map((h) => (
-                <div key={h.id} className="flex gap-3">
+                <div key={h.id} className="flex gap-3 group">
                   <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: "var(--primary)" }} />
-                  <div>
+                  <div className="flex-1">
                     <div className="text-sm" style={{ color: "var(--foreground)" }}>{h.description}</div>
                     <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>
                       {new Date(h.createdAt).toLocaleString("pt-BR")}
                     </div>
                   </div>
+                  {isDiretor && (
+                    <button
+                      onClick={() => apagarHistorico(h.id)}
+                      disabled={apagarHist.isPending}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 disabled:opacity-60"
+                      style={{ color: "var(--muted-foreground)" }}
+                      title="Apagar este item (só Diretor)"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
                 </div>
               ))}
               {!isLoading && (history ?? []).length === 0 && (
