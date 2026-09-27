@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/layout/header";
-import { Bot, Send, Upload, FileText, Settings, Zap, RefreshCw, Loader2, Check } from "lucide-react";
+import { Bot, Send, Upload, FileText, Settings, Zap, RefreshCw, Loader2, Check, Trash2, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
 import { useAiChat, useMyAi, useUpdateMyAi, type AiChatMessage } from "@/hooks/use-ai";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
-import { useKnowledge, useUploadKnowledge } from "@/hooks/use-knowledge";
+import { useKnowledge, useUploadKnowledge, useDeleteKnowledge } from "@/hooks/use-knowledge";
 import { getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 
@@ -263,48 +263,79 @@ function MyAiCard() {
   );
 }
 
-/* Base de conhecimento REAL (compartilhada da empresa). */
+/* Conhecimento do KAYSER (IA): base compartilhada da empresa — PDF, imagem, Excel, Word... */
 function KnowledgePanel() {
   const { data: items } = useKnowledge();
   const upload = useUploadKnowledge();
+  const remover = useDeleteKnowledge();
   const fileRef = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState("");
+  const [enviando, setEnviando] = useState("");
 
+  // Aceita vários arquivos de uma vez; envia um por um e mostra o resultado.
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
     setMsg("");
-    try {
-      await upload.mutateAsync(file);
-      setMsg(`"${file.name}" adicionado à base.`);
-    } catch (err) {
-      setMsg(getApiErrorMessage(err, "Falha ao enviar."));
-    } finally {
-      if (fileRef.current) fileRef.current.value = "";
+    const ok: string[] = [];
+    const erros: string[] = [];
+    for (const file of files) {
+      setEnviando(file.name);
+      try {
+        await upload.mutateAsync(file);
+        ok.push(file.name);
+      } catch (err) {
+        erros.push(`${file.name}: ${getApiErrorMessage(err, "falha ao enviar")}`);
+      }
     }
+    setEnviando("");
+    setMsg([ok.length ? `✅ ${ok.length} arquivo(s) adicionado(s) ao Kayser.` : "", ...erros.map((x) => `❌ ${x}`)].filter(Boolean).join("\n"));
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const icone = (titulo: string) => {
+    const ext = titulo.split(".").pop()?.toLowerCase() || "";
+    if (["jpg", "jpeg", "png", "webp", "gif"].includes(ext)) return <ImageIcon size={14} style={{ color: "#3b82f6" }} />;
+    if (["xlsx", "xls", "csv"].includes(ext)) return <FileSpreadsheet size={14} style={{ color: "#22c55e" }} />;
+    return <FileText size={14} style={{ color: "var(--primary)" }} />;
   };
 
   return (
     <div className="rounded-2xl border p-4" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-      <div className="flex items-center gap-2 mb-4">
-        <FileText size={16} style={{ color: "var(--primary)" }} />
-        <h3 className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>Base de Conhecimento</h3>
+      <div className="flex items-center gap-2 mb-1">
+        <Bot size={16} style={{ color: "var(--primary)" }} />
+        <h3 className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>Conhecimento do Kayser</h3>
+        <span className="ml-auto text-xs" style={{ color: "var(--muted-foreground)" }}>{(items ?? []).length} arquivo(s)</span>
       </div>
+      <p className="text-xs mb-3" style={{ color: "var(--muted-foreground)" }}>
+        Suba tabelas de preço, folders, plantas, memoriais: <b>PDF, imagem (JPG/PNG), Excel, Word, PowerPoint</b>. O Kayser usa isso pra responder os clientes.
+      </p>
       <div className="space-y-2">
-        {(items ?? []).slice(0, 6).map((item) => (
-          <div key={item.id} className="flex items-center gap-2 p-2 rounded-xl" style={{ background: "var(--secondary)" }}>
-            <FileText size={14} style={{ color: "var(--primary)" }} />
-            <span className="text-xs truncate flex-1" style={{ color: "var(--foreground)" }}>{item.title}</span>
-          </div>
-        ))}
-        {(items ?? []).length === 0 && (
-          <p className="text-xs text-center py-2" style={{ color: "var(--muted-foreground)" }}>Nenhum documento ainda.</p>
-        )}
-        <input ref={fileRef} type="file" accept=".pdf,.docx,.doc,.pptx,.xlsx,.xls,.csv,.txt,.md" onChange={handleUpload} className="hidden" />
-        <button onClick={() => fileRef.current?.click()} disabled={upload.isPending} className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border-2 border-dashed text-xs font-medium disabled:opacity-60" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
-          {upload.isPending ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Adicionar documento
+        <input ref={fileRef} type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.docx,.doc,.pptx,.xlsx,.xls,.csv,.txt,.md" onChange={handleUpload} className="hidden" />
+        <button onClick={() => fileRef.current?.click()} disabled={upload.isPending} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed text-xs font-medium disabled:opacity-60" style={{ borderColor: "var(--primary)", color: "var(--primary)" }}>
+          {upload.isPending ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+          {upload.isPending ? `Enviando ${enviando}… (imagem leva alguns segundos)` : "Adicionar arquivos (PDF, imagem, Excel...)"}
         </button>
-        {msg && <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>{msg}</p>}
+        {msg && <p className="text-xs whitespace-pre-line" style={{ color: "var(--muted-foreground)" }}>{msg}</p>}
+        <div className="space-y-1.5 max-h-72 overflow-y-auto">
+          {(items ?? []).map((item) => (
+            <div key={item.id} className="flex items-center gap-2 p-2 rounded-xl" style={{ background: "var(--secondary)" }}>
+              {icone(item.title)}
+              <span className="text-xs truncate flex-1" style={{ color: "var(--foreground)" }} title={item.title}>{item.title}</span>
+              <button
+                onClick={() => { if (window.confirm(`Tirar "${item.title}" do conhecimento do Kayser?`)) remover.mutate(item.id); }}
+                className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
+                style={{ color: "#ef4444" }}
+                title="Remover"
+              >
+                <Trash2 size={13} />
+              </button>
+            </div>
+          ))}
+          {(items ?? []).length === 0 && (
+            <p className="text-xs text-center py-2" style={{ color: "var(--muted-foreground)" }}>Nenhum arquivo ainda. Suba o primeiro acima.</p>
+          )}
+        </div>
       </div>
     </div>
   );
