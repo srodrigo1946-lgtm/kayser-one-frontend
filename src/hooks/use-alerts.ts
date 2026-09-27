@@ -9,6 +9,9 @@ export interface AlertsResponse {
   semContato: Lead[];
   /** Clientes que responderam e ainda aguardam resposta do corretor (com o texto). */
   responderam?: { leadId: string; nome: string; mensagem: string; at: string }[];
+  /** Totais verdadeiros (as listas vêm limitadas). */
+  responderamTotal?: number;
+  semContatoTotal?: number;
 }
 
 export function useAlerts() {

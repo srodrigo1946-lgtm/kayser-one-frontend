@@ -234,6 +234,9 @@ export default function KanbanPage() {
   const responderam = alerts?.responderam ?? [];
   const semContato = alerts?.semContato ?? [];
   const respostaByLead = new Map(responderam.map((r) => [r.leadId, r.mensagem]));
+  // Total verdadeiro (a lista mostra só parte: 20 sem contato mais antigos).
+  const totalResponderam = alerts?.responderamTotal ?? responderam.length;
+  const totalSemContato = alerts?.semContatoTotal ?? semContato.length;
   const [avisosAbertos, setAvisosAbertos] = useState(true);
   const moveCard = useMoveCard();
   const createColumn = useCreateColumn();
@@ -332,9 +335,9 @@ export default function KanbanPage() {
         <div className="mx-6 mt-3 rounded-2xl border" style={{ background: "var(--card)", borderColor: "#f9731655" }}>
           <button onClick={() => setAvisosAbertos((v) => !v)} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-left" style={{ color: "var(--foreground)" }}>
             <BellRing size={15} style={{ color: "#f97316" }} />
-            Avisos: {responderam.length > 0 && <span style={{ color: "#22c55e" }}>{responderam.length} cliente(s) responderam</span>}
-            {responderam.length > 0 && semContato.length > 0 && " · "}
-            {semContato.length > 0 && <span style={{ color: "#f97316" }}>{semContato.length} sem contato há 3+ dias</span>}
+            Avisos: {totalResponderam > 0 && <span style={{ color: "#22c55e" }}>{totalResponderam} cliente(s) responderam</span>}
+            {totalResponderam > 0 && totalSemContato > 0 && " · "}
+            {totalSemContato > 0 && <span style={{ color: "#f97316" }}>{totalSemContato} sem contato há 3+ dias</span>}
             <span className="ml-auto text-xs font-normal" style={{ color: "var(--muted-foreground)" }}>{avisosAbertos ? "esconder" : "ver"}</span>
           </button>
           {avisosAbertos && (
@@ -349,6 +352,11 @@ export default function KanbanPage() {
                   ⚠️ <b>{l.name}</b> — {l.lastContactAt ? Math.floor((Date.now() - new Date(l.lastContactAt).getTime()) / 86400000) : 3} dias sem contato
                 </button>
               ))}
+              {totalSemContato > semContato.length && (
+                <div className="md:col-span-2 text-xs px-1 pt-1" style={{ color: "var(--muted-foreground)" }}>
+                  Mostrando os {semContato.length} mais antigos sem contato de {totalSemContato}. Todos têm o selo ⚠️ no card.
+                </div>
+              )}
             </div>
           )}
         </div>

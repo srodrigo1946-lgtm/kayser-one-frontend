@@ -38,7 +38,12 @@ export function Header({ title, subtitle }: HeaderProps) {
   const semContato = alerts?.semContato ?? [];
   const responderam = alerts?.responderam ?? [];
   const pendentes = pending ?? [];
-  const count = responderam.length + semAtendimento.length + semContato.length + pendentes.length;
+  // Totais verdadeiros (as listas vêm limitadas).
+  const count =
+    (alerts?.responderamTotal ?? responderam.length) +
+    semAtendimento.length +
+    (alerts?.semContatoTotal ?? semContato.length) +
+    pendentes.length;
 
   const goToLead = () => {
     setOpen(false);
