@@ -6,6 +6,7 @@ import { Bot, Send, Upload, FileText, Settings, Zap, RefreshCw, Loader2, Check, 
 import { useAiChat, useMyAi, useUpdateMyAi, type AiChatMessage } from "@/hooks/use-ai";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useKnowledge, useUploadKnowledge, useDeleteKnowledge } from "@/hooks/use-knowledge";
+import { useProperties } from "@/hooks/use-properties";
 import { getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 
@@ -268,9 +269,13 @@ function KnowledgePanel() {
   const { data: items } = useKnowledge();
   const upload = useUploadKnowledge();
   const remover = useDeleteKnowledge();
+  const { data: imoveis } = useProperties();
   const fileRef = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState("");
   const [enviando, setEnviando] = useState("");
+  // Empreendimento escolhido pro upload ("" = conhecimento geral da empresa).
+  const [empId, setEmpId] = useState("");
+  const empreendimentos = (imoveis ?? []).filter((p) => p.active !== false);
 
   // Aceita vários arquivos de uma vez; envia um por um e mostra o resultado.
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -282,7 +287,7 @@ function KnowledgePanel() {
     for (const file of files) {
       setEnviando(file.name);
       try {
-        await upload.mutateAsync(file);
+        await upload.mutateAsync({ file, propertyId: empId || undefined });
         ok.push(file.name);
       } catch (err) {
         erros.push(`${file.name}: ${getApiErrorMessage(err, "falha ao enviar")}`);
@@ -308,20 +313,46 @@ function KnowledgePanel() {
         <span className="ml-auto text-xs" style={{ color: "var(--muted-foreground)" }}>{(items ?? []).length} arquivo(s)</span>
       </div>
       <p className="text-xs mb-3" style={{ color: "var(--muted-foreground)" }}>
-        Suba tabelas de preço, folders, plantas, memoriais: <b>PDF, imagem (JPG/PNG), Excel, Word, PowerPoint</b>. O Kayser usa isso pra responder os clientes.
+        Suba tabelas de preço, folders, plantas, memoriais: <b>PDF, imagem (JPG/PNG), Excel, Word, PowerPoint</b>. Escolha o empreendimento e suba os arquivos dele. O Kayser usa isso pra responder e <b>envia as imagens</b> pro cliente no WhatsApp (junto com as fotos do cadastro em Imóveis).
       </p>
       <div className="space-y-2">
+        <select
+          value={empId}
+          onChange={(e) => setEmpId(e.target.value)}
+          className="w-full px-3 py-2 rounded-xl border text-xs outline-none"
+          style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+        >
+          <option value="">📚 Geral (vale pra todos)</option>
+          {empreendimentos.map((p) => (
+            <option key={p.id} value={p.id}>🏢 {p.name}</option>
+          ))}
+        </select>
         <input ref={fileRef} type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.docx,.doc,.pptx,.xlsx,.xls,.csv,.txt,.md" onChange={handleUpload} className="hidden" />
         <button onClick={() => fileRef.current?.click()} disabled={upload.isPending} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed text-xs font-medium disabled:opacity-60" style={{ borderColor: "var(--primary)", color: "var(--primary)" }}>
           {upload.isPending ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-          {upload.isPending ? `Enviando ${enviando}… (imagem leva alguns segundos)` : "Adicionar arquivos (PDF, imagem, Excel...)"}
+          {upload.isPending
+            ? `Enviando ${enviando}… (imagem leva alguns segundos)`
+            : `Adicionar arquivos ${empId ? `de ${empreendimentos.find((p) => p.id === empId)?.name ?? "empreendimento"}` : "gerais"} (PDF, imagem, Excel...)`}
         </button>
         {msg && <p className="text-xs whitespace-pre-line" style={{ color: "var(--muted-foreground)" }}>{msg}</p>}
-        <div className="space-y-1.5 max-h-72 overflow-y-auto">
-          {(items ?? []).map((item) => (
+        <div className="space-y-1.5 max-h-96 overflow-y-auto">
+          {/* Agrupado por empreendimento; mostra também as fotos do cadastro (Imóveis). */}
+          {[{ id: "", name: "📚 Geral", fotos: 0 }, ...empreendimentos.map((p) => ({ id: p.id, name: `🏢 ${p.name}`, fotos: p.photos?.length ?? 0 }))]
+            .filter((g) => g.id === "" ? (items ?? []).some((i) => !i.propertyId) : true)
+            .map((g) => {
+              const doGrupo = (items ?? []).filter((i) => (i.propertyId || "") === g.id);
+              return (
+                <div key={g.id || "geral"} className="pt-1">
+                  <div className="flex items-center justify-between text-xs font-semibold px-1 pb-1" style={{ color: "var(--foreground)" }}>
+                    <span className="truncate">{g.name}</span>
+                    <span className="font-normal flex-shrink-0 ml-2" style={{ color: "var(--muted-foreground)" }}>
+                      {doGrupo.length} arq.{g.id ? ` · ${g.fotos} foto(s) do cadastro` : ""}
+                    </span>
+                  </div>
+                  {doGrupo.map((item) => (
             <div key={item.id} className="flex items-center gap-2 p-2 rounded-xl" style={{ background: "var(--secondary)" }}>
               {icone(item.title)}
-              <span className="text-xs truncate flex-1" style={{ color: "var(--foreground)" }} title={item.title}>{item.title}</span>
+              <span className="text-xs truncate flex-1" style={{ color: "var(--foreground)" }} title={item.title}>{item.title.replace(/^.+? — /, "")}</span>
               <button
                 onClick={() => { if (window.confirm(`Tirar "${item.title}" do conhecimento do Kayser?`)) remover.mutate(item.id); }}
                 className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
@@ -331,7 +362,10 @@ function KnowledgePanel() {
                 <Trash2 size={13} />
               </button>
             </div>
-          ))}
+                  ))}
+                </div>
+              );
+            })}
           {(items ?? []).length === 0 && (
             <p className="text-xs text-center py-2" style={{ color: "var(--muted-foreground)" }}>Nenhum arquivo ainda. Suba o primeiro acima.</p>
           )}
