@@ -303,7 +303,7 @@ function IaSettings() {
           </div>
           <div>
             <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted-foreground)" }}>Modelo (opcional)</label>
-            <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="ex: claude-sonnet-4-6" autoComplete="off" name="kayser-company-ai-model" className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
+            <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="ex: claude-sonnet-5 (padrão)" autoComplete="off" name="kayser-company-ai-model" className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
           </div>
         </div>
         <div className="mt-4">

@@ -242,7 +242,7 @@ function MyAiCard() {
         </div>
         <div>
           <label className="text-xs font-medium block mb-1" style={{ color: "var(--muted-foreground)" }}>Modelo (opcional)</label>
-          <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="ex: gpt-4o-mini" autoComplete="off" name="kayser-ai-model" className="w-full px-3 py-2 rounded-xl border text-sm outline-none" style={inputStyle} />
+          <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="vazio = padrão (Claude: claude-sonnet-5)" autoComplete="off" name="kayser-ai-model" className="w-full px-3 py-2 rounded-xl border text-sm outline-none" style={inputStyle} />
         </div>
         <div>
           <label className="text-xs font-medium block mb-1" style={{ color: "var(--muted-foreground)" }}>
