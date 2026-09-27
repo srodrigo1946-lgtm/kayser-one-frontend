@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Moon, Sun, Search, AlertCircle, Clock, UserPlus, Menu, Volume2, VolumeX, MessageCircle } from "lucide-react";
+import { Bell, Moon, Sun, Search, AlertCircle, Clock, UserPlus, Menu, Volume2, VolumeX, MessageCircle, CalendarCheck } from "lucide-react";
 import { somLigado, setSomLigado, tocarBip } from "@/hooks/use-new-lead-alert";
 import { getStoredUser } from "@/lib/auth";
 import { useTheme } from "@/hooks/use-theme";
@@ -37,9 +37,11 @@ export function Header({ title, subtitle }: HeaderProps) {
   const semAtendimento = alerts?.semAtendimento ?? [];
   const semContato = alerts?.semContato ?? [];
   const responderam = alerts?.responderam ?? [];
+  const visitasIA = alerts?.visitasIA ?? [];
   const pendentes = pending ?? [];
   // Totais verdadeiros (as listas vêm limitadas).
   const count =
+    visitasIA.length +
     (alerts?.responderamTotal ?? responderam.length) +
     semAtendimento.length +
     (alerts?.semContatoTotal ?? semContato.length) +
@@ -144,6 +146,15 @@ export function Header({ title, subtitle }: HeaderProps) {
                       onClick={goToApprovals}
                     />
                   ))}
+                  {visitasIA.map((v) => (
+                    <AlertRow
+                      key={`vi-${v.id}`}
+                      icon={<CalendarCheck size={14} style={{ color: "#3b82f6" }} />}
+                      name={`📅 Visita: ${v.nome}`}
+                      reason={`${dataVisita(v.scheduledAt)} · ${v.phone || "sem telefone"}${v.corretor ? ` · ${v.corretor.split(" ")[0]}` : " · aguardando plantão"}`}
+                      onClick={() => goToConversa(v.leadId)}
+                    />
+                  ))}
                   {responderam.map((r) => (
                     <AlertRow
                       key={`rp-${r.leadId}`}
@@ -181,7 +192,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                     Aprovar cadastros
                   </button>
                 )}
-                {responderam.length + semAtendimento.length + semContato.length > 0 && (
+                {visitasIA.length + responderam.length + semAtendimento.length + semContato.length > 0 && (
                   <button
                     onClick={goToLead}
                     className="w-full p-3 text-sm font-medium border-t"
@@ -219,6 +230,12 @@ export function Header({ title, subtitle }: HeaderProps) {
       </div>
     </header>
   );
+}
+
+/** "sáb., 28/09 às 10:00". */
+function dataVisita(iso: string) {
+  const d = new Date(iso);
+  return `${d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })} às ${d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
 }
 
 /** "há 5 min" / "há 2 h" / "há 3 dias". */

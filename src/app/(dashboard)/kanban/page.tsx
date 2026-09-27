@@ -51,11 +51,14 @@ function LeadCard({
   onExcluir,
   onWhatsapp,
   respondeu,
+  visita,
 }: {
   lead: Lead;
   dueAt?: string;
   /** Texto que o cliente respondeu e ainda está sem resposta do corretor. */
   respondeu?: string;
+  /** Visita agendada pela IA (data ISO). */
+  visita?: string;
   onDragStart: (lead: Lead) => void;
   onOpen: (lead: Lead) => void;
   podeExcluir: boolean;
@@ -106,6 +109,12 @@ function LeadCard({
 
       {dueAt && (
         <div className="mb-2"><Countdown dueAt={dueAt} /></div>
+      )}
+
+      {visita && (
+        <div className="mb-2 text-xs px-2 py-1 rounded-lg" style={{ background: "#3b82f622", color: "#3b82f6" }} title="Visita agendada pela IA fora do plantão">
+          📅 Visita {new Date(visita).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })} às {new Date(visita).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} (IA)
+        </div>
       )}
 
       {respondeu !== undefined && (
@@ -234,6 +243,8 @@ export default function KanbanPage() {
   const responderam = alerts?.responderam ?? [];
   const semContato = alerts?.semContato ?? [];
   const respostaByLead = new Map(responderam.map((r) => [r.leadId, r.mensagem]));
+  const visitasIA = alerts?.visitasIA ?? [];
+  const visitaByLead = new Map(visitasIA.map((v) => [v.leadId, v.scheduledAt]));
   // Total verdadeiro (a lista mostra só parte: 20 sem contato mais antigos).
   const totalResponderam = alerts?.responderamTotal ?? responderam.length;
   const totalSemContato = alerts?.semContatoTotal ?? semContato.length;
@@ -331,17 +342,27 @@ export default function KanbanPage() {
       </div>
 
       {/* Quadro de avisos: cliente respondeu / 3+ dias sem contato (cada cargo vê a sua equipe). */}
-      {(responderam.length > 0 || semContato.length > 0) && (
+      {(visitasIA.length > 0 || responderam.length > 0 || semContato.length > 0) && (
         <div className="mx-6 mt-3 rounded-2xl border" style={{ background: "var(--card)", borderColor: "#f9731655" }}>
           <button onClick={() => setAvisosAbertos((v) => !v)} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-left" style={{ color: "var(--foreground)" }}>
             <BellRing size={15} style={{ color: "#f97316" }} />
-            Avisos: {totalResponderam > 0 && <span style={{ color: "#22c55e" }}>{totalResponderam} cliente(s) responderam</span>}
+            Avisos: {visitasIA.length > 0 && <span style={{ color: "#3b82f6" }}>{visitasIA.length} visita(s) agendada(s) pela IA · </span>}
+            {totalResponderam > 0 && <span style={{ color: "#22c55e" }}>{totalResponderam} cliente(s) responderam</span>}
             {totalResponderam > 0 && totalSemContato > 0 && " · "}
             {totalSemContato > 0 && <span style={{ color: "#f97316" }}>{totalSemContato} sem contato há 3+ dias</span>}
             <span className="ml-auto text-xs font-normal" style={{ color: "var(--muted-foreground)" }}>{avisosAbertos ? "esconder" : "ver"}</span>
           </button>
           {avisosAbertos && (
             <div className="px-4 pb-3 grid gap-1.5 md:grid-cols-2 max-h-48 overflow-y-auto">
+              {visitasIA.map((v) => (
+                <button key={`vi-${v.id}`} onClick={() => router.push(`/whatsapp?lead=${v.leadId}`)} className="text-left text-xs px-2.5 py-1.5 rounded-lg" style={{ background: "#3b82f618", color: "var(--foreground)", border: "1px solid #3b82f655" }} title="Abrir a conversa">
+                  📅 <b>{v.nome}</b> · {v.phone || "sem telefone"}
+                  <div style={{ color: "#3b82f6" }}>
+                    Visita {new Date(v.scheduledAt).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })} às {new Date(v.scheduledAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                    {v.local ? ` · ${v.local}` : ""} · {v.corretor ? `corretor: ${v.corretor.split(" ")[0]}` : "aguardando plantão"}
+                  </div>
+                </button>
+              ))}
               {responderam.map((r) => (
                 <button key={`rp-${r.leadId}`} onClick={() => router.push(`/whatsapp?lead=${r.leadId}`)} className="text-left text-xs px-2.5 py-1.5 rounded-lg truncate" style={{ background: "#22c55e18", color: "var(--foreground)" }} title="Abrir a conversa">
                   💬 <b>{r.nome}</b> respondeu: <span style={{ color: "#22c55e" }}>“{r.mensagem || "(mensagem)"}”</span>
@@ -403,7 +424,7 @@ export default function KanbanPage() {
 
               <div className="flex-1 p-2 space-y-2 overflow-y-auto">
                 {filtra(col.leads).map((lead) => (
-                  <LeadCard key={lead.id} lead={lead} dueAt={col.id === "novo_lead" ? dueByLead.get(lead.id) : undefined} onDragStart={setDragging} onOpen={setDetailLead} podeExcluir={isDiretor} onExcluir={confirmarExcluir} onWhatsapp={abrirWhatsapp} respondeu={respostaByLead.get(lead.id)} />
+                  <LeadCard key={lead.id} lead={lead} dueAt={col.id === "novo_lead" ? dueByLead.get(lead.id) : undefined} onDragStart={setDragging} onOpen={setDetailLead} podeExcluir={isDiretor} onExcluir={confirmarExcluir} onWhatsapp={abrirWhatsapp} respondeu={respostaByLead.get(lead.id)} visita={visitaByLead.get(lead.id)} />
                 ))}
                 {filtra(col.leads).length === 0 && (
                   <div className="text-xs text-center py-8 rounded-xl border-2 border-dashed" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>

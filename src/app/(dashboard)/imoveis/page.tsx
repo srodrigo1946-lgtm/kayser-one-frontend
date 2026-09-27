@@ -315,7 +315,7 @@ function PropertyForm({
     const src = (initial ?? {}) as any;
     [
       "name", "type", "status", "construtora", "description",
-      "address", "bairro", "cidade", "estado", "cep", "imageUrl", "deliveryDate",
+      "address", "bairro", "cidade", "estado", "cep", "imageUrl", "deliveryDate", "standAddress",
       ...NUMERIC_FIELDS,
     ].forEach((k) => {
       f[k] = src[k] != null ? String(src[k]) : "";
@@ -369,7 +369,7 @@ function PropertyForm({
 
   const buildPayload = (): PropertyInput => {
     const out: any = {};
-    ["name", "type", "status", "construtora", "description", "address", "bairro", "cidade", "estado", "cep", "imageUrl", "deliveryDate"].forEach((k) => {
+    ["name", "type", "status", "construtora", "description", "address", "bairro", "cidade", "estado", "cep", "imageUrl", "deliveryDate", "standAddress"].forEach((k) => {
       if (form[k] && form[k].trim()) out[k] = form[k].trim();
     });
     NUMERIC_FIELDS.forEach((k) => {
@@ -449,6 +449,7 @@ function PropertyForm({
           </div>
           <Field label="Bairro"><input value={form.bairro} onChange={(e) => set("bairro", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
           <Field label="Endereço"><input value={form.address} onChange={(e) => set("address", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
+          <Field label="📍 Endereço do stand de vendas (vai no cartão da visita pro cliente)"><input value={form.standAddress} onChange={(e) => set("standAddress", e.target.value)} placeholder="Vazio = usa o endereço do imóvel" className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
 
           {/* Comercial */}
           <div className="text-xs font-semibold pt-1" style={{ color: "var(--muted-foreground)" }}>DADOS COMERCIAIS</div>

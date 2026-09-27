@@ -26,6 +26,8 @@ export interface Property {
   parkingSpots?: number | null;
   amenities?: string[] | null;
   deliveryDate?: string | null;
+  /** Endereço do stand de vendas (vai no cartão da visita pro cliente). */
+  standAddress?: string | null;
   imageUrl?: string | null;
   photos?: string[] | null;
   active?: boolean;

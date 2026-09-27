@@ -12,6 +12,8 @@ export interface AlertsResponse {
   /** Totais verdadeiros (as listas vêm limitadas). */
   responderamTotal?: number;
   semContatoTotal?: number;
+  /** Visitas que a IA agendou fora do plantão (cartão: nome, telefone, data, corretor). */
+  visitasIA?: { id: string; leadId: string; nome: string; phone: string; scheduledAt: string; local: string; corretor: string | null }[];
 }
 
 export function useAlerts() {
