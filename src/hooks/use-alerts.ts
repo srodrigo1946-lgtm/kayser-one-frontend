@@ -7,6 +7,8 @@ import type { Lead } from "@/types";
 export interface AlertsResponse {
   semAtendimento: Lead[];
   semContato: Lead[];
+  /** Clientes que responderam e ainda aguardam resposta do corretor (com o texto). */
+  responderam?: { leadId: string; nome: string; mensagem: string; at: string }[];
 }
 
 export function useAlerts() {

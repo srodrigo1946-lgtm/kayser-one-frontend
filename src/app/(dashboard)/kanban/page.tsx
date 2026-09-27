@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import type { Lead, KanbanColumn } from "@/types";
-import { MessageSquare, Plus, Trash2, Settings2, ChevronLeft, ChevronRight, Search, Clock } from "lucide-react";
+import { MessageSquare, Plus, Trash2, Settings2, ChevronLeft, ChevronRight, Search, Clock, BellRing } from "lucide-react";
 import {
   useKanbanBoard,
   useMoveCard,
@@ -16,6 +16,7 @@ import {
 import { useDeleteLead } from "@/hooks/use-leads";
 import { usePendentes } from "@/hooks/use-lead-queue";
 import { getStoredUser } from "@/lib/auth";
+import { useAlerts } from "@/hooks/use-alerts";
 import { LeadDetailDrawer } from "@/components/leads/lead-detail-drawer";
 
 // Relógio de contagem regressiva do SLA (tempo pra atender antes de passar pro próximo).
@@ -49,9 +50,12 @@ function LeadCard({
   podeExcluir,
   onExcluir,
   onWhatsapp,
+  respondeu,
 }: {
   lead: Lead;
   dueAt?: string;
+  /** Texto que o cliente respondeu e ainda está sem resposta do corretor. */
+  respondeu?: string;
   onDragStart: (lead: Lead) => void;
   onOpen: (lead: Lead) => void;
   podeExcluir: boolean;
@@ -64,6 +68,10 @@ function LeadCard({
   const desde = lead.stageSince ? new Date(lead.stageSince) : null;
   const dias = desde ? Math.floor((Date.now() - desde.getTime()) / 86400000) : 0;
   const tempoEtapa = desde ? (dias <= 0 ? "hoje" : dias === 1 ? "1 dia" : `${dias} dias`) : "";
+  // Alerta: 3+ dias sem contato (venda ganha/perdida não conta).
+  const fechado = lead.status === "venda_ganha" || lead.status === "venda_perdida";
+  const diasSemContato = lead.lastContactAt ? Math.floor((Date.now() - new Date(lead.lastContactAt).getTime()) / 86400000) : 0;
+  const alertaContato = !fechado && diasSemContato >= 3;
 
   return (
     <div
@@ -98,6 +106,18 @@ function LeadCard({
 
       {dueAt && (
         <div className="mb-2"><Countdown dueAt={dueAt} /></div>
+      )}
+
+      {respondeu !== undefined && (
+        <div className="mb-2 text-xs px-2 py-1 rounded-lg line-clamp-2 break-words" style={{ background: "#22c55e22", color: "#22c55e" }} title="O cliente respondeu e está esperando você">
+          💬 Respondeu: “{respondeu || "(mensagem)"}”
+        </div>
+      )}
+
+      {alertaContato && respondeu === undefined && (
+        <div className="mb-2 text-xs px-2 py-1 rounded-lg" style={{ background: "#f9731622", color: "#f97316" }} title="Chame o cliente">
+          ⚠️ {diasSemContato} dias sem contato
+        </div>
       )}
 
       {lead.empreendimento && (
@@ -209,6 +229,12 @@ export default function KanbanPage() {
   const { data: board, isLoading, isError } = useKanbanBoard();
   const { data: pendentes } = usePendentes();
   const dueByLead = new Map((pendentes ?? []).map((p) => [p.leadId, p.dueAt]));
+  // Avisos do sino (já filtrados pela equipe de quem está logado).
+  const { data: alerts } = useAlerts();
+  const responderam = alerts?.responderam ?? [];
+  const semContato = alerts?.semContato ?? [];
+  const respostaByLead = new Map(responderam.map((r) => [r.leadId, r.mensagem]));
+  const [avisosAbertos, setAvisosAbertos] = useState(true);
   const moveCard = useMoveCard();
   const createColumn = useCreateColumn();
   const updateColumn = useUpdateColumn();
@@ -301,6 +327,33 @@ export default function KanbanPage() {
         )}
       </div>
 
+      {/* Quadro de avisos: cliente respondeu / 3+ dias sem contato (cada cargo vê a sua equipe). */}
+      {(responderam.length > 0 || semContato.length > 0) && (
+        <div className="mx-6 mt-3 rounded-2xl border" style={{ background: "var(--card)", borderColor: "#f9731655" }}>
+          <button onClick={() => setAvisosAbertos((v) => !v)} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-left" style={{ color: "var(--foreground)" }}>
+            <BellRing size={15} style={{ color: "#f97316" }} />
+            Avisos: {responderam.length > 0 && <span style={{ color: "#22c55e" }}>{responderam.length} cliente(s) responderam</span>}
+            {responderam.length > 0 && semContato.length > 0 && " · "}
+            {semContato.length > 0 && <span style={{ color: "#f97316" }}>{semContato.length} sem contato há 3+ dias</span>}
+            <span className="ml-auto text-xs font-normal" style={{ color: "var(--muted-foreground)" }}>{avisosAbertos ? "esconder" : "ver"}</span>
+          </button>
+          {avisosAbertos && (
+            <div className="px-4 pb-3 grid gap-1.5 md:grid-cols-2 max-h-48 overflow-y-auto">
+              {responderam.map((r) => (
+                <button key={`rp-${r.leadId}`} onClick={() => router.push(`/whatsapp?lead=${r.leadId}`)} className="text-left text-xs px-2.5 py-1.5 rounded-lg truncate" style={{ background: "#22c55e18", color: "var(--foreground)" }} title="Abrir a conversa">
+                  💬 <b>{r.nome}</b> respondeu: <span style={{ color: "#22c55e" }}>“{r.mensagem || "(mensagem)"}”</span>
+                </button>
+              ))}
+              {semContato.map((l) => (
+                <button key={`sc-${l.id}`} onClick={() => router.push(`/whatsapp?lead=${l.id}`)} className="text-left text-xs px-2.5 py-1.5 rounded-lg truncate" style={{ background: "#f9731618", color: "var(--foreground)" }} title="Abrir a conversa">
+                  ⚠️ <b>{l.name}</b> — {l.lastContactAt ? Math.floor((Date.now() - new Date(l.lastContactAt).getTime()) / 86400000) : 3} dias sem contato
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {isLoading && <div className="p-6 text-sm" style={{ color: "var(--muted-foreground)" }}>Carregando board...</div>}
       {isError && <div className="p-6 text-sm" style={{ color: "#ef4444" }}>Erro ao carregar o board. Verifique se o backend está rodando.</div>}
 
@@ -342,7 +395,7 @@ export default function KanbanPage() {
 
               <div className="flex-1 p-2 space-y-2 overflow-y-auto">
                 {filtra(col.leads).map((lead) => (
-                  <LeadCard key={lead.id} lead={lead} dueAt={col.id === "novo_lead" ? dueByLead.get(lead.id) : undefined} onDragStart={setDragging} onOpen={setDetailLead} podeExcluir={isDiretor} onExcluir={confirmarExcluir} onWhatsapp={abrirWhatsapp} />
+                  <LeadCard key={lead.id} lead={lead} dueAt={col.id === "novo_lead" ? dueByLead.get(lead.id) : undefined} onDragStart={setDragging} onOpen={setDetailLead} podeExcluir={isDiretor} onExcluir={confirmarExcluir} onWhatsapp={abrirWhatsapp} respondeu={respostaByLead.get(lead.id)} />
                 ))}
                 {filtra(col.leads).length === 0 && (
                   <div className="text-xs text-center py-8 rounded-xl border-2 border-dashed" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>

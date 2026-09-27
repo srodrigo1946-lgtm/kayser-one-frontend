@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Moon, Sun, Search, AlertCircle, Clock, UserPlus, Menu, Volume2, VolumeX } from "lucide-react";
+import { Bell, Moon, Sun, Search, AlertCircle, Clock, UserPlus, Menu, Volume2, VolumeX, MessageCircle } from "lucide-react";
 import { somLigado, setSomLigado, tocarBip } from "@/hooks/use-new-lead-alert";
 import { getStoredUser } from "@/lib/auth";
 import { useTheme } from "@/hooks/use-theme";
@@ -36,12 +36,19 @@ export function Header({ title, subtitle }: HeaderProps) {
 
   const semAtendimento = alerts?.semAtendimento ?? [];
   const semContato = alerts?.semContato ?? [];
+  const responderam = alerts?.responderam ?? [];
   const pendentes = pending ?? [];
-  const count = semAtendimento.length + semContato.length + pendentes.length;
+  const count = responderam.length + semAtendimento.length + semContato.length + pendentes.length;
 
   const goToLead = () => {
     setOpen(false);
     router.push("/leads");
+  };
+
+  // Abre a conversa do lead no WhatsApp (deep-link já suportado pela página).
+  const goToConversa = (leadId: string) => {
+    setOpen(false);
+    router.push(`/whatsapp?lead=${leadId}`);
   };
 
   const goToApprovals = () => {
@@ -132,6 +139,15 @@ export function Header({ title, subtitle }: HeaderProps) {
                       onClick={goToApprovals}
                     />
                   ))}
+                  {responderam.map((r) => (
+                    <AlertRow
+                      key={`rp-${r.leadId}`}
+                      icon={<MessageCircle size={14} style={{ color: "#22c55e" }} />}
+                      name={`${r.nome} respondeu`}
+                      reason={`“${r.mensagem || "(mensagem)"}” · ${tempoDesde(r.at)}`}
+                      onClick={() => goToConversa(r.leadId)}
+                    />
+                  ))}
                   {semAtendimento.map((lead) => (
                     <AlertRow
                       key={`sa-${lead.id}`}
@@ -146,8 +162,8 @@ export function Header({ title, subtitle }: HeaderProps) {
                       key={`sc-${lead.id}`}
                       icon={<Clock size={14} style={{ color: "#f97316" }} />}
                       name={lead.name}
-                      reason="+3 dias sem contato"
-                      onClick={goToLead}
+                      reason={`${diasDesde(lead.lastContactAt)} dias sem contato — chame o cliente`}
+                      onClick={() => goToConversa(lead.id)}
                     />
                   ))}
                 </div>
@@ -160,7 +176,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                     Aprovar cadastros
                   </button>
                 )}
-                {semAtendimento.length + semContato.length > 0 && (
+                {responderam.length + semAtendimento.length + semContato.length > 0 && (
                   <button
                     onClick={goToLead}
                     className="w-full p-3 text-sm font-medium border-t"
@@ -200,6 +216,22 @@ export function Header({ title, subtitle }: HeaderProps) {
   );
 }
 
+/** "há 5 min" / "há 2 h" / "há 3 dias". */
+function tempoDesde(iso?: string | Date | null) {
+  if (!iso) return "";
+  const min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (min < 60) return `há ${min} min`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `há ${h} h`;
+  return `há ${Math.round(h / 24)} dia(s)`;
+}
+
+/** Dias inteiros desde a data (mínimo 3, que é o critério do alerta). */
+function diasDesde(iso?: string | Date | null) {
+  if (!iso) return 3;
+  return Math.max(3, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
+}
+
 function AlertRow({
   icon,
   name,
@@ -222,7 +254,7 @@ function AlertRow({
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>{name}</div>
-        <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>{reason}</div>
+        <div className="text-xs line-clamp-2 break-words" style={{ color: "var(--muted-foreground)" }}>{reason}</div>
       </div>
     </button>
   );
