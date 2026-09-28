@@ -8,6 +8,10 @@ import { useTheme } from "@/hooks/use-theme";
 import { login } from "@/lib/auth";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { SupportBox } from "@/components/support/support-box";
+import { Cena3D } from "@/components/login/cena-3d";
+
+// Cores do painel do login (amarelo e preto — pedido do Rodrigo).
+const AMARELO = "#facc15";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -71,65 +75,71 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex" style={{ background: "var(--background)" }}>
-      {/* Left Panel - Brand */}
-      <div
-        className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12"
-        style={{ background: "var(--sidebar)" }}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: "var(--primary)" }}
-          >
-            <Building2 size={22} color="white" />
+      {/* Left Panel - Brand: cena 3D (prédios animados) em amarelo e preto */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden" style={{ background: "#050505" }}>
+        <Cena3D />
+        {/* Degradê por cima da cena: deixa os textos legíveis sem esconder os prédios. */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(5,5,5,0.85) 0%, rgba(5,5,5,0.15) 30%, rgba(5,5,5,0.1) 55%, rgba(5,5,5,0.9) 100%)",
+          }}
+        />
+        <div className="relative z-10 flex flex-col justify-between p-12 w-full pointer-events-none">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: AMARELO }}>
+              <Building2 size={22} color="#0a0a0a" />
+            </div>
+            <span className="text-xl font-bold text-white">Kayser One</span>
           </div>
-          <span className="text-xl font-bold" style={{ color: "var(--sidebar-foreground)" }}>
-            Kayser One
-          </span>
-        </div>
 
-        <div>
-          <h1 className="text-4xl font-bold mb-4" style={{ color: "var(--sidebar-foreground)" }}>
-            CRM Inteligente
-            <br />
-            para Gestão
-            <br />
-            Comercial
-          </h1>
-          <p style={{ color: "var(--sidebar-muted)" }} className="text-lg">
-            Leads, Kanban, WhatsApp e IA em uma única plataforma.
+          <div>
+            <h1 className="text-4xl font-bold mb-4 text-white drop-shadow-lg">
+              CRM Inteligente
+              <br />
+              para Gestão
+              <br />
+              <span style={{ color: AMARELO }}>Comercial</span>
+            </h1>
+            <p className="text-lg" style={{ color: "rgba(255,255,255,0.85)", textShadow: "0 2px 12px rgba(0,0,0,0.95)" }}>
+              Leads, Kanban, WhatsApp e IA em uma única plataforma.
+            </p>
+
+            <div className="mt-12 grid grid-cols-2 gap-4">
+              {[
+                { label: "Leads gerenciados", value: "12.4k" },
+                { label: "Vendas fechadas", value: "1.2k" },
+                { label: "Taxa de conversão", value: "9.7%" },
+                { label: "Tempo médio", value: "4.2 dias" },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="rounded-xl p-4 backdrop-blur-md border"
+                  style={{ background: "rgba(10,10,10,0.55)", borderColor: "rgba(250,204,21,0.25)" }}
+                >
+                  <div className="text-2xl font-bold" style={{ color: AMARELO }}>
+                    {stat.value}
+                  </div>
+                  <div className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.7)" }}>
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
+            © 2025 Kayser One. Todos os direitos reservados.
           </p>
-
-          <div className="mt-12 grid grid-cols-2 gap-4">
-            {[
-              { label: "Leads gerenciados", value: "12.4k" },
-              { label: "Vendas fechadas", value: "1.2k" },
-              { label: "Taxa de conversão", value: "9.7%" },
-              { label: "Tempo médio", value: "4.2 dias" },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="rounded-xl p-4"
-                style={{ background: "rgba(255,255,255,0.05)" }}
-              >
-                <div className="text-2xl font-bold" style={{ color: "var(--sidebar-foreground)" }}>
-                  {stat.value}
-                </div>
-                <div className="text-sm mt-1" style={{ color: "var(--sidebar-muted)" }}>
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
-
-        <p className="text-sm" style={{ color: "var(--sidebar-muted)" }}>
-          © 2025 Kayser One. Todos os direitos reservados.
-        </p>
       </div>
 
       {/* Right Panel - Form */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8">
+      <div
+        className="flex-1 flex flex-col items-center justify-center p-8"
+        style={theme === "dark" ? { background: "#0b0b0b" } : undefined}
+      >
         {/* Theme Toggle */}
         <div className="absolute top-6 right-6">
           <button
@@ -149,9 +159,9 @@ export default function LoginPage() {
           <div className="lg:hidden flex items-center gap-3 mb-8">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: "var(--primary)" }}
+              style={{ background: AMARELO }}
             >
-              <Building2 size={22} color="white" />
+              <Building2 size={22} color="#0a0a0a" />
             </div>
             <span className="text-xl font-bold" style={{ color: "var(--foreground)" }}>
               Kayser One
@@ -206,7 +216,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowForgot((v) => !v)}
                   className="text-sm"
-                  style={{ color: "var(--primary)" }}
+                  style={{ color: AMARELO }}
                 >
                   Esqueceu a senha?
                 </button>
@@ -275,10 +285,7 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               className="w-full py-3 rounded-xl font-semibold text-sm transition-all disabled:opacity-70"
-              style={{
-                background: "var(--primary)",
-                color: "var(--primary-foreground)",
-              }}
+              style={{ background: AMARELO, color: "#0a0a0a" }}
             >
               {loading ? "Entrando..." : "Entrar"}
             </button>
@@ -295,7 +302,7 @@ export default function LoginPage() {
 
           <p className="mt-6 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
             Não tem conta?{" "}
-            <Link href="/register" style={{ color: "var(--primary)" }}>Cadastre-se</Link>
+            <Link href="/register" style={{ color: AMARELO }}>Cadastre-se</Link>
           </p>
 
           {/* Caixinha pública de suporte/reclamação */}
