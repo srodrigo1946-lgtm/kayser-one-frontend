@@ -17,6 +17,8 @@ export interface AppSettings {
   aiAutoReply: boolean;
   aiReplyGroups: boolean;
   hasApiKey: boolean;
+  /** Tem chave da OpenAI pra transcrever áudio? (a chave nunca volta pro front) */
+  hasAudioKey?: boolean;
   hasDirecionalImage: boolean;
   hasMetaToken: boolean;
   hasMetaVerify: boolean;
@@ -39,7 +41,7 @@ export function useSettings() {
 export function useUpdateSettings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: Partial<AppSettings> & { aiApiKey?: string }) => {
+    mutationFn: async (payload: Partial<AppSettings> & { aiApiKey?: string; audioApiKey?: string }) => {
       const { data } = await api.put("/settings", payload);
       return data;
     },

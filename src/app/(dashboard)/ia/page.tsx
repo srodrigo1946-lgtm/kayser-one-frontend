@@ -7,7 +7,7 @@ import { useAiChat, useMyAi, useUpdateMyAi, type AiChatMessage } from "@/hooks/u
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useKnowledge, useUploadKnowledge, useDeleteKnowledge } from "@/hooks/use-knowledge";
 import { useProperties } from "@/hooks/use-properties";
-import { getApiErrorMessage } from "@/lib/api";
+import { api, getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 
 const initialConvo: AiChatMessage[] = [
@@ -187,6 +187,7 @@ function IAPageDiretor() {
         <div className="w-72 flex flex-col gap-4 overflow-y-auto">
           <MyAiCard />
           <KnowledgePanel />
+          <AudioPanel />
           <AutomationsPanel />
         </div>
       </div>
@@ -389,6 +390,88 @@ function KnowledgePanel() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* Áudio dos clientes: chave da OpenAI (Whisper) + botão de teste. Só Diretor (a página toda é). */
+function AudioPanel() {
+  const { data: s } = useSettings();
+  const updateSettings = useUpdateSettings();
+  const [chave, setChave] = useState("");
+  const [msg, setMsg] = useState("");
+  const [testando, setTestando] = useState(false);
+  const [diag, setDiag] = useState<{
+    temChaveOpenAI: boolean;
+    temChaveGoogle: boolean;
+    testes: { provedor: string; ok: boolean; detalhe: string }[];
+    ultimoErro: string | null;
+  } | null>(null);
+
+  const salvar = async () => {
+    if (!chave.trim()) return;
+    setMsg("");
+    try {
+      await updateSettings.mutateAsync({ audioApiKey: chave.trim() });
+      setChave("");
+      setMsg("✅ Chave salva. O Kayser já pode ouvir os áudios.");
+    } catch (err) {
+      setMsg(getApiErrorMessage(err, "Falha ao salvar a chave."));
+    }
+  };
+
+  const testar = async () => {
+    setTestando(true);
+    setDiag(null);
+    try {
+      const { data } = await api.get("/ai/diagnostico-audio");
+      setDiag(data);
+    } catch (err) {
+      setMsg(getApiErrorMessage(err, "Falha ao testar."));
+    } finally {
+      setTestando(false);
+    }
+  };
+
+  const inputStyle = { background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" };
+  return (
+    <div className="rounded-2xl border p-4" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+      <div className="flex items-center gap-2 mb-1">
+        <span>🎤</span>
+        <h3 className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>Áudio dos clientes</h3>
+      </div>
+      <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>
+        Pro Kayser entender mensagem de voz, cole a chave da <b>OpenAI</b>{" "}
+        {s?.hasAudioKey ? <span style={{ color: "#22c55e" }}>(configurada — preencha p/ trocar)</span> : <span style={{ color: "#f97316" }}>(não configurada)</span>}
+      </p>
+      <input
+        type="password"
+        value={chave}
+        onChange={(e) => setChave(e.target.value)}
+        placeholder="sk-..."
+        autoComplete="off"
+        name="kayser-audio-key"
+        className="w-full px-3 py-2 rounded-xl border text-sm outline-none mb-2"
+        style={inputStyle}
+      />
+      <div className="flex gap-2">
+        <button onClick={salvar} disabled={!chave.trim() || updateSettings.isPending} className="flex-1 py-2 rounded-xl text-xs font-medium disabled:opacity-50" style={{ background: "var(--primary)", color: "white" }}>
+          {updateSettings.isPending ? "Salvando…" : "Salvar chave"}
+        </button>
+        <button onClick={testar} disabled={testando} className="flex-1 py-2 rounded-xl text-xs font-medium border disabled:opacity-50" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>
+          {testando ? "Testando…" : "Testar áudio"}
+        </button>
+      </div>
+      {msg && <p className="text-xs mt-2" style={{ color: "var(--muted-foreground)" }}>{msg}</p>}
+      {diag && (
+        <div className="text-xs mt-2 space-y-1" style={{ color: "var(--foreground)" }}>
+          {!diag.temChaveOpenAI && !diag.temChaveGoogle && <div>❌ Nenhuma chave de áudio configurada.</div>}
+          {diag.testes.map((t) => (
+            <div key={t.provedor}>{t.ok ? "✅" : "❌"} <b>{t.provedor}</b>: {t.detalhe}</div>
+          ))}
+          {diag.ultimoErro && <div style={{ color: "#f97316" }}>Último erro: {diag.ultimoErro}</div>}
+        </div>
+      )}
     </div>
   );
 }
