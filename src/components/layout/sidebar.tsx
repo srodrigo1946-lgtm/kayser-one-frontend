@@ -54,7 +54,8 @@ const navItems = [
   { href: "/suporte", label: "Suporte", icon: LifeBuoy, diretorOnly: true },
   { href: "/agenda", label: "Agenda", icon: Calendar },
   { href: "/reunioes", label: "Reuniões", icon: Video },
-  { href: "/ia", label: "IA Agente", icon: Bot },
+  // IA Agente (Kayser, conhecimento, chaves): só o Diretor vê — pedido do Rodrigo.
+  { href: "/ia", label: "IA Agente", icon: Bot, diretorOnly: true },
   { href: "/metas", label: "Metas", icon: Target },
   { href: "/ranking", label: "Ranking", icon: Trophy },
   { href: "/relatorios", label: "Relatórios", icon: BarChart3 },

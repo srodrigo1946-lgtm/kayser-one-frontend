@@ -18,7 +18,25 @@ const initialConvo: AiChatMessage[] = [
   },
 ];
 
+// Página só do Diretor: quem não é Diretor (mesmo digitando /ia) vê o aviso.
 export default function IAPage() {
+  const [permitido, setPermitido] = useState<boolean | null>(null);
+  useEffect(() => setPermitido(getStoredUser()?.role === "diretor"), []);
+  if (permitido === null) return null;
+  if (!permitido) {
+    return (
+      <div className="flex flex-col h-screen">
+        <Header title="Área restrita" subtitle="Disponível só para o Diretor" />
+        <div className="p-6 text-sm" style={{ color: "var(--muted-foreground)" }}>
+          Esta área é exclusiva do Diretor.
+        </div>
+      </div>
+    );
+  }
+  return <IAPageDiretor />;
+}
+
+function IAPageDiretor() {
   const [messages, setMessages] = useState<AiChatMessage[]>(initialConvo);
   const [input, setInput] = useState("");
   const aiChat = useAiChat();

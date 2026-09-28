@@ -15,6 +15,7 @@ import {
   Settings,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { getStoredUser } from "@/lib/auth";
 import type { Lead } from "@/types";
 
 const pages = [
@@ -75,7 +76,11 @@ export function CommandPalette() {
 
   if (!open) return null;
 
-  const matchedPages = pages.filter((p) => p.label.toLowerCase().includes(query.toLowerCase()));
+  // IA Agente é só do Diretor (some da busca pros demais cargos).
+  const isDiretor = getStoredUser()?.role === "diretor";
+  const matchedPages = pages
+    .filter((p) => isDiretor || p.href !== "/ia")
+    .filter((p) => p.label.toLowerCase().includes(query.toLowerCase()));
 
   const go = (href: string) => { setOpen(false); router.push(href); };
 
