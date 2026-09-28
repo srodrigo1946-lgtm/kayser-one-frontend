@@ -423,8 +423,8 @@ function MetaIntegrationCard() {
 /* ---------------- Follow-up automático (só Diretor) ---------------- */
 const SOURCE_OPTIONS: { id: string; label: string }[] = [
   { id: "anuncio", label: "Anúncio (Facebook/Instagram/etc)" },
-  { id: "manual", label: "Cadastrado pelo cargo" },
-  { id: "whatsapp", label: "WhatsApp orgânico (sem anúncio)" },
+  { id: "whatsapp", label: "WhatsApp do número central (sem anúncio)" },
+  { id: "manual", label: "Cadastrado pelo Diretor (manual)" },
 ];
 
 const FOLLOWUP_DEFAULTS = {
@@ -439,7 +439,7 @@ function FollowupSettings() {
   const update = useUpdateSettings();
   const [enabled, setEnabled] = useState(true);
   const [days, setDays] = useState(3);
-  const [sources, setSources] = useState<string[]>(["anuncio", "manual"]);
+  const [sources, setSources] = useState<string[]>(["anuncio", "whatsapp", "manual"]);
   const [manha, setManha] = useState("");
   const [tarde, setTarde] = useState("");
   const [noite, setNoite] = useState("");
@@ -449,7 +449,7 @@ function FollowupSettings() {
     if (settings) {
       setEnabled(settings.followupEnabled);
       setDays(settings.followupDays);
-      setSources(settings.followupSources?.length ? settings.followupSources : ["anuncio", "manual"]);
+      setSources(settings.followupSources?.length ? settings.followupSources : ["anuncio", "whatsapp", "manual"]);
       setManha(settings.followupMsgManha ?? "");
       setTarde(settings.followupMsgTarde ?? "");
       setNoite(settings.followupMsgNoite ?? "");
@@ -482,8 +482,8 @@ function FollowupSettings() {
   return (
     <Card title="Follow-up automático">
       <p className="text-sm mb-5" style={{ color: "var(--muted-foreground)" }}>
-        Quando ligado, leads sem contato há alguns dias recebem uma saudação automática por WhatsApp
-        conforme o horário. Só o Diretor edita estas regras.
+        Quando ligado, leads sem contato há alguns dias recebem uma saudação automática por WhatsApp,
+        todo dia às 9h (horário de Brasília), com o primeiro nome do cliente. Só o Diretor edita estas regras.
       </p>
 
       <div className="grid grid-cols-2 gap-4 items-end mb-5">
