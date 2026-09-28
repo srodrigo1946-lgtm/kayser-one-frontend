@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2, Upload, Check, X, KeyRound, UserX, Megaphone, Copy, Search } from "lucide-react";
 import { useRef } from "react";
 import { getStoredUser } from "@/lib/auth";
-import { getApiErrorMessage, API_URL } from "@/lib/api";
+import { api, getApiErrorMessage, API_URL } from "@/lib/api";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useUpdateProfile, useUploadAvatar, avatarUrl } from "@/hooks/use-profile";
 import { useMe, useSetRecoveryCode } from "@/hooks/use-recovery";
@@ -416,7 +416,68 @@ function MetaIntegrationCard() {
       >
         {update.isPending ? "Salvando…" : "Salvar tokens"}
       </button>
+
+      {settings?.hasMetaToken && <MetaFormsPicker />}
     </Card>
+  );
+}
+
+/* Quais formulários do Meta mandam lead pro Kayser (só os marcados). */
+function MetaFormsPicker() {
+  const { data: settings } = useSettings();
+  const update = useUpdateSettings();
+  const [forms, setForms] = useState<{ id: string; name: string; leads: number; status: string }[] | null>(null);
+  const [erro, setErro] = useState("");
+  const [marcados, setMarcados] = useState<string[]>([]);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    api
+      .get("/meta/forms")
+      .then((r) => setForms(r.data))
+      .catch((err) => setErro(getApiErrorMessage(err, "Não foi possível listar os formulários.")));
+  }, []);
+  useEffect(() => {
+    setMarcados((settings?.metaFormIds || "").split(",").map((x) => x.trim()).filter(Boolean));
+  }, [settings?.metaFormIds]);
+
+  const alternar = (id: string) => setMarcados((m) => (m.includes(id) ? m.filter((x) => x !== id) : [...m, id]));
+  const salvar = async () => {
+    setMsg("");
+    try {
+      await update.mutateAsync({ metaFormIds: marcados.join(",") });
+      setMsg(marcados.length ? `✅ ${marcados.length} formulário(s) mandando lead.` : "✅ Todos os formulários mandam lead.");
+    } catch (err) {
+      setMsg(getApiErrorMessage(err, "Falha ao salvar."));
+    }
+  };
+
+  // Formulários com lead primeiro; os vazios/antigos depois.
+  const lista = [...(forms ?? [])].sort((a, b) => b.leads - a.leads);
+  return (
+    <div className="mt-6 pt-5 border-t" style={{ borderColor: "var(--border)" }}>
+      <div className="text-sm font-semibold mb-1" style={{ color: "var(--foreground)" }}>Formulários que mandam lead</div>
+      <p className="text-xs mb-3" style={{ color: "var(--muted-foreground)" }}>
+        Só os marcados caem no Kayser One (novos leads). Nenhum marcado = todos.
+      </p>
+      {erro && <p className="text-xs" style={{ color: "#ef4444" }}>{erro}</p>}
+      {!forms && !erro && <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Carregando formulários…</p>}
+      <div className="space-y-1.5 max-h-72 overflow-y-auto">
+        {lista.map((f) => (
+          <label key={f.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl cursor-pointer" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>
+            <input type="checkbox" checked={marcados.includes(f.id)} onChange={() => alternar(f.id)} />
+            <span className="flex-1 truncate">{f.name}</span>
+            <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>{f.leads} leads</span>
+          </label>
+        ))}
+      </div>
+      {forms && (
+        <button onClick={salvar} disabled={update.isPending} className="mt-3 px-5 py-2 rounded-xl text-sm font-medium disabled:opacity-50" style={{ background: "var(--primary)", color: "white" }}>
+          {update.isPending ? "Salvando…" : "Salvar formulários"}
+        </button>
+      )}
+      {msg && <p className="text-xs mt-2" style={{ color: "var(--muted-foreground)" }}>{msg}</p>}
+    </div>
   );
 }
 

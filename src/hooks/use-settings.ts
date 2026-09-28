@@ -21,6 +21,8 @@ export interface AppSettings {
   hasAudioKey?: boolean;
   hasDirecionalImage: boolean;
   hasMetaToken: boolean;
+  /** IDs (vírgula) dos formulários do Meta que mandam lead. Vazio = todos. */
+  metaFormIds?: string | null;
   hasMetaVerify: boolean;
   direcionalUrl?: string;
   tabelaRivaUrl?: string;
