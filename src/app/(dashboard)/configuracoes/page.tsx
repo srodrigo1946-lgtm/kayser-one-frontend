@@ -2,7 +2,7 @@
 
 import { Header } from "@/components/layout/header";
 import { useEffect, useState } from "react";
-import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2, Upload, Check, X, KeyRound, UserX, Megaphone, Copy, Search } from "lucide-react";
+import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2, Upload, Check, X, KeyRound, UserX, Megaphone, Copy, Search, Eye, EyeOff } from "lucide-react";
 import { useRef } from "react";
 import { getStoredUser } from "@/lib/auth";
 import { api, getApiErrorMessage, API_URL } from "@/lib/api";
@@ -339,6 +339,40 @@ function MetaIntegrationCard() {
   const update = useUpdateSettings();
   const [pageToken, setPageToken] = useState("");
   const [verifyToken, setVerifyToken] = useState("");
+  // 👁 Mostrar: busca a chave salva (só Diretor) e exibe no campo.
+  const [ver, setVer] = useState<{ verify: boolean; page: boolean }>({ verify: false, page: false });
+  const mostrar = async (qual: "verify" | "page") => {
+    if (ver[qual]) {
+      setVer((v) => ({ ...v, [qual]: false }));
+      if (qual === "verify") setVerifyToken("");
+      else setPageToken("");
+      return;
+    }
+    const vazio = qual === "verify" ? !verifyToken : !pageToken;
+    if (vazio) {
+      try {
+        const campo = qual === "verify" ? "metaVerifyToken" : "metaPageToken";
+        const { data } = await api.get<{ valor: string }>(`/settings/segredo?campo=${campo}`);
+        if (qual === "verify") setVerifyToken(data.valor);
+        else setPageToken(data.valor);
+      } catch (err) {
+        alert(getApiErrorMessage(err, "Não consegui mostrar. Só o Diretor pode ver."));
+        return;
+      }
+    }
+    setVer((v) => ({ ...v, [qual]: true }));
+  };
+  const olho = (qual: "verify" | "page") => (
+    <button
+      type="button"
+      onClick={() => mostrar(qual)}
+      title={ver[qual] ? "Esconder" : "Mostrar"}
+      className="px-3 rounded-xl border flex items-center"
+      style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--muted-foreground)" }}
+    >
+      {ver[qual] ? <EyeOff size={16} /> : <Eye size={16} />}
+    </button>
+  );
   const [feedback, setFeedback] = useState("");
   const [copiado, setCopiado] = useState(false);
 
@@ -445,21 +479,27 @@ function MetaIntegrationCard() {
           <label className="text-xs font-medium block mb-1.5" style={labelStyle}>
             Verify Token {settings?.hasMetaVerify && <span style={{ color: "#10b981" }}>· configurado ✓</span>}
           </label>
-          <input
-            type="password" autoComplete="new-password" placeholder={settings?.hasMetaVerify ? "•••••••• (deixe em branco para manter)" : "a senha que você define e repete no Meta"}
-            value={verifyToken} onChange={(e) => setVerifyToken(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={inputStyle}
-          />
+          <div className="flex gap-2">
+            <input
+              type={ver.verify ? "text" : "password"} autoComplete="new-password" placeholder={settings?.hasMetaVerify ? "•••••••• (deixe em branco para manter)" : "a senha que você define e repete no Meta"}
+              value={verifyToken} onChange={(e) => setVerifyToken(e.target.value)}
+              className="flex-1 min-w-0 px-3 py-2.5 rounded-xl border text-sm outline-none" style={inputStyle}
+            />
+            {olho("verify")}
+          </div>
         </div>
         <div>
           <label className="text-xs font-medium block mb-1.5" style={labelStyle}>
             Page Access Token {settings?.hasMetaToken && <span style={{ color: "#10b981" }}>· configurado ✓</span>}
           </label>
-          <input
-            type="password" autoComplete="new-password" placeholder={settings?.hasMetaToken ? "•••••••• (deixe em branco para manter)" : "token da Página com permissão leads_retrieval"}
-            value={pageToken} onChange={(e) => setPageToken(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none" style={inputStyle}
-          />
+          <div className="flex gap-2">
+            <input
+              type={ver.page ? "text" : "password"} autoComplete="new-password" placeholder={settings?.hasMetaToken ? "•••••••• (deixe em branco para manter)" : "token da Página com permissão leads_retrieval"}
+              value={pageToken} onChange={(e) => setPageToken(e.target.value)}
+              className="flex-1 min-w-0 px-3 py-2.5 rounded-xl border text-sm outline-none" style={inputStyle}
+            />
+            {olho("page")}
+          </div>
         </div>
       </div>
 
