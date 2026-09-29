@@ -16,6 +16,8 @@ export interface AppSettings {
   followupMsgNoite?: string;
   aiAutoReply: boolean;
   aiReplyGroups: boolean;
+  /** Contingência: WhatsApp central pausado (nada sai; leads seguem pra fila). */
+  whatsappPausado?: boolean;
   hasApiKey: boolean;
   /** Tem chave da OpenAI pra transcrever áudio? (a chave nunca volta pro front) */
   hasAudioKey?: boolean;

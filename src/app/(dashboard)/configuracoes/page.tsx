@@ -343,6 +343,38 @@ function MetaIntegrationCard() {
   const [copiado, setCopiado] = useState(false);
 
   const webhookUrl = `${API_URL}/meta/leadgen`;
+  const [puxando, setPuxando] = useState(false);
+  const [puxarMsg, setPuxarMsg] = useState("");
+  const puxarLeads = async () => {
+    setPuxando(true);
+    setPuxarMsg("");
+    try {
+      const { data } = await api.post<{ encontrados: number; novos: number; erro?: string }>("/meta/sincronizar?horas=72");
+      setPuxarMsg(
+        data.erro
+          ? `Não consegui puxar: ${data.erro}`
+          : data.novos
+            ? `✅ ${data.novos} lead(s) novo(s) trazido(s) pra fila (de ${data.encontrados} no Facebook, últimas 72h).`
+            : `Tudo em dia: os ${data.encontrados} lead(s) do Facebook (últimas 72h) já estão no Kayser.`
+      );
+    } catch (err) {
+      setPuxarMsg(getApiErrorMessage(err, "Falha ao puxar os leads."));
+    } finally {
+      setPuxando(false);
+    }
+  };
+  const pausado = !!settings?.whatsappPausado;
+  const alternarPausa = async () => {
+    const msg = pausado
+      ? "Voltar ao normal? O WhatsApp central volta a enviar (IA, follow-up) e o Kayser manda a 1ª mensagem aos leads que ficaram sem contato, aos poucos."
+      : "Pausar o WhatsApp central? Nada sai pelo WhatsApp (IA, follow-up, 1ª mensagem). Os leads do formulário continuam entrando na fila.";
+    if (!window.confirm(msg)) return;
+    try {
+      await update.mutateAsync({ whatsappPausado: !pausado } as any);
+    } catch (err) {
+      alert(getApiErrorMessage(err, "Falha ao alterar. Apenas o Diretor pode."));
+    }
+  };
 
   const copiar = () => {
     navigator.clipboard?.writeText(webhookUrl);
@@ -374,6 +406,30 @@ function MetaIntegrationCard() {
         Cole aqui os tokens do Meta para os leads de <strong>formulário</strong> (Facebook/Instagram)
         caírem sozinhos na fila de distribuição. Só o Diretor vê e altera.
       </p>
+
+      {/* Contingência + puxar leads (automático a cada 15 min; botão pra puxar na hora) */}
+      <div className="rounded-xl border p-3 mb-4 space-y-3" style={{ borderColor: pausado ? "#f59e0b" : "var(--border)", background: pausado ? "#f59e0b14" : "transparent" }}>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="text-sm" style={{ color: "var(--foreground)" }}>
+            <strong>{pausado ? "⏸️ WhatsApp central PAUSADO" : "🟢 WhatsApp central normal"}</strong>
+            <div className="text-xs" style={labelStyle}>
+              {pausado
+                ? "Nada sai pelo WhatsApp. Leads do formulário seguem entrando na fila."
+                : "Se o WhatsApp cair, os leads seguem na fila e a 1ª mensagem sai sozinha quando ele voltar."}
+            </div>
+          </div>
+          <button onClick={alternarPausa} className="px-3 py-2 rounded-xl text-sm font-medium" style={{ background: pausado ? "#10b981" : "#f59e0b", color: "white" }}>
+            {pausado ? "Voltar ao normal" : "Pausar WhatsApp"}
+          </button>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button onClick={puxarLeads} disabled={puxando} className="px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-2 disabled:opacity-60" style={{ background: "var(--primary)", color: "white" }}>
+            {puxando ? "Puxando..." : "📥 Puxar leads do formulário agora"}
+          </button>
+          <span className="text-xs" style={labelStyle}>Automático a cada 15 min. Não duplica lead que já existe.</span>
+        </div>
+        {puxarMsg && <p className="text-sm" style={{ color: "var(--foreground)" }}>{puxarMsg}</p>}
+      </div>
 
       {/* URL do webhook para colar no App do Meta */}
       <label className="text-xs font-medium block mb-1.5" style={labelStyle}>URL do Webhook (cole no Meta, campo &quot;leadgen&quot;)</label>
