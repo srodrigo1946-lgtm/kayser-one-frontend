@@ -522,16 +522,25 @@ function MetaIntegrationCard() {
 function MetaFormsPicker() {
   const { data: settings } = useSettings();
   const update = useUpdateSettings();
-  const [forms, setForms] = useState<{ id: string; name: string; leads: number; status: string }[] | null>(null);
+  const [forms, setForms] = useState<{ id: string; name: string; leads: number; status: string; criado?: string }[] | null>(null);
   const [erro, setErro] = useState("");
   const [marcados, setMarcados] = useState<string[]>([]);
   const [msg, setMsg] = useState("");
+  const [busca, setBusca] = useState("");
+  const [atualizando, setAtualizando] = useState(false);
 
-  useEffect(() => {
+  // Busca a lista no Facebook (botão "Atualizar lista" pega formulário recém-criado).
+  const carregar = () => {
+    setAtualizando(true);
+    setErro("");
     api
       .get("/meta/forms")
       .then((r) => setForms(r.data))
-      .catch((err) => setErro(getApiErrorMessage(err, "Não foi possível listar os formulários.")));
+      .catch((err) => setErro(getApiErrorMessage(err, "Não foi possível listar os formulários.")))
+      .finally(() => setAtualizando(false));
+  };
+  useEffect(() => {
+    carregar();
   }, []);
   useEffect(() => {
     setMarcados((settings?.metaFormIds || "").split(",").map((x) => x.trim()).filter(Boolean));
@@ -548,22 +557,46 @@ function MetaFormsPicker() {
     }
   };
 
-  // Formulários com lead primeiro; os vazios/antigos depois.
-  const lista = [...(forms ?? [])].sort((a, b) => b.leads - a.leads);
+  // Marcados em cima; depois do MAIS NOVO pro mais antigo (formulário novo não some no fim).
+  const termo = busca.trim().toLowerCase();
+  const lista = [...(forms ?? [])]
+    .filter((f) => !termo || f.name.toLowerCase().includes(termo))
+    .sort((a, b) => {
+      const ma = marcados.includes(a.id) ? 1 : 0;
+      const mb = marcados.includes(b.id) ? 1 : 0;
+      if (ma !== mb) return mb - ma;
+      return (b.criado || "").localeCompare(a.criado || "");
+    });
+  const dataCurta = (iso?: string) => (iso ? new Date(iso).toLocaleDateString("pt-BR") : "");
   return (
     <div className="mt-6 pt-5 border-t" style={{ borderColor: "var(--border)" }}>
       <div className="text-sm font-semibold mb-1" style={{ color: "var(--foreground)" }}>Formulários que mandam lead</div>
       <p className="text-xs mb-3" style={{ color: "var(--muted-foreground)" }}>
         Só os marcados caem no Kayser One (novos leads). Nenhum marcado = todos.
       </p>
+      <div className="flex gap-2 mb-2">
+        <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "var(--secondary)" }}>
+          <Search size={14} style={{ color: "var(--muted-foreground)" }} />
+          <input placeholder="Buscar formulário (ex.: ilha)" value={busca} onChange={(e) => setBusca(e.target.value)} className="flex-1 bg-transparent outline-none text-sm" style={{ color: "var(--foreground)" }} />
+        </div>
+        <button onClick={carregar} disabled={atualizando} className="px-3 rounded-xl border text-sm disabled:opacity-60" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}>
+          {atualizando ? "Atualizando…" : "🔄 Atualizar lista"}
+        </button>
+      </div>
       {erro && <p className="text-xs" style={{ color: "#ef4444" }}>{erro}</p>}
       {!forms && !erro && <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Carregando formulários…</p>}
+      {forms && <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>{forms.length} formulário(s) no Facebook{termo ? ` · ${lista.length} com "${busca.trim()}"` : ""}.</p>}
       <div className="space-y-1.5 max-h-72 overflow-y-auto">
         {lista.map((f) => (
           <label key={f.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl cursor-pointer" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>
             <input type="checkbox" checked={marcados.includes(f.id)} onChange={() => alternar(f.id)} />
             <span className="flex-1 truncate">{f.name}</span>
-            <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>{f.leads} leads</span>
+            {f.status && f.status !== "ACTIVE" && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: "#6b728033", color: "var(--muted-foreground)" }}>arquivado</span>
+            )}
+            <span className="text-xs whitespace-nowrap" style={{ color: "var(--muted-foreground)" }}>
+              {dataCurta(f.criado) && `criado ${dataCurta(f.criado)} · `}{f.leads} leads
+            </span>
           </label>
         ))}
       </div>
