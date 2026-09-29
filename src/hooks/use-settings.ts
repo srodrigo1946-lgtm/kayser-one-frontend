@@ -18,6 +18,8 @@ export interface AppSettings {
   aiReplyGroups: boolean;
   /** Contingência: WhatsApp central pausado (nada sai; leads seguem pra fila). */
   whatsappPausado?: boolean;
+  /** Conta(s) de anúncio do Meta (vírgula) — gasto do Custo por Lead. */
+  metaAdAccountIds?: string | null;
   hasApiKey: boolean;
   /** Tem chave da OpenAI pra transcrever áudio? (a chave nunca volta pro front) */
   hasAudioKey?: boolean;

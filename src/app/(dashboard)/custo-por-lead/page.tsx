@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { Header } from "@/components/layout/header";
 import { DollarSign, Users, Target, ShoppingBag, TrendingUp, Wallet, Download } from "lucide-react";
 import { getStoredUser } from "@/lib/auth";
-import { getApiErrorMessage } from "@/lib/api";
+import { api, getApiErrorMessage } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
 import { useBreakdown, useDaily } from "@/hooks/use-dashboard";
 import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useInvestimento, useSetInvestimento, useInvestDays, useSetInvestDays, useClearInvestDays } from "@/hooks/use-investimento";
@@ -26,6 +27,9 @@ const ROLE_LABEL: Record<string, string> = {
 
 export default function CustoPorLeadPage() {
   const isDiretor = getStoredUser()?.role === "diretor";
+  const qcMeta = useQueryClient();
+  const [puxandoMeta, setPuxandoMeta] = useState(false);
+  const [metaMsg, setMetaMsg] = useState("");
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
   const [month, setMonth] = useState(new Date().getMonth() + 1); // abre no mês vigente
@@ -206,7 +210,41 @@ export default function CustoPorLeadPage() {
 
         {/* Entrada do investimento (Diretor) */}
         <div className="rounded-2xl border p-5" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
-          <div className="font-semibold text-lg mb-1" style={{ color: "var(--foreground)" }}>Investimento em anúncio · {periodo}</div>
+          <div className="flex items-start justify-between gap-3 flex-wrap mb-1">
+            <div className="font-semibold text-lg" style={{ color: "var(--foreground)" }}>Investimento em anúncio · {periodo}</div>
+            {isDiretor && month && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>Meta: automático de hora em hora</span>
+                <button
+                  onClick={async () => {
+                    setPuxandoMeta(true);
+                    setMetaMsg("");
+                    try {
+                      const { data } = await api.post<{ dias: number; total: number; erro?: string }>(
+                        `/investimento/sincronizar-meta?year=${year}&month=${month}`
+                      );
+                      setMetaMsg(
+                        data.erro
+                          ? `Não consegui puxar: ${data.erro}`
+                          : `✅ Gasto do Meta: ${data.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} em ${data.dias} dia(s).`
+                      );
+                      qcMeta.invalidateQueries({ queryKey: ["investimento"] });
+                    } catch (err) {
+                      setMetaMsg(getApiErrorMessage(err, "Falha ao puxar do Meta."));
+                    } finally {
+                      setPuxandoMeta(false);
+                    }
+                  }}
+                  disabled={puxandoMeta}
+                  className="px-3 py-1.5 rounded-xl text-sm font-medium disabled:opacity-60"
+                  style={{ background: "var(--primary)", color: "white" }}
+                >
+                  {puxandoMeta ? "Puxando…" : "🔄 Puxar gasto do Meta"}
+                </button>
+              </div>
+            )}
+          </div>
+          {metaMsg && <div className="text-sm mb-2" style={{ color: "var(--foreground)" }}>{metaMsg}</div>}
           {month ? (
             <>
               <div className="text-sm mb-3" style={{ color: "var(--muted-foreground)" }}>
