@@ -112,9 +112,10 @@ export function useDeleteLeadHistory() {
 export function useImportLeads() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (file: File) => {
+    mutationFn: async ({ file, time }: { file: File; time?: string }) => {
       const form = new FormData();
       form.append("file", file);
+      if (time) form.append("time", time);
       const { data } = await api.post<{ imported: number; duplicates: number; total: number }>(
         "/leads/import/excel",
         form,

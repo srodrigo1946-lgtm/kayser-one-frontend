@@ -146,9 +146,20 @@ export default function LeadsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setFeedback("");
+    // Cargos abaixo do Diretor: a planilha precisa do nome do time (não mistura com os leads existentes).
+    let time: string | undefined;
+    if (!isDiretor) {
+      const t = window.prompt("Nome do time desta planilha (ex.: Time Isaac):", "Time ");
+      if (!t || !t.replace(/^\s*time\s*/i, "").trim()) {
+        setFeedback("Importação cancelada: informe o nome do time (ex.: Time Isaac).");
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
+      time = t.trim();
+    }
     try {
-      const res = await importLeads.mutateAsync(file);
-      setFeedback(`Importação concluída: ${res.imported} novos, ${res.duplicates} duplicados (de ${res.total} linhas).`);
+      const res = await importLeads.mutateAsync({ file, time });
+      setFeedback(`Importação concluída${time ? ` (${time})` : ""}: ${res.imported} novos, ${res.duplicates} já existiam e não foram duplicados (de ${res.total} linhas).`);
     } catch (err) {
       setFeedback(getApiErrorMessage(err, "Falha ao importar a planilha."));
     } finally {
