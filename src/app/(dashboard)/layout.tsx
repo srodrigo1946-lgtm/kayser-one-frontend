@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { CommandPalette } from "@/components/command-palette";
-import { isAuthenticated } from "@/lib/auth";
+import { isAuthenticated, getStoredUser } from "@/lib/auth";
 import { useNewLeadAlert } from "@/hooks/use-new-lead-alert";
 
 export default function DashboardLayout({
@@ -21,6 +21,8 @@ export default function DashboardLayout({
     if (!isAuthenticated()) {
       router.replace("/login");
     } else {
+      // Tema preto e amarelo só pro Diretor (os cargos seguem com o tema padrão).
+      document.documentElement.dataset.perfil = getStoredUser()?.role === "diretor" ? "diretor" : "";
       setReady(true);
     }
   }, [router]);

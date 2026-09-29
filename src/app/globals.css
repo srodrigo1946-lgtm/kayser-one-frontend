@@ -167,3 +167,48 @@ header {
     backdrop-filter: none !important;
   }
 }
+
+/* ============ Tema do DIRETOR — preto e amarelo (só quando o Diretor está logado) ============
+   O layout marca <html data-perfil="diretor">. Vale no claro e no escuro. */
+html[data-perfil="diretor"],
+html.dark[data-perfil="diretor"] {
+  --background: #0a0a0a;
+  --foreground: #f5f5f4;
+  --card: rgba(23, 23, 23, 0.88);
+  --card-foreground: #f5f5f4;
+  --primary: #facc15;
+  --primary-foreground: #0a0a0a;
+  --secondary: rgba(38, 38, 38, 0.7);
+  --secondary-foreground: #e7e5e4;
+  --muted: rgba(38, 38, 38, 0.6);
+  --muted-foreground: #a8a29e;
+  --accent: rgba(250, 204, 21, 0.12);
+  --accent-foreground: #fde047;
+  --border: rgba(250, 204, 21, 0.16);
+  --input: rgba(250, 204, 21, 0.22);
+  --ring: #facc15;
+  --sidebar: rgba(5, 5, 5, 0.94);
+  --sidebar-foreground: #f5f5f4;
+  --sidebar-muted: #a8a29e;
+  --sidebar-active: #facc15;
+  --sidebar-active-foreground: #0a0a0a;
+
+  --glass-blur: 12px;
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 20px -8px rgba(0, 0, 0, 0.6), 0 26px 50px -18px rgba(0, 0, 0, 0.8);
+  --shadow-hover: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 16px 34px -10px rgba(0, 0, 0, 0.65), 0 40px 70px -20px rgba(250, 204, 21, 0.18);
+  --glow: 0 0 0 1px rgba(250, 204, 21, 0.4), 0 10px 34px -8px rgba(250, 204, 21, 0.45);
+  --edge: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm3d: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 6px 16px -8px rgba(0, 0, 0, 0.65);
+  color-scheme: dark;
+}
+html[data-perfil="diretor"] body {
+  background-image:
+    radial-gradient(1200px 640px at 8% -12%, rgba(250, 204, 21, 0.09), transparent 60%),
+    radial-gradient(1000px 520px at 100% 0%, rgba(250, 204, 21, 0.05), transparent 55%);
+}
+/* Botão amarelo com texto branco fica ilegível: no tema do Diretor o texto vira preto. */
+html[data-perfil="diretor"] [style*="background: var(--primary)"][style*="color: white"],
+html[data-perfil="diretor"] [style*="background: var(--primary)"][style*="color: rgb(255, 255, 255)"],
+html[data-perfil="diretor"] [style*="background: var(--sidebar-active)"] {
+  color: #0a0a0a !important;
+}

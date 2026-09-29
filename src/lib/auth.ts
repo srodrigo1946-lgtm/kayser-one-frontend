@@ -49,6 +49,7 @@ export async function changePassword(currentPassword: string, newPassword: strin
 export function logout() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  document.documentElement.dataset.perfil = "";
   window.location.href = "/login";
 }
 
