@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Header } from "@/components/layout/header";
-import { Search, Send, Bot, QrCode, Loader2, Smile, Paperclip, RefreshCw } from "lucide-react";
+import { Search, Send, Bot, QrCode, Loader2, Smile, Paperclip, RefreshCw, ArrowLeft } from "lucide-react";
 import { api, getApiErrorMessage, API_URL } from "@/lib/api";
 import { getToken, getStoredUser } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -125,6 +125,11 @@ export default function WhatsAppPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversations]);
 
+  const voltarParaLista = () => {
+    setSelectedId(null);
+    if (window.location.search) window.history.replaceState(null, "", window.location.pathname);
+  };
+
   const list = (conversations ?? []).filter((c) =>
     (c.lead?.name || c.contactName || c.remoteJid || "").toLowerCase().includes(search.toLowerCase())
   );
@@ -194,16 +199,16 @@ export default function WhatsAppPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-[100dvh]">
       <Header title="Conversas ao vivo" subtitle="Central de mensagens" />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Lista de conversas */}
-        <div className="w-80 flex flex-col border-r flex-shrink-0" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+        <div className={`w-full md:w-80 flex-col border-r flex-shrink-0 ${selected || qr ? "hidden md:flex" : "flex"}`} style={{ background: "var(--card)", borderColor: "var(--border)" }}>
           <div className="p-3 border-b" style={{ borderColor: "var(--border)" }}>
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "var(--secondary)" }}>
               <Search size={14} style={{ color: "var(--muted-foreground)" }} />
-              <input placeholder="Buscar conversa..." value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1 bg-transparent outline-none text-sm" style={{ color: "var(--foreground)" }} />
+              <input placeholder="Buscar conversa..." value={search} onChange={(e) => setSearch(e.target.value)} className="flex-1 bg-transparent outline-none text-base md:text-sm" style={{ color: "var(--foreground)" }} />
             </div>
           </div>
 
@@ -282,8 +287,11 @@ export default function WhatsAppPage() {
             <button onClick={() => setQr(null)} className="text-sm" style={{ color: "var(--primary)" }}>Fechar</button>
           </div>
         ) : selected ? (
-          <div className="flex-1 flex flex-col">
-            <div className="h-16 flex items-center gap-3 px-4 border-b" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+          <div className="flex-1 flex flex-col min-w-0">
+            <div className="h-16 flex items-center gap-3 px-3 md:px-4 border-b" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+              <button onClick={voltarParaLista} className="md:hidden w-9 h-9 -ml-1 rounded-xl flex items-center justify-center flex-shrink-0" style={{ color: "var(--foreground)" }} title="Voltar" aria-label="Voltar para as conversas">
+                <ArrowLeft size={20} />
+              </button>
               {selected.contactAvatar ? (
                 <img src={selected.contactAvatar} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
               ) : (
@@ -331,7 +339,7 @@ export default function WhatsAppPage() {
             </div>
 
             {/* Etiqueta = estágio do funil (lista suspensa). Move o card no Kanban. */}
-            <div className="flex items-center gap-2 px-4 py-2 border-b" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+            <div className="flex items-center gap-2 px-3 md:px-4 py-2 border-b flex-wrap" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
               <span className="text-xs flex-shrink-0" style={{ color: "var(--muted-foreground)" }}>Etiqueta:</span>
               <select
                 value={estagioAtual(selected)}
@@ -385,10 +393,10 @@ export default function WhatsAppPage() {
               clientPhone={selected.remoteJid}
             />
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ background: "var(--background)" }}>
+            <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3" style={{ background: "var(--background)" }}>
               {(thread?.messages ?? []).map((msg) => (
                 <div key={msg.id} className={`flex ${msg.direction === "out" ? "justify-end" : "justify-start"}`}>
-                  <div className="max-w-[70%] rounded-2xl px-4 py-2.5" style={{ background: msg.direction === "out" ? "var(--primary)" : "var(--card)", color: msg.direction === "out" ? "white" : "var(--foreground)" }}>
+                  <div className="max-w-[85%] md:max-w-[70%] rounded-2xl px-3 md:px-4 py-2.5 break-words" style={{ background: msg.direction === "out" ? "var(--primary)" : "var(--card)", color: msg.direction === "out" ? "white" : "var(--foreground)" }}>
                     {msg.direction === "out" && msg.isAI && (
                       <div className="flex items-center gap-1 mb-1 opacity-70 text-xs"><Bot size={10} /><span>Kayser One AI</span></div>
                     )}
@@ -435,7 +443,7 @@ export default function WhatsAppPage() {
               )}
             </div>
 
-            <div className="p-3 border-t flex items-center gap-2 relative" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+            <div className="p-2 md:p-3 border-t flex items-center gap-2 relative" style={{ background: "var(--card)", borderColor: "var(--border)", paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
               {showEmojis && (
                 <div
                   className="absolute bottom-16 left-3 z-20 p-2 rounded-xl border shadow-lg grid grid-cols-10 gap-1 w-[320px]"
@@ -487,14 +495,14 @@ export default function WhatsAppPage() {
                 {sendMedia.isPending ? <Loader2 size={18} className="animate-spin" /> : <Paperclip size={18} />}
               </button>
 
-              <input placeholder="Digite uma mensagem..." value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSend()} className="flex-1 px-3 py-2 rounded-xl border text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
-              <button onClick={handleSend} disabled={send.isPending} className="w-9 h-9 rounded-xl flex items-center justify-center disabled:opacity-50" style={{ background: "var(--primary)", color: "white" }}>
+              <input placeholder="Digite uma mensagem..." value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSend()} className="flex-1 min-w-0 px-3 py-2 rounded-xl border text-base md:text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
+              <button onClick={handleSend} disabled={send.isPending} className="w-10 h-10 md:w-9 md:h-9 rounded-xl flex items-center justify-center flex-shrink-0 disabled:opacity-50" style={{ background: "var(--primary)", color: "white" }}>
                 <Send size={16} />
               </button>
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center" style={{ color: "var(--muted-foreground)" }}>
+          <div className="flex-1 hidden md:flex items-center justify-center" style={{ color: "var(--muted-foreground)" }}>
             Selecione uma conversa ou conecte o WhatsApp
           </div>
         )}
