@@ -1,4 +1,5 @@
 "use client";
+import { useSettings } from "@/hooks/use-settings";
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -117,6 +118,10 @@ export default function LeadsPage() {
 
   const { data, isLoading, isError } = useLeads({ search, status: filterStatus });
   const createLead = useCreateLead();
+  const { data: settingsTimes } = useSettings();
+  const origensTimes = settingsTimes?.leadOrigens?.length
+    ? settingsTimes.leadOrigens
+    : ["Time Tati", "Time Helen", "Time Allan", "Time Marisa", "Time Isabelle", "Time Isaac", "Time Andre", "Time Edjane"];
   const deleteLead = useDeleteLead();
   const isDiretor = getStoredUser()?.role === "diretor";
   const qc = useQueryClient();
@@ -172,10 +177,26 @@ export default function LeadsPage() {
     if (!name) return;
     const phone = window.prompt("Telefone (somente números):");
     if (!phone) return;
+    // Cargos: time de origem obrigatório (não mistura com anúncio nem com os do Diretor).
+    let origem: string | undefined;
+    if (!isDiretor) {
+      const lista = origensTimes.map((t, i) => `${i + 1} - ${t}`).join("\n");
+      const r = window.prompt(`Time de origem (digite o número ou o nome):\n${lista}`, "");
+      if (!r || !r.trim()) {
+        setFeedback("Cadastro cancelado: informe o time de origem (ex.: Time Isaac).");
+        return;
+      }
+      const n = Number(r.trim());
+      origem = Number.isInteger(n) && n >= 1 && n <= origensTimes.length ? origensTimes[n - 1] : r.trim();
+    }
     setFeedback("");
     try {
-      await createLead.mutateAsync({ name, phone });
-      setFeedback("Lead criado (manual). Não entra na fila nem conta no Custo por Lead — é só seu.");
+      await createLead.mutateAsync({ name, phone, ...(origem ? { origem } : {}) });
+      setFeedback(
+        origem
+          ? `Lead criado no ${origem}. Não entra na fila, nem no painel, nem no Custo por Lead.`
+          : "Lead criado (manual). Não entra na fila nem conta no Custo por Lead."
+      );
     } catch (err) {
       setFeedback(getApiErrorMessage(err, "Falha ao criar o lead."));
     }
