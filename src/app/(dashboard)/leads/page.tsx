@@ -1,4 +1,5 @@
 "use client";
+import { useKanbanColumns } from "@/hooks/use-kanban";
 import { useSettings } from "@/hooks/use-settings";
 
 import { useEffect, useRef, useState } from "react";
@@ -118,6 +119,8 @@ export default function LeadsPage() {
 
   const { data, isLoading, isError } = useLeads({ search, status: filterStatus });
   const createLead = useCreateLead();
+  const { data: colunasKanban } = useKanbanColumns();
+  const isGestorImport = ["diretor", "superintendente", "gerente_geral", "gerente"].includes(getStoredUser()?.role ?? "");
   const { data: settingsTimes } = useSettings();
   const origensTimes = settingsTimes?.leadOrigens?.length
     ? settingsTimes.leadOrigens
@@ -162,9 +165,23 @@ export default function LeadsPage() {
       }
       time = t.trim();
     }
+    // Em qual coluna do Kanban os leads entram (Enter = Novo Lead).
+    let status: string | undefined;
+    const cols = (colunasKanban ?? []).filter((c) => isGestorImport || !(c as any).somenteGestores);
+    if (cols.length) {
+      const lista = cols.map((c, i) => `${i + 1} - ${c.emoji} ${c.title}`).join("\n");
+      const r = window.prompt(`Em qual coluna do Kanban os leads entram? (número; vazio = Novo Lead)\n${lista}`, "");
+      if (r === null) {
+        setFeedback("Importação cancelada.");
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
+      const n = Number(r.trim());
+      if (r.trim() && Number.isInteger(n) && n >= 1 && n <= cols.length) status = cols[n - 1].key;
+    }
     try {
-      const res = await importLeads.mutateAsync({ file, time });
-      setFeedback(`Importação concluída${time ? ` (${time})` : ""}: ${res.imported} novos, ${res.duplicates} já existiam e não foram duplicados (de ${res.total} linhas).`);
+      const res = await importLeads.mutateAsync({ file, time, status });
+      setFeedback(`Importação concluída${time ? ` (${time})` : ""}: ${res.imported} novos, ${res.duplicates} já existiam e não foram duplicados${res.semTelefone ? `, ${res.semTelefone} sem telefone válido (ignorados)` : ""} (de ${res.total} linhas).`);
     } catch (err) {
       setFeedback(getApiErrorMessage(err, "Falha ao importar a planilha."));
     } finally {

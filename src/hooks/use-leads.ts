@@ -112,11 +112,12 @@ export function useDeleteLeadHistory() {
 export function useImportLeads() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ file, time }: { file: File; time?: string }) => {
+    mutationFn: async ({ file, time, status }: { file: File; time?: string; status?: string }) => {
       const form = new FormData();
       form.append("file", file);
       if (time) form.append("time", time);
-      const { data } = await api.post<{ imported: number; duplicates: number; total: number }>(
+      if (status) form.append("status", status);
+      const { data } = await api.post<{ imported: number; duplicates: number; semTelefone?: number; total: number }>(
         "/leads/import/excel",
         form,
         { headers: { "Content-Type": "multipart/form-data" } }
@@ -126,6 +127,7 @@ export function useImportLeads() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["leads"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["kanban"] });
     },
   });
 }
