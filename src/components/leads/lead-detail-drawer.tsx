@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Pencil, Loader2, Search, Shuffle, Clock, ChevronRight, Trash2 } from "lucide-react";
+import { X, Pencil, Loader2, Search, Shuffle, Clock, ChevronRight, ChevronDown, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
@@ -314,6 +314,7 @@ function LeadEditForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [respOpen, setRespOpen] = useState(false);
+  const [origemAberta, setOrigemAberta] = useState(false);
   const [respQuery, setRespQuery] = useState("");
 
   // Origens extras (times) cadastradas pelo Diretor; fallback pros times padrão.
@@ -517,18 +518,35 @@ function LeadEditForm({
       </Field>
 
       <Field label="Origem do lead (de onde veio / time)">
-        <select
-          value={(() => {
+        {(() => {
+          // Lista própria (não <select>): dentro dela o Diretor apaga time com a lixeira.
+          type Opc = { v: string; label: string };
+          const pagos: Opc[] = [
+            { v: "facebook", label: "📘 Facebook (anúncio)" },
+            { v: "instagram", label: "📸 Instagram (anúncio)" },
+            { v: "tiktok", label: "🎵 TikTok (anúncio)" },
+            { v: "anuncio", label: "🎯 Anúncio/Ads (outro)" },
+            { v: "formulario_meta", label: "📝 Formulário Meta" },
+          ];
+          const semCusto: Opc[] = [
+            { v: "manual", label: "✋ Manual / oferta do corretor" },
+            { v: "whatsapp", label: "💬 WhatsApp orgânico" },
+          ];
+          const atual = (() => {
             if (form.source === "anuncio")
               return form.origem === "instagram" ? "instagram" : form.origem === "facebook" ? "facebook" : form.origem === "tiktok" ? "tiktok" : "anuncio";
             if (origens.some((o) => o.toLowerCase() === (form.origem || "").toLowerCase())) return `custom:${form.origem}`;
+            if (form.source === "time" && form.origem) return `custom:${form.origem}`;
             return form.source || "manual";
-          })()}
-          onChange={(e) => {
-            const v = e.target.value;
-            // Origem custom (time): oferta → não conta no custo, só identifica de onde veio.
+          })();
+          const rotulo =
+            [...pagos, ...semCusto].find((o) => o.v === atual)?.label ??
+            (atual.startsWith("custom:") ? `👥 ${atual.slice(7)}` : "✋ Manual / oferta do corretor");
+          const escolher = (v: string) => {
+            setOrigemAberta(false);
+            // Time/captação: source "time" (não conta no painel nem no custo; não mistura).
             if (v.startsWith("custom:")) {
-              set("source", "manual");
+              set("source", "time");
               set("origem", v.slice(7));
               return;
             }
@@ -544,90 +562,102 @@ function LeadEditForm({
             const m = mapa[v] ?? mapa.manual;
             set("source", m.source);
             set("origem", m.origem);
-          }}
-          className="w-full px-3 py-2 rounded-lg border text-sm outline-none"
-          style={inputStyle}
-        >
-          {/* Origens PAGAS (contam no Custo por Lead) — só o Diretor marca. */}
-          {isDiretor && (
-            <optgroup label="Anúncio pago (conta no custo)">
-              <option value="facebook">📘 Facebook (anúncio)</option>
-              <option value="instagram">📸 Instagram (anúncio)</option>
-              <option value="tiktok">🎵 TikTok (anúncio)</option>
-              <option value="anuncio">🎯 Anúncio/Ads (outro)</option>
-              <option value="formulario_meta">📝 Formulário Meta</option>
-            </optgroup>
-          )}
-          <optgroup label="Sem custo">
-            <option value="manual">✋ Manual / oferta do corretor</option>
-            <option value="whatsapp">💬 WhatsApp orgânico</option>
-          </optgroup>
-          {origens.length > 0 && (
-            <optgroup label="Times / captação (não conta no custo)">
-              {origens.map((o) => (
-                <option key={o} value={`custom:${o}`}>👥 {o}</option>
-              ))}
-            </optgroup>
-          )}
-        </select>
-        {isDiretor && (
-          <button
-            type="button"
-            onClick={async () => {
-              const novo = window.prompt("Nome da nova origem (ex.: Time João, Indicação, Placa):")?.trim();
-              if (!novo) return;
-              if (origens.some((o) => o.toLowerCase() === novo.toLowerCase())) {
-                set("source", "manual");
-                set("origem", novo);
-                return;
-              }
-              try {
+          };
+          const apagarTime = async (alvo: string) => {
+            if (!window.confirm(`Apagar o "${alvo}" da lista? Os leads que já têm essa origem continuam com ela.`)) return;
+            try {
+              await updateSettings.mutateAsync({ leadOrigens: origens.filter((o) => o !== alvo) });
+            } catch {
+              setError("Falha ao apagar a origem.");
+            }
+          };
+          const adicionar = async () => {
+            const novo = window.prompt("Nome da nova origem (ex.: Time João, Indicação, Placa):")?.trim();
+            if (!novo) return;
+            try {
+              if (!origens.some((o) => o.toLowerCase() === novo.toLowerCase())) {
                 await updateSettings.mutateAsync({ leadOrigens: [...origens, novo] });
-                set("source", "manual");
-                set("origem", novo);
-              } catch {
-                setError("Falha ao adicionar a origem.");
               }
-            }}
-            className="text-xs mt-1.5 underline"
-            style={{ color: "var(--primary)" }}
-          >
-            ＋ Adicionar origem
-          </button>
-        )}
-        {isDiretor && origens.length > 0 && (
-          <button
-            type="button"
-            onClick={async () => {
-              // Time que saiu da empresa: some da lista (leads antigos mantêm a origem no cadastro).
-              const lista = origens.map((o, i) => `${i + 1} - ${o}`).join("\n");
-              const r = window.prompt(`Qual origem apagar? (digite o número ou o nome)\n${lista}`, "")?.trim();
-              if (!r) return;
-              const n = Number(r);
-              const alvo =
-                Number.isInteger(n) && n >= 1 && n <= origens.length
-                  ? origens[n - 1]
-                  : origens.find((o) => o.toLowerCase() === r.toLowerCase());
-              if (!alvo) {
-                setError(`Origem "${r}" não encontrada.`);
-                return;
-              }
-              if (!window.confirm(`Apagar a origem "${alvo}" da lista? Os leads que já têm essa origem continuam com ela.`)) return;
-              try {
-                await updateSettings.mutateAsync({ leadOrigens: origens.filter((o) => o !== alvo) });
-              } catch {
-                setError("Falha ao apagar a origem.");
-              }
-            }}
-            className="text-xs mt-1.5 ml-4 underline"
-            style={{ color: "#ef4444" }}
-          >
-            − Apagar origem
-          </button>
-        )}
+              escolher(`custom:${novo}`);
+            } catch {
+              setError("Falha ao adicionar a origem.");
+            }
+          };
+          const titulo = (t: string) => (
+            <div className="px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--muted-foreground)" }}>{t}</div>
+          );
+          const item = (o: Opc) => (
+            <button
+              key={o.v}
+              type="button"
+              onClick={() => escolher(o.v)}
+              className="w-full text-left px-3 py-2 text-sm rounded-lg"
+              style={{ background: atual === o.v ? "var(--secondary)" : "transparent", color: "var(--foreground)" }}
+            >
+              {o.label}
+            </button>
+          );
+          return (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setOrigemAberta((a) => !a)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg border text-sm outline-none text-left"
+                style={inputStyle}
+              >
+                <span className="truncate">{rotulo}</span>
+                <ChevronDown size={16} style={{ color: "var(--muted-foreground)" }} />
+              </button>
+              {origemAberta && (
+                <div
+                  className="absolute z-30 left-0 right-0 mt-1 rounded-xl border p-1 max-h-80 overflow-y-auto"
+                  style={{ background: "var(--card)", borderColor: "var(--border)", boxShadow: "0 16px 40px rgba(0,0,0,.45)", backdropFilter: "blur(12px)" }}
+                >
+                  {/* Origens PAGAS (contam no Custo por Lead) — só o Diretor marca. */}
+                  {isDiretor && (
+                    <>
+                      {titulo("Anúncio pago (conta no custo)")}
+                      {pagos.map(item)}
+                    </>
+                  )}
+                  {titulo("Sem custo")}
+                  {semCusto.map(item)}
+                  {origens.length > 0 && titulo("Times / captação (não conta no custo)")}
+                  {origens.map((o) => (
+                    <div
+                      key={o}
+                      className="flex items-center rounded-lg"
+                      style={{ background: atual === `custom:${o}` ? "var(--secondary)" : "transparent" }}
+                    >
+                      <button type="button" onClick={() => escolher(`custom:${o}`)} className="flex-1 text-left px-3 py-2 text-sm" style={{ color: "var(--foreground)" }}>
+                        👥 {o}
+                      </button>
+                      {isDiretor && (
+                        <button
+                          type="button"
+                          onClick={() => apagarTime(o)}
+                          title={`Apagar ${o} da lista`}
+                          className="p-2 mr-1 rounded-lg"
+                          style={{ color: "#ef4444" }}
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {isDiretor && (
+                    <button type="button" onClick={adicionar} className="w-full text-left px-3 py-2 text-sm rounded-lg font-medium" style={{ color: "var(--primary)" }}>
+                      ＋ Adicionar origem
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
         <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>
           {isDiretor
-            ? "Anúncio pago entra no Custo por Lead. Times/captação não contam. Use ＋ para criar e − para apagar origens."
+            ? "Anúncio pago entra no Custo por Lead. Times/captação não contam. Abra a lista: ＋ cria origem e 🗑 apaga time."
             : "Marque de qual time/captação veio o lead."}
         </div>
       </Field>
