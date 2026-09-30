@@ -320,7 +320,7 @@ function LeadEditForm({
   const origens =
     settings?.leadOrigens && settings.leadOrigens.length
       ? settings.leadOrigens
-      : TIMES.map((n) => `Time ${n}`);
+      : [...TIMES.map((n) => `Time ${n}`), "Corujão"];
 
   const [form, setForm] = useState({
     name: lead.name ?? "",

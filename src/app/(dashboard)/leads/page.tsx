@@ -121,7 +121,7 @@ export default function LeadsPage() {
   const { data: settingsTimes } = useSettings();
   const origensTimes = settingsTimes?.leadOrigens?.length
     ? settingsTimes.leadOrigens
-    : ["Time Tati", "Time Helen", "Time Allan", "Time Marisa", "Time Isabelle", "Time Isaac", "Time Andre", "Time Edjane"];
+    : ["Time Tati", "Time Helen", "Time Allan", "Time Marisa", "Time Isabelle", "Time Isaac", "Time Andre", "Time Edjane", "Corujão"];
   const deleteLead = useDeleteLead();
   const isDiretor = getStoredUser()?.role === "diretor";
   const qc = useQueryClient();
