@@ -1,5 +1,4 @@
 "use client";
-import { useKanbanColumns } from "@/hooks/use-kanban";
 import { useSettings } from "@/hooks/use-settings";
 
 import { useEffect, useRef, useState } from "react";
@@ -14,11 +13,11 @@ import {
   useLeads,
   useCreateLead,
   useDeleteLead,
-  useImportLeads,
   exportLeads,
 } from "@/hooks/use-leads";
 import type { Lead } from "@/types";
 import { LeadDetailDrawer } from "@/components/leads/lead-detail-drawer";
+import { ImportModal } from "@/components/leads/import-modal";
 import {
   Search,
   Download,
@@ -26,7 +25,6 @@ import {
   Plus,
   MessageSquare,
   Trash2,
-  Loader2,
   Eye,
 } from "lucide-react";
 
@@ -119,8 +117,6 @@ export default function LeadsPage() {
 
   const { data, isLoading, isError } = useLeads({ search, status: filterStatus });
   const createLead = useCreateLead();
-  const { data: colunasKanban } = useKanbanColumns();
-  const isGestorImport = ["diretor", "superintendente", "gerente_geral", "gerente"].includes(getStoredUser()?.role ?? "");
   const { data: settingsTimes } = useSettings();
   const origensTimes = settingsTimes?.leadOrigens?.length
     ? settingsTimes.leadOrigens
@@ -145,48 +141,18 @@ export default function LeadsPage() {
       setAdotando(false);
     }
   };
-  const importLeads = useImportLeads();
 
   const leads = data?.data ?? [];
   const total = data?.total ?? 0;
 
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Escolheu a planilha → abre a janela de importação (time, coluna e lotes).
+  const [arquivoImport, setArquivoImport] = useState<File | null>(null);
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    if (fileInputRef.current) fileInputRef.current.value = "";
     if (!file) return;
     setFeedback("");
-    // Cargos abaixo do Diretor: a planilha precisa do nome do time (não mistura com os leads existentes).
-    let time: string | undefined;
-    if (!isDiretor) {
-      const t = window.prompt("Nome do time desta planilha (ex.: Time Isaac):", "Time ");
-      if (!t || !t.replace(/^\s*time\s*/i, "").trim()) {
-        setFeedback("Importação cancelada: informe o nome do time (ex.: Time Isaac).");
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        return;
-      }
-      time = t.trim();
-    }
-    // Em qual coluna do Kanban os leads entram (Enter = Novo Lead).
-    let status: string | undefined;
-    const cols = (colunasKanban ?? []).filter((c) => isGestorImport || !(c as any).somenteGestores);
-    if (cols.length) {
-      const lista = cols.map((c, i) => `${i + 1} - ${c.emoji} ${c.title}`).join("\n");
-      const r = window.prompt(`Em qual coluna do Kanban os leads entram? (número; vazio = Novo Lead)\n${lista}`, "");
-      if (r === null) {
-        setFeedback("Importação cancelada.");
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        return;
-      }
-      const n = Number(r.trim());
-      if (r.trim() && Number.isInteger(n) && n >= 1 && n <= cols.length) status = cols[n - 1].key;
-    }
-    try {
-      const res = await importLeads.mutateAsync({ file, time, status });
-      setFeedback(`Importação concluída${time ? ` (${time})` : ""}: ${res.imported} novos, ${res.duplicates} já existiam e não foram duplicados${res.semTelefone ? `, ${res.semTelefone} sem telefone válido (ignorados)` : ""} (de ${res.total} linhas).`);
-    } catch (err) {
-      setFeedback(getApiErrorMessage(err, "Falha ao importar a planilha."));
-    } finally {
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
+    setArquivoImport(file);
   };
 
   const handleNewLead = async () => {
@@ -279,11 +245,11 @@ export default function LeadsPage() {
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              disabled={importLeads.isPending}
+              disabled={!!arquivoImport}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium disabled:opacity-60"
               style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
             >
-              {importLeads.isPending ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+              <Upload size={16} />
               Importar
             </button>
             <button
@@ -474,6 +440,16 @@ export default function LeadsPage() {
       </div>
 
       {detailLead && <LeadDetailDrawer lead={detailLead} onClose={() => setDetailLead(null)} />}
+      {arquivoImport && (
+        <ImportModal
+          file={arquivoImport}
+          onClose={() => setArquivoImport(null)}
+          onDone={(msg) => {
+            setArquivoImport(null);
+            setFeedback(msg);
+          }}
+        />
+      )}
     </div>
   );
 }

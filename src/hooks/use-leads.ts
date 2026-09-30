@@ -112,12 +112,13 @@ export function useDeleteLeadHistory() {
 export function useImportLeads() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ file, time, status }: { file: File; time?: string; status?: string }) => {
+    mutationFn: async ({ file, time, status, lotes }: { file: File; time?: string; status?: string; lotes?: string }) => {
       const form = new FormData();
       form.append("file", file);
       if (time) form.append("time", time);
       if (status) form.append("status", status);
-      const { data } = await api.post<{ imported: number; duplicates: number; semTelefone?: number; total: number }>(
+      if (lotes) form.append("lotes", lotes);
+      const { data } = await api.post<{ imported: number; duplicates: number; semTelefone?: number; total: number; porLote?: number[]; restante?: number }>(
         "/leads/import/excel",
         form,
         { headers: { "Content-Type": "multipart/form-data" } }
