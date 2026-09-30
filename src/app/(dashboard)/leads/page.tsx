@@ -18,6 +18,7 @@ import {
 import type { Lead } from "@/types";
 import { LeadDetailDrawer } from "@/components/leads/lead-detail-drawer";
 import { ImportModal } from "@/components/leads/import-modal";
+import { ImportacoesModal } from "@/components/leads/importacoes-modal";
 import {
   Search,
   Download,
@@ -147,6 +148,7 @@ export default function LeadsPage() {
 
   // Escolheu a planilha → abre a janela de importação (time, coluna e lotes).
   const [arquivoImport, setArquivoImport] = useState<File | null>(null);
+  const [verImportacoes, setVerImportacoes] = useState(false);
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -251,6 +253,14 @@ export default function LeadsPage() {
             >
               <Upload size={16} />
               Importar
+            </button>
+            <button
+              onClick={() => setVerImportacoes(true)}
+              title="Planilhas importadas — apagar todos os leads de uma planilha errada"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium"
+              style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+            >
+              📂 Importações
             </button>
             <button
               onClick={handleExport}
@@ -440,6 +450,12 @@ export default function LeadsPage() {
       </div>
 
       {detailLead && <LeadDetailDrawer lead={detailLead} onClose={() => setDetailLead(null)} />}
+      {verImportacoes && (
+        <ImportacoesModal
+          onClose={() => setVerImportacoes(false)}
+          onDone={(msg) => setFeedback(msg)}
+        />
+      )}
       {arquivoImport && (
         <ImportModal
           file={arquivoImport}

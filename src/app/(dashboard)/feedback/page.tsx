@@ -41,7 +41,9 @@ export default function FeedbackPage() {
   const [alvoId, setAlvoId] = useState<string>("");
 
   const { data: users = [] } = useUsers();
-  const { data: breakdown = [] } = useBreakdown(year, month || undefined);
+  const { data: breakdownBruto = [] } = useBreakdown(year, month || undefined);
+  // 1-on-1 é com os cargos: tira o Diretor e a linha "Sem responsável" do Custo por Lead.
+  const breakdown = breakdownBruto.filter((b: any) => b.responsavelId && b.role !== "diretor");
 
   // Individual: todo mundo do escopo (menos empresa parceira). Time: só gestores.
   const pessoas = users.filter((u: any) => u.role !== "diretor" && !u.empresaId);

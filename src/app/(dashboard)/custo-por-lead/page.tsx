@@ -440,7 +440,7 @@ export default function CustoPorLeadPage() {
               </thead>
               <tbody>
                 {linhas.map((l) => (
-                  <tr key={l.responsavelId} style={{ borderTop: "1px solid var(--border)" }}>
+                  <tr key={l.responsavelId ?? "sem-dono"} style={{ borderTop: "1px solid var(--border)" }}>
                     <td className="py-2.5 pr-3" style={{ color: "var(--foreground)" }}>{l.nome}</td>
                     <td className="py-2.5 pr-3">
                       <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}>
