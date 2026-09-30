@@ -595,9 +595,39 @@ function LeadEditForm({
             ＋ Adicionar origem
           </button>
         )}
+        {isDiretor && origens.length > 0 && (
+          <button
+            type="button"
+            onClick={async () => {
+              // Time que saiu da empresa: some da lista (leads antigos mantêm a origem no cadastro).
+              const lista = origens.map((o, i) => `${i + 1} - ${o}`).join("\n");
+              const r = window.prompt(`Qual origem apagar? (digite o número ou o nome)\n${lista}`, "")?.trim();
+              if (!r) return;
+              const n = Number(r);
+              const alvo =
+                Number.isInteger(n) && n >= 1 && n <= origens.length
+                  ? origens[n - 1]
+                  : origens.find((o) => o.toLowerCase() === r.toLowerCase());
+              if (!alvo) {
+                setError(`Origem "${r}" não encontrada.`);
+                return;
+              }
+              if (!window.confirm(`Apagar a origem "${alvo}" da lista? Os leads que já têm essa origem continuam com ela.`)) return;
+              try {
+                await updateSettings.mutateAsync({ leadOrigens: origens.filter((o) => o !== alvo) });
+              } catch {
+                setError("Falha ao apagar a origem.");
+              }
+            }}
+            className="text-xs mt-1.5 ml-4 underline"
+            style={{ color: "#ef4444" }}
+          >
+            − Apagar origem
+          </button>
+        )}
         <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>
           {isDiretor
-            ? "Anúncio pago entra no Custo por Lead. Times/captação não contam. Use ＋ para criar novas origens."
+            ? "Anúncio pago entra no Custo por Lead. Times/captação não contam. Use ＋ para criar e − para apagar origens."
             : "Marque de qual time/captação veio o lead."}
         </div>
       </Field>
