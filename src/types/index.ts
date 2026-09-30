@@ -72,6 +72,7 @@ export interface Lead {
 export interface KanbanColumn {
   id: string; // chave/status da coluna (pode ser customizada)
   columnId?: string; // id no banco (para editar/remover)
+  somenteGestores?: boolean; // só gerente pra cima vê
   title: string;
   emoji: string;
   color: string;

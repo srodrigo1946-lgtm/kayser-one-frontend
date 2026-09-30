@@ -78,6 +78,7 @@ export function useUpdateColumn() {
       title?: string;
       emoji?: string;
       color?: string;
+      somenteGestores?: boolean;
     }) => {
       const { data } = await api.patch(`/kanban/columns/${id}`, body);
       return data;

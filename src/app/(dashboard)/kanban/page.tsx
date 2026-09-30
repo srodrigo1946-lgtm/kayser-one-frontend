@@ -180,7 +180,7 @@ function ColumnEditor({
   canRight,
 }: {
   col: KanbanColumn;
-  onSave: (patch: { title?: string; emoji?: string; color?: string }) => void;
+  onSave: (patch: { title?: string; emoji?: string; color?: string; somenteGestores?: boolean }) => void;
   onDelete: () => void;
   onMoveLeft: () => void;
   onMoveRight: () => void;
@@ -230,6 +230,14 @@ function ColumnEditor({
           <Trash2 size={14} />
         </button>
       </div>
+      <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "var(--muted-foreground)" }}>
+        <input
+          type="checkbox"
+          checked={!!col.somenteGestores}
+          onChange={(e) => onSave({ somenteGestores: e.target.checked })}
+        />
+        🔒 Só gerentes ↑ (corretor não vê)
+      </label>
     </div>
   );
 }
