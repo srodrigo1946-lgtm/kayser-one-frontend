@@ -65,6 +65,25 @@ export default function CorujaoPage() {
 
       {isDiretor && <ConfigPanel />}
 
+      {isDiretor && pool?.pegosHoje && (
+        <div className="mb-4 p-3 rounded-xl border" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
+          <div className="text-sm font-semibold mb-2" style={{ color: "var(--foreground)" }}>
+            🦉 Quem pegou hoje ({pool.pegosHoje.reduce((a, p) => a + p.qtd, 0)} lead(s))
+          </div>
+          {pool.pegosHoje.length === 0 ? (
+            <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>Ninguém pegou lead do Corujão hoje ainda.</div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {pool.pegosHoje.map((p) => (
+                <span key={p.nome} className="text-xs px-2.5 py-1 rounded-lg" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>
+                  {p.nome}: <b>{p.qtd}</b>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {msg && (
         <div className="text-sm mb-4 px-3 py-2 rounded-lg" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>{msg}</div>
       )}

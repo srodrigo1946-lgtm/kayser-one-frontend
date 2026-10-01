@@ -29,6 +29,8 @@ export interface CorujaoConfig {
 export interface CorujaoPool {
   podePegar: boolean; // só corretor ativado pode aceitar
   leads: CorujaoLead[];
+  /** Só Diretor: quem pegou quantos leads do Corujão hoje. */
+  pegosHoje?: { nome: string; qtd: number }[];
 }
 
 // Leads do repique — todos os cargos VEEM; só corretor ativado PEGA.
