@@ -26,15 +26,36 @@ export default function CorujaoPage() {
   const aceitar = useAceitarCorujao();
   const [msg, setMsg] = useState("");
 
-  const handleAceitar = async (id: string) => {
+  // Lead aceito some na hora (antes do refetch) e dispara o foguete do card.
+  const [aceitos, setAceitos] = useState<string[]>([]);
+  const [lancamentos, setLancamentos] = useState<{ id: number; x: number; y: number }[]>([]);
+  const visiveis = leads.filter((l) => !aceitos.includes(l.id));
+
+  const lancarFoguete = (el: HTMLElement | null) => {
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const id = Date.now() + Math.random();
+    setLancamentos((ls) => [...ls, { id, x: r.left + r.width / 2, y: r.top }]);
+    setTimeout(() => setLancamentos((ls) => ls.filter((l) => l.id !== id)), 1800);
+  };
+
+  const handleAceitar = async (id: string, el: HTMLElement | null) => {
     setMsg("");
     try {
       await aceitar.mutateAsync(id);
-      setMsg("Lead aceito! 🎉 Já está com você em Primeiro Contato — abra o CRM/WhatsApp pra falar com o cliente.");
+      lancarFoguete(el);
+      setAceitos((a) => [...a, id]);
+      setMsg("🚀 Lead aceito! Já está com você em Primeiro Contato — abra o CRM/WhatsApp pra falar com o cliente.");
     } catch (err) {
       setMsg(getApiErrorMessage(err, "Falha ao aceitar o lead."));
     }
   };
+
+  const limite = pool?.limiteDia ?? 0;
+  const meus = pool?.meusHoje ?? 0;
+  const pct = limite ? Math.min(100, Math.round((meus / limite) * 100)) : 0;
+  // Mais leads disponíveis = mais foguetes no céu (até 6).
+  const qtdFoguetes = podePegar ? Math.min(visiveis.length, 6) : 0;
 
   return (
     <div className="p-4 lg:p-6 max-w-5xl mx-auto">
@@ -46,22 +67,51 @@ export default function CorujaoPage() {
         Leads sem interesse (e os que estão com o Diretor) voltam pra cá. Clique em <b>Aceitar</b> pra assumir — o lead vira seu e entra em “Primeiro Contato”.
       </p>
 
-      {/* Foguete voando: chama o corretor quando tem lead liberado no Corujão. */}
-      {podePegar && leads.length > 0 && (
-        <>
-          <div aria-hidden className="corujao-rocket">🚀</div>
-          <style>{`
-            .corujao-rocket{position:fixed;left:-60px;bottom:48px;font-size:40px;z-index:40;pointer-events:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3));animation:corujaoFly 5s linear infinite;}
-            @keyframes corujaoFly{
-              0%{transform:translate(0,0) rotate(-28deg);opacity:0;}
-              8%{opacity:1;}
-              88%{opacity:1;}
-              100%{transform:translate(108vw,-78vh) rotate(-28deg);opacity:0;}
-            }
-            @media (prefers-reduced-motion: reduce){ .corujao-rocket{display:none;} }
-          `}</style>
-        </>
-      )}
+      {/* Céu de foguetes: quanto mais lead disponível, mais foguete voando. */}
+      {Array.from({ length: qtdFoguetes }, (_, i) => (
+        <div
+          key={`fg-${i}`}
+          aria-hidden
+          className="corujao-rocket"
+          style={{ bottom: `${8 + ((i * 13) % 50)}%`, animationDelay: `${i * 0.9}s`, animationDuration: `${4.5 + (i % 3)}s`, fontSize: `${30 + (i % 3) * 8}px` }}
+        >
+          🚀
+        </div>
+      ))}
+      {/* Foguete que decola do card aceito + estrelas. */}
+      {lancamentos.map((l) => (
+        <div key={l.id} aria-hidden className="corujao-launch" style={{ left: l.x, top: l.y }}>
+          <span className="corujao-launch-rocket">🚀</span>
+          {["✨", "⭐", "🌟", "✨", "⭐", "💫"].map((e, i) => (
+            <span key={i} className="corujao-star" style={{ ["--a" as any]: `${i * 60}deg` }}>{e}</span>
+          ))}
+        </div>
+      ))}
+      <style>{`
+        .corujao-rocket{position:fixed;left:-60px;z-index:40;pointer-events:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3));animation:corujaoFly 5s linear infinite;opacity:0;}
+        @keyframes corujaoFly{
+          0%{transform:translate(0,0) rotate(-28deg);opacity:0;}
+          8%{opacity:1;} 88%{opacity:1;}
+          100%{transform:translate(108vw,-70vh) rotate(-28deg);opacity:0;}
+        }
+        .corujao-launch{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-50%);}
+        .corujao-launch-rocket{display:block;font-size:46px;animation:corujaoDecola 1.6s cubic-bezier(.3,.0,.7,1) forwards;filter:drop-shadow(0 0 12px rgba(250,204,21,.8));}
+        @keyframes corujaoDecola{
+          0%{transform:translateY(0) scale(.6) rotate(-45deg);opacity:0;}
+          12%{transform:translateY(-10px) scale(1.1) rotate(-45deg);opacity:1;}
+          100%{transform:translateY(-110vh) scale(1.3) rotate(-45deg);opacity:0;}
+        }
+        .corujao-star{position:absolute;left:0;top:0;font-size:20px;animation:corujaoEstrela 1s ease-out forwards;}
+        @keyframes corujaoEstrela{
+          0%{transform:rotate(var(--a)) translateX(0) scale(.4);opacity:1;}
+          100%{transform:rotate(var(--a)) translateX(90px) scale(1.2);opacity:0;}
+        }
+        .corujao-card{transition:transform .2s ease, box-shadow .2s ease;}
+        .corujao-card:hover{transform:translateY(-3px);}
+        .corujao-btn{background:linear-gradient(90deg,var(--primary),#f59e0b);transition:transform .15s ease, filter .15s ease;}
+        .corujao-btn:hover:not(:disabled){transform:scale(1.02);filter:brightness(1.08);}
+        @media (prefers-reduced-motion: reduce){ .corujao-rocket,.corujao-launch{display:none;} }
+      `}</style>
 
       {isDiretor && <ConfigPanel />}
 
@@ -88,18 +138,26 @@ export default function CorujaoPage() {
         <div className="text-sm mb-4 px-3 py-2 rounded-lg" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>{msg}</div>
       )}
 
-      <h2 className="font-semibold mb-1" style={{ color: "var(--foreground)" }}>
-        Leads para pegar {pool ? `(${leads.length})` : ""}
+      <h2 className="font-semibold mb-2 flex items-center gap-2" style={{ color: "var(--foreground)" }}>
+        Leads para pegar {pool ? <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--primary)", color: "white" }}>{visiveis.length}</span> : ""}
       </h2>
-      {podePegar && !!pool?.limiteDia && (
-        <p className="text-xs mb-2" style={{ color: (pool.meusHoje ?? 0) >= pool.limiteDia ? "#ef4444" : "var(--muted-foreground)" }}>
-          Você pegou <b>{pool.meusHoje ?? 0}</b> de <b>{pool.limiteDia}</b> hoje
-          {(pool.meusHoje ?? 0) >= pool.limiteDia ? " — chegou no limite, amanhã tem mais! 🦉" : "."}
-        </p>
+
+      {/* Barra do dia: o foguete anda conforme o corretor pega leads. */}
+      {podePegar && !!limite && (
+        <div className="mb-4 p-3 rounded-xl border" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
+          <div className="flex items-center justify-between text-xs mb-2" style={{ color: meus >= limite ? "#ef4444" : "var(--muted-foreground)" }}>
+            <span>Você pegou <b style={{ color: "var(--foreground)" }}>{meus}</b> de <b style={{ color: "var(--foreground)" }}>{limite}</b> hoje</span>
+            <span>{meus >= limite ? "Chegou no limite — amanhã tem mais! 🦉" : `Faltam ${limite - meus} 🚀`}</span>
+          </div>
+          <div className="relative h-3 rounded-full" style={{ background: "var(--secondary)" }}>
+            <div className="h-3 rounded-full" style={{ width: `${pct}%`, background: "linear-gradient(90deg,var(--primary),#f59e0b)", transition: "width .6s ease" }} />
+            <span className="absolute -top-3 text-xl" style={{ left: `calc(${pct}% - 12px)`, transition: "left .6s ease", transform: "rotate(45deg)" }}>🚀</span>
+          </div>
+        </div>
       )}
-      {isDiretor && !!pool?.limiteDia && (
+      {isDiretor && !!limite && (
         <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>
-          Limite: cada corretor pega no máximo <b>{pool.limiteDia}</b> leads do Corujão por dia.
+          Limite: cada corretor pega no máximo <b>{limite}</b> leads do Corujão por dia.
         </p>
       )}
       {!podePegar && !isDiretor && (
@@ -112,44 +170,89 @@ export default function CorujaoPage() {
         <div className="flex items-center gap-2 text-sm" style={{ color: "var(--muted-foreground)" }}>
           <Loader2 size={16} className="animate-spin" /> Carregando…
         </div>
-      ) : leads.length === 0 ? (
-        <div className="p-4 rounded-xl border text-sm" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
+      ) : visiveis.length === 0 ? (
+        <div className="p-6 rounded-2xl border text-center" style={{ borderColor: "var(--border)", background: "var(--card)", color: "var(--muted-foreground)" }}>
+          <div className="text-3xl mb-1">🦉</div>
           Nenhum lead no repique agora. 🎉
         </div>
       ) : (
-        <div className="grid gap-2 sm:grid-cols-2">
-          {leads.map((l) => (
-            <div key={l.id} className="p-3 rounded-xl border" style={{ borderColor: "var(--border)", background: "var(--card)" }}>
-              <div className="font-medium" style={{ color: "var(--foreground)" }}>{l.name || "🔒 Lead disponível"}</div>
-              {l.phone && (
-                <div className="text-xs flex items-center gap-1 mt-0.5" style={{ color: "var(--muted-foreground)" }}>
-                  <Phone size={12} /> {l.phone}
+        <div className="grid gap-3 sm:grid-cols-2">
+          {visiveis.map((l) => {
+            const cor = corDoEmpreendimento(l.empreendimento);
+            const og = origemInfo(l.origem);
+            const dias = (l as any).desde ? Math.max(0, Math.floor((Date.now() - new Date((l as any).desde).getTime()) / 86400000)) : null;
+            return (
+              <div
+                key={l.id}
+                className="corujao-card rounded-2xl border overflow-hidden"
+                style={{ borderColor: `${cor}55`, background: `linear-gradient(135deg, ${cor}1f, var(--card) 55%)` }}
+              >
+                <div style={{ height: 4, background: cor }} />
+                <div className="p-3.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-semibold" style={{ color: "var(--foreground)" }}>{l.name || "🔒 Lead disponível"}</div>
+                    {dias !== null && (
+                      <span className="text-[11px] px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}>
+                        ⏳ {dias === 0 ? "hoje" : `${dias}d parado`}
+                      </span>
+                    )}
+                  </div>
+                  {l.phone && (
+                    <div className="text-xs flex items-center gap-1 mt-1" style={{ color: "var(--muted-foreground)" }}>
+                      <Phone size={12} /> {l.phone}
+                    </div>
+                  )}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                    {l.empreendimento && (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${cor}26`, color: cor }}>🏢 {l.empreendimento}</span>
+                    )}
+                    {og && (
+                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}>{og}</span>
+                    )}
+                    {l.responsavel && (
+                      <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>· atual: {l.responsavel}</span>
+                    )}
+                  </div>
+                  {podePegar && (
+                    <button
+                      onClick={(e) => handleAceitar(l.id, e.currentTarget)}
+                      disabled={aceitar.isPending || (!!limite && meus >= limite)}
+                      className="corujao-btn mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
+                      style={{ color: "white" }}
+                    >
+                      🚀 Aceitar
+                    </button>
+                  )}
                 </div>
-              )}
-              {l.empreendimento && (
-                <div className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>🏢 {l.empreendimento}</div>
-              )}
-              {(l.origem || l.responsavel) && (
-                <div className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
-                  {l.origem || "—"}{l.responsavel ? ` · atual: ${l.responsavel}` : ""}
-                </div>
-              )}
-              {podePegar && (
-                <button
-                  onClick={() => handleAceitar(l.id)}
-                  disabled={aceitar.isPending}
-                  className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-60"
-                  style={{ background: "var(--primary)", color: "white" }}
-                >
-                  <Check size={15} /> Aceitar
-                </button>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
   );
+}
+
+/** Cor fixa por empreendimento (o mesmo empreendimento sempre na mesma cor). */
+function corDoEmpreendimento(nome?: string): string {
+  const cores = ["#facc15", "#22c55e", "#3b82f6", "#a855f7", "#f97316", "#06b6d4", "#ec4899", "#14b8a6"];
+  const t = (nome || "").toLowerCase();
+  let h = 0;
+  for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0;
+  return t ? cores[h % cores.length] : "#94a3b8";
+}
+
+/** Origem legível com ícone. */
+function origemInfo(origem?: string): string {
+  const o = (origem || "").toLowerCase();
+  if (!o) return "";
+  if (o.includes("formul")) return "📝 Formulário";
+  if (o.includes("insta")) return "📸 Instagram";
+  if (o.includes("face")) return "📘 Facebook";
+  if (o.includes("tiktok")) return "🎵 TikTok";
+  if (o.includes("whats")) return "💬 WhatsApp";
+  if (o === "anuncio") return "🎯 Anúncio";
+  return `👥 ${origem}`;
 }
 
 function ConfigPanel() {
