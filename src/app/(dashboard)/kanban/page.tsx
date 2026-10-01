@@ -16,6 +16,7 @@ import {
 import { useDeleteLead } from "@/hooks/use-leads";
 import { usePendentes } from "@/hooks/use-lead-queue";
 import { getStoredUser } from "@/lib/auth";
+import { api, getApiErrorMessage } from "@/lib/api";
 import { useAlerts } from "@/hooks/use-alerts";
 import { LeadDetailDrawer } from "@/components/leads/lead-detail-drawer";
 
@@ -256,6 +257,30 @@ export default function KanbanPage() {
   // Total verdadeiro (a lista mostra só parte: 20 sem contato mais antigos).
   const totalResponderam = alerts?.responderamTotal ?? responderam.length;
   const totalSemContato = alerts?.semContatoTotal ?? semContato.length;
+  // Diretor: mandar a mensagem de follow-up pros leads sem contato (pelo número central).
+  const [chamando, setChamando] = useState(false);
+  const [chamarMsg, setChamarMsg] = useState("");
+  const [chamados, setChamados] = useState<string[]>([]);
+  const chamar = async (ids?: string[], nome?: string) => {
+    const texto = ids
+      ? `Mandar a mensagem de follow-up pra ${nome} agora, pelo WhatsApp central?`
+      : `Mandar a mensagem de follow-up pros leads sem contato (até 40, um a cada 25–60s)? Leva alguns minutos.`;
+    if (!window.confirm(texto)) return;
+    setChamando(true);
+    setChamarMsg("");
+    try {
+      const { data } = await api.post<{ agendados: number; minutos: number; motivo?: string }>("/automation/chamar-leads", ids ? { leadIds: ids } : {});
+      if (data.motivo) setChamarMsg(`⚠️ ${data.motivo}`);
+      else {
+        setChamarMsg(`✅ ${data.agendados} mensagem(ns) na fila — termina em ~${data.minutos} min.`);
+        if (ids) setChamados((c) => [...c, ...ids]);
+      }
+    } catch (err) {
+      setChamarMsg(getApiErrorMessage(err, "Falha ao enviar."));
+    } finally {
+      setChamando(false);
+    }
+  };
   const [avisosAbertos, setAvisosAbertos] = useState(true);
   const moveCard = useMoveCard();
   const createColumn = useCreateColumn();
@@ -376,10 +401,39 @@ export default function KanbanPage() {
                   💬 <b>{r.nome}</b> respondeu: <span style={{ color: "#22c55e" }}>“{r.mensagem || "(mensagem)"}”</span>
                 </button>
               ))}
+              {isDiretor && semContato.length > 0 && (
+                <div className="md:col-span-2 flex items-center gap-2 flex-wrap pb-1">
+                  <button
+                    onClick={() => chamar()}
+                    disabled={chamando}
+                    className="text-xs px-3 py-1.5 rounded-lg font-semibold disabled:opacity-60"
+                    style={{ background: "var(--primary)", color: "white" }}
+                  >
+                    📤 Chamar todos sem contato ({Math.min(totalSemContato, 40)})
+                  </button>
+                  <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+                    Pelo número central, com o nome do cliente, 25–60s entre cada um (máx. 40 por vez).
+                  </span>
+                  {chamarMsg && <span className="text-xs" style={{ color: "var(--foreground)" }}>{chamarMsg}</span>}
+                </div>
+              )}
               {semContato.map((l) => (
-                <button key={`sc-${l.id}`} onClick={() => router.push(`/whatsapp?lead=${l.id}`)} className="text-left text-xs px-2.5 py-1.5 rounded-lg truncate" style={{ background: "#f9731618", color: "var(--foreground)" }} title="Abrir a conversa">
-                  ⚠️ <b>{l.name}</b> — {l.lastContactAt ? Math.floor((Date.now() - new Date(l.lastContactAt).getTime()) / 86400000) : 3} dias sem contato
-                </button>
+                <div key={`sc-${l.id}`} className="flex items-center gap-1 rounded-lg" style={{ background: "#f9731618" }}>
+                  <button onClick={() => router.push(`/whatsapp?lead=${l.id}`)} className="flex-1 min-w-0 text-left text-xs px-2.5 py-1.5 truncate" style={{ color: "var(--foreground)" }} title="Abrir a conversa">
+                    ⚠️ <b>{l.name}</b> — {l.lastContactAt ? Math.floor((Date.now() - new Date(l.lastContactAt).getTime()) / 86400000) : 3} dias sem contato
+                  </button>
+                  {isDiretor && (
+                    <button
+                      onClick={() => chamar([l.id], l.name)}
+                      disabled={chamando || chamados.includes(l.id)}
+                      className="text-[11px] px-2 py-1 mr-1 rounded-md font-semibold flex-shrink-0 disabled:opacity-50"
+                      style={{ background: "#f97316", color: "white" }}
+                      title="Mandar a mensagem de follow-up pelo WhatsApp"
+                    >
+                      {chamados.includes(l.id) ? "✓ Enviado" : "📤 Chamar"}
+                    </button>
+                  )}
+                </div>
               ))}
               {totalSemContato > semContato.length && (
                 <div className="md:col-span-2 text-xs px-1 pt-1" style={{ color: "var(--muted-foreground)" }}>
