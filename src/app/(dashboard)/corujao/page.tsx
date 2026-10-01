@@ -106,6 +106,13 @@ export default function CorujaoPage() {
           0%{transform:rotate(var(--a)) translateX(0) scale(.4);opacity:1;}
           100%{transform:rotate(var(--a)) translateX(90px) scale(1.2);opacity:0;}
         }
+        .corujao-bar-voo{position:absolute;top:0;left:0;animation:corujaoVoo 2.6s ease-in-out infinite;}
+        @keyframes corujaoVoo{
+          0%{left:0;opacity:0;}
+          10%{opacity:1;}
+          85%{opacity:1;}
+          100%{left:calc(100% - 24px);opacity:0;}
+        }
         .corujao-bar-rocket{display:inline-block;font-size:20px;animation:corujaoBalanca 1.1s ease-in-out infinite;filter:drop-shadow(0 0 6px rgba(250,204,21,.7));}
         @keyframes corujaoBalanca{
           0%,100%{transform:rotate(45deg) translate(0,0);}
@@ -120,7 +127,7 @@ export default function CorujaoPage() {
         .corujao-card:hover{transform:translateY(-3px);}
         .corujao-btn{background:linear-gradient(90deg,var(--primary),#f59e0b);transition:transform .15s ease, filter .15s ease;}
         .corujao-btn:hover:not(:disabled){transform:scale(1.02);filter:brightness(1.08);}
-        @media (prefers-reduced-motion: reduce){ .corujao-rocket,.corujao-launch{display:none;} .corujao-bar-rocket,.corujao-bar-fumaca{animation:none;} }
+        @media (prefers-reduced-motion: reduce){ .corujao-rocket,.corujao-launch{display:none;} .corujao-bar-rocket,.corujao-bar-fumaca,.corujao-bar-voo{animation:none;opacity:1;} }
       `}</style>
 
       {isDiretor && <ConfigPanel />}
@@ -161,9 +168,12 @@ export default function CorujaoPage() {
           </div>
           <div className="relative h-3 rounded-full" style={{ background: "var(--secondary)" }}>
             <div className="h-3 rounded-full" style={{ width: `${pct}%`, background: "linear-gradient(90deg,var(--primary),#f59e0b)", transition: "width .6s ease" }} />
-            <span className="absolute -top-3" style={{ left: `calc(${pct}% - 12px)`, transition: "left .6s ease" }}>
-              <span className="corujao-bar-fumaca">💨</span>
-              <span className="corujao-bar-rocket">🚀</span>
+            {/* Foguete voa sem parar: de onde o corretor está até o fim da barra. */}
+            <span className="absolute -top-3 bottom-0" style={{ left: `calc(${pct}% - 12px)`, right: 0, transition: "left .6s ease" }}>
+              <span className="corujao-bar-voo">
+                <span className="corujao-bar-fumaca">💨</span>
+                <span className="corujao-bar-rocket">🚀</span>
+              </span>
             </span>
           </div>
         </div>
