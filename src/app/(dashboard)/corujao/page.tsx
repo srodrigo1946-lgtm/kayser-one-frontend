@@ -106,11 +106,21 @@ export default function CorujaoPage() {
           0%{transform:rotate(var(--a)) translateX(0) scale(.4);opacity:1;}
           100%{transform:rotate(var(--a)) translateX(90px) scale(1.2);opacity:0;}
         }
+        .corujao-bar-rocket{display:inline-block;font-size:20px;animation:corujaoBalanca 1.1s ease-in-out infinite;filter:drop-shadow(0 0 6px rgba(250,204,21,.7));}
+        @keyframes corujaoBalanca{
+          0%,100%{transform:rotate(45deg) translate(0,0);}
+          50%{transform:rotate(45deg) translate(3px,-3px);}
+        }
+        .corujao-bar-fumaca{position:absolute;left:-16px;top:6px;font-size:13px;animation:corujaoFumaca 1.1s ease-out infinite;}
+        @keyframes corujaoFumaca{
+          0%{transform:translateX(0) scale(.6);opacity:.9;}
+          100%{transform:translateX(-14px) scale(1.2);opacity:0;}
+        }
         .corujao-card{transition:transform .2s ease, box-shadow .2s ease;}
         .corujao-card:hover{transform:translateY(-3px);}
         .corujao-btn{background:linear-gradient(90deg,var(--primary),#f59e0b);transition:transform .15s ease, filter .15s ease;}
         .corujao-btn:hover:not(:disabled){transform:scale(1.02);filter:brightness(1.08);}
-        @media (prefers-reduced-motion: reduce){ .corujao-rocket,.corujao-launch{display:none;} }
+        @media (prefers-reduced-motion: reduce){ .corujao-rocket,.corujao-launch{display:none;} .corujao-bar-rocket,.corujao-bar-fumaca{animation:none;} }
       `}</style>
 
       {isDiretor && <ConfigPanel />}
@@ -151,7 +161,10 @@ export default function CorujaoPage() {
           </div>
           <div className="relative h-3 rounded-full" style={{ background: "var(--secondary)" }}>
             <div className="h-3 rounded-full" style={{ width: `${pct}%`, background: "linear-gradient(90deg,var(--primary),#f59e0b)", transition: "width .6s ease" }} />
-            <span className="absolute -top-3 text-xl" style={{ left: `calc(${pct}% - 12px)`, transition: "left .6s ease", transform: "rotate(45deg)" }}>🚀</span>
+            <span className="absolute -top-3" style={{ left: `calc(${pct}% - 12px)`, transition: "left .6s ease" }}>
+              <span className="corujao-bar-fumaca">💨</span>
+              <span className="corujao-bar-rocket">🚀</span>
+            </span>
           </div>
         </div>
       )}
