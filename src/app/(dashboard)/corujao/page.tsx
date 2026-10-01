@@ -30,7 +30,7 @@ export default function CorujaoPage() {
     setMsg("");
     try {
       await aceitar.mutateAsync(id);
-      setMsg("Lead aceito! 🎉 Já está com você em Novo Lead — abra o CRM/WhatsApp pra falar com o cliente.");
+      setMsg("Lead aceito! 🎉 Já está com você em Primeiro Contato — abra o CRM/WhatsApp pra falar com o cliente.");
     } catch (err) {
       setMsg(getApiErrorMessage(err, "Falha ao aceitar o lead."));
     }
@@ -43,7 +43,7 @@ export default function CorujaoPage() {
         <h1 className="text-xl font-bold" style={{ color: "var(--foreground)" }}>Corujão — repique de leads</h1>
       </div>
       <p className="text-sm mb-5" style={{ color: "var(--muted-foreground)" }}>
-        Leads sem interesse (e os que estão com o Diretor) voltam pra cá. Clique em <b>Aceitar</b> pra assumir — o lead vira seu e volta pra “Novo Lead”.
+        Leads sem interesse (e os que estão com o Diretor) voltam pra cá. Clique em <b>Aceitar</b> pra assumir — o lead vira seu e entra em “Primeiro Contato”.
       </p>
 
       {/* Foguete voando: chama o corretor quando tem lead liberado no Corujão. */}
