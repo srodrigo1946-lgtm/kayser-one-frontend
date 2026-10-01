@@ -711,7 +711,7 @@ function FollowupSettings() {
         <FollowupMsg label="🌙 Mensagem da noite (após 18h)" value={noite} onChange={setNoite} placeholder={FOLLOWUP_DEFAULTS.noite} />
       </div>
       <p className="text-xs mt-2" style={{ color: "var(--muted-foreground)" }}>
-        Use <code>{"{nome}"}</code> para inserir o primeiro nome do lead. Deixe vazio para usar o texto padrão.
+        Use <code>{"{nome}"}</code> para o primeiro nome e <code>{"{imovel}"}</code> para o empreendimento do lead. No texto padrão, &quot;no imóvel&quot; já vira o nome do empreendimento. Deixe vazio para usar o texto padrão.
       </p>
 
       {feedback && <p className="text-sm mt-4" style={{ color: "var(--muted-foreground)" }}>{feedback}</p>}
