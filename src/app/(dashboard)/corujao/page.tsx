@@ -91,6 +91,17 @@ export default function CorujaoPage() {
       <h2 className="font-semibold mb-1" style={{ color: "var(--foreground)" }}>
         Leads para pegar {pool ? `(${leads.length})` : ""}
       </h2>
+      {podePegar && !!pool?.limiteDia && (
+        <p className="text-xs mb-2" style={{ color: (pool.meusHoje ?? 0) >= pool.limiteDia ? "#ef4444" : "var(--muted-foreground)" }}>
+          Você pegou <b>{pool.meusHoje ?? 0}</b> de <b>{pool.limiteDia}</b> hoje
+          {(pool.meusHoje ?? 0) >= pool.limiteDia ? " — chegou no limite, amanhã tem mais! 🦉" : "."}
+        </p>
+      )}
+      {isDiretor && !!pool?.limiteDia && (
+        <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>
+          Limite: cada corretor pega no máximo <b>{pool.limiteDia}</b> leads do Corujão por dia.
+        </p>
+      )}
       {!podePegar && !isDiretor && (
         <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>
           Só corretores ativados no Corujão pegam os leads. Você está vendo em modo consulta.

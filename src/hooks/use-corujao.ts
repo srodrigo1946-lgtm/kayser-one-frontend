@@ -31,6 +31,9 @@ export interface CorujaoPool {
   leads: CorujaoLead[];
   /** Só Diretor: quem pegou quantos leads do Corujão hoje. */
   pegosHoje?: { nome: string; qtd: number }[];
+  /** Limite diário por corretor (0 = sem limite) e quanto EU já peguei hoje. */
+  limiteDia?: number;
+  meusHoje?: number;
 }
 
 // Leads do repique — todos os cargos VEEM; só corretor ativado PEGA.
