@@ -17,7 +17,7 @@ export function CheckinPlantao() {
   const [tentando, setTentando] = useState(false);
   const tentouAuto = useRef(false);
 
-  const precisa = !!st?.regraAtiva && !!st?.turnoAtivo && !!st?.naEscala && !st?.checkin && st?.janela !== "fechada";
+  const precisa = !!st?.regraAtiva && !!st?.turnoAtivo && !!st?.naEscala && !st?.checkin && st?.janela !== "fechada" && !st?.bloqueado;
 
   const fazer = async (automatico = false) => {
     setTentando(true);
@@ -42,6 +42,14 @@ export function CheckinPlantao() {
     if (!precisa) tentouAuto.current = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [precisa]);
+
+  if (st?.turnoAtivo && st.bloqueado) {
+    return (
+      <div className="mx-4 lg:mx-6 mt-3 px-3 py-2 rounded-xl text-xs flex items-center gap-2" style={{ background: "#ef44441a", color: "#ef4444", border: "1px solid #ef444455" }}>
+        <MapPin size={15} /> Você está <b>bloqueado no plantão</b> (por {st.bloqueado.por}). Fale com seu gestor.
+      </div>
+    );
+  }
 
   if (!st?.regraAtiva || !st.turnoAtivo || !st.naEscala) return null;
 

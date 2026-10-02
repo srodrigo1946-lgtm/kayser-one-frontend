@@ -7,6 +7,7 @@ export interface PlantaoStatus {
   turno?: { horaInicio: string; horaFim: string };
   naEscala: boolean;
   janela?: "aberta" | "fechada";
+  bloqueado?: { por: string } | null;
   checkin: { stand: string; distancia: number; hora: string } | null;
 }
 
@@ -17,7 +18,10 @@ export interface PlantaoPainel {
   faltamLocalizar?: number;
   turnoAtivo: { id: string; horaInicio: string; horaFim: string; atendentes: number } | null;
   stands: { propertyId: string; nome: string; endereco: string; localizado: boolean; lat: number | null; lng: number | null }[];
-  turnosHoje?: { id: string; horaInicio: string; horaFim: string; atendentes: { id: string; nome: string; entrou: boolean; como: string | null }[] }[];
+  modoLivre?: boolean;
+  plantaoLivreDesde?: string | null;
+  corretores?: { id: string; nome: string }[];
+  turnosHoje?: { id: string; horaInicio: string; horaFim: string; atendentes: { id: string; nome: string; entrou: boolean; como: string | null; bloqueado?: boolean }[] }[];
   checkinsHoje: { nome: string; stand: string; distancia: number; hora: string; doTurnoAtual: boolean }[];
 }
 
@@ -49,6 +53,22 @@ export function usePlantaoPainel(enabled = true) {
     enabled,
     refetchInterval: 60_000,
     queryFn: async () => (await api.get<PlantaoPainel>("/plantao/painel")).data,
+  });
+}
+
+export interface MembroPlantao {
+  id: string;
+  nome: string;
+  bloqueado: { por: string; porDiretor: boolean; desde: string } | null;
+  podeDesbloquear: boolean;
+}
+
+/** Corretores que posso bloquear no plantão (Diretor: todos; gestor: equipe). */
+export function useEquipePlantao(enabled = true) {
+  return useQuery({
+    queryKey: ["plantao", "equipe"],
+    enabled,
+    queryFn: async () => (await api.get<MembroPlantao[]>("/plantao/equipe")).data,
   });
 }
 

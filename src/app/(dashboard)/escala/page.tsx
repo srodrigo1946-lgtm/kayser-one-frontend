@@ -5,13 +5,15 @@ import { Header } from "@/components/layout/header";
 import { Plus, X } from "lucide-react";
 import { getStoredUser } from "@/lib/auth";
 import { PainelPlantao } from "@/components/plantao/painel-plantao";
+import { BloqueiosPlantao } from "@/components/plantao/bloqueios-plantao";
 import { useUsers } from "@/hooks/use-users";
 import { useEscala, useSetTurno, useSetHorario, type EscalaTurno } from "@/hooks/use-escala";
 
 const DIAS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 export default function EscalaPage() {
-  const isDiretor = getStoredUser()?.role === "diretor";
+  const role = getStoredUser()?.role;
+  const isDiretor = role === "diretor";
   const { data: grade } = useEscala();
   const { data: users } = useUsers();
   const setTurno = useSetTurno();
@@ -126,6 +128,7 @@ export default function EscalaPage() {
           </p>
         )}
         {isDiretor && <PainelPlantao />}
+        {role && role !== "corretor" && <BloqueiosPlantao />}
       </div>
     </div>
   );
