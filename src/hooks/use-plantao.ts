@@ -17,6 +17,7 @@ export interface PlantaoPainel {
   faltamLocalizar?: number;
   turnoAtivo: { id: string; horaInicio: string; horaFim: string; atendentes: number } | null;
   stands: { propertyId: string; nome: string; endereco: string; localizado: boolean; lat: number | null; lng: number | null }[];
+  turnosHoje?: { id: string; horaInicio: string; horaFim: string; atendentes: { id: string; nome: string; entrou: boolean; como: string | null }[] }[];
   checkinsHoje: { nome: string; stand: string; distancia: number; hora: string; doTurnoAtual: boolean }[];
 }
 

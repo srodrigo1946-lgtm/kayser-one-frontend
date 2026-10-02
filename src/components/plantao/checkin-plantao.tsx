@@ -48,7 +48,7 @@ export function CheckinPlantao() {
   if (st.checkin) {
     return (
       <div className="mx-4 lg:mx-6 mt-3 px-3 py-2 rounded-xl text-xs flex items-center gap-2" style={{ background: "#22c55e1a", color: "#16a34a", border: "1px solid #22c55e44" }}>
-        <CheckCircle2 size={15} /> Plantão {st.turno?.horaInicio}–{st.turno?.horaFim}: check-in no <b>{st.checkin.stand}</b> — você está recebendo leads.
+        <CheckCircle2 size={15} /> Plantão {st.turno?.horaInicio}–{st.turno?.horaFim}: {st.checkin.stand?.startsWith("Liberado") ? <b>{st.checkin.stand}</b> : <>check-in no <b>{st.checkin.stand}</b></>} — você está no plantão.
       </div>
     );
   }

@@ -73,6 +73,20 @@ export function PainelPlantao() {
     }
   };
 
+  const liberar = async (userId: string, turnoId: string, nome: string, hora: string) => {
+    if (!window.confirm(`Liberar ${nome} no plantão das ${hora} sem check-in pelo GPS?`)) return;
+    setOcupado(userId + turnoId);
+    try {
+      await api.post("/plantao/liberar", { userId, turnoId });
+      setMsg(`✅ ${nome} liberado no plantão das ${hora}.`);
+      recarregar();
+    } catch (err) {
+      setMsg(getApiErrorMessage(err, "Falha ao liberar."));
+    } finally {
+      setOcupado(null);
+    }
+  };
+
   const alternar = async () => {
     const liga = !p?.checkinObrigatorio;
     if (!window.confirm(liga ? "Ligar o check-in obrigatório? Quem não fizer check-in no turno não recebe lead." : "Desligar o check-in obrigatório? A fila volta a mandar lead pra todos da escala.")) return;
@@ -143,6 +157,44 @@ export function PainelPlantao() {
             </div>
           ))}
         </div>
+      )}
+
+      {!!p.turnosHoje?.length && (
+        <>
+          <div className="text-sm font-semibold mt-4 mb-1" style={{ color: "var(--foreground)" }}>Liberar plantão manualmente (hoje)</div>
+          <div className="space-y-2">
+            {p.turnosHoje.map((t) => (
+              <div key={t.id} className="px-3 py-2 rounded-xl" style={{ background: "var(--secondary)" }}>
+                <div className="text-xs font-semibold mb-1.5" style={{ color: "var(--muted-foreground)" }}>
+                  Turno {t.horaInicio}–{t.horaFim}
+                </div>
+                {t.atendentes.length === 0 ? (
+                  <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>Ninguém na escala.</div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {t.atendentes.map((a) =>
+                      a.entrou ? (
+                        <span key={a.id} className="text-xs px-2.5 py-1.5 rounded-lg" style={{ background: "#22c55e1f", color: "var(--foreground)" }} title={a.como ?? ""}>
+                          🟢 {a.nome}
+                        </span>
+                      ) : (
+                        <button
+                          key={a.id}
+                          onClick={() => liberar(a.id, t.id, a.nome, t.horaInicio)}
+                          disabled={!!ocupado}
+                          className="text-xs px-2.5 py-1.5 rounded-lg disabled:opacity-60"
+                          style={{ background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)" }}
+                        >
+                          {ocupado === a.id + t.id ? "…" : `🔓 Liberar ${a.nome}`}
+                        </button>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       <div className="text-sm font-semibold mt-4 mb-1" style={{ color: "var(--foreground)" }}>
