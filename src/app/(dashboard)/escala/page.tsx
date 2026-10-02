@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Header } from "@/components/layout/header";
 import { Plus, X } from "lucide-react";
 import { getStoredUser } from "@/lib/auth";
+import { PainelPlantao } from "@/components/plantao/painel-plantao";
 import { useUsers } from "@/hooks/use-users";
 import { useEscala, useSetTurno, useSetHorario, type EscalaTurno } from "@/hooks/use-escala";
 
@@ -124,6 +125,7 @@ export default function EscalaPage() {
             Só o Diretor edita a escala.
           </p>
         )}
+        {isDiretor && <PainelPlantao />}
       </div>
     </div>
   );

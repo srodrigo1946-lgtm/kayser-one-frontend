@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { CommandPalette } from "@/components/command-palette";
+import { CheckinPlantao } from "@/components/plantao/checkin-plantao";
 import { isAuthenticated, getStoredUser } from "@/lib/auth";
 import { useNewLeadAlert } from "@/hooks/use-new-lead-alert";
 
@@ -41,7 +42,11 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "var(--background)" }}>
       <Sidebar />
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="flex-1 overflow-y-auto">
+        {/* Check-in do plantão por GPS (aparece só pra quem está na escala do turno). */}
+        <CheckinPlantao />
+        {children}
+      </main>
       <CommandPalette />
     </div>
   );
