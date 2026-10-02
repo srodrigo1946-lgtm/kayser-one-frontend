@@ -17,7 +17,7 @@ export function CheckinPlantao() {
   const [tentando, setTentando] = useState(false);
   const tentouAuto = useRef(false);
 
-  const precisa = !!st?.regraAtiva && !!st?.turnoAtivo && !!st?.naEscala && !st?.checkin;
+  const precisa = !!st?.regraAtiva && !!st?.turnoAtivo && !!st?.naEscala && !st?.checkin && st?.janela !== "fechada";
 
   const fazer = async (automatico = false) => {
     setTentando(true);
@@ -53,11 +53,19 @@ export function CheckinPlantao() {
     );
   }
 
+  if (st.janela === "fechada") {
+    return (
+      <div className="mx-4 lg:mx-6 mt-3 px-3 py-2 rounded-xl text-xs flex items-center gap-2" style={{ background: "#ef44441a", color: "#ef4444", border: "1px solid #ef444455" }}>
+        <MapPin size={15} /> Check-in encerrado: era até as <b>{st.turno?.horaInicio}</b>. Você não entra no plantão {st.turno?.horaInicio}–{st.turno?.horaFim}.
+      </div>
+    );
+  }
+
   return (
     <div className="mx-4 lg:mx-6 mt-3 p-3 rounded-xl flex items-center gap-3 flex-wrap" style={{ background: "#f59e0b1a", border: "1px solid #f59e0b66" }}>
       <MapPin size={20} style={{ color: "#f59e0b" }} />
       <div className="flex-1 min-w-[200px] text-sm" style={{ color: "var(--foreground)" }}>
-        <b>Seu plantão começou ({st.turno?.horaInicio}–{st.turno?.horaFim}).</b> Faça o check-in no stand pra receber leads.
+        <b>Plantão {st.turno?.horaInicio}–{st.turno?.horaFim}:</b> faça o check-in no stand até as <b>{st.turno?.horaInicio}</b> pra entrar no plantão.
         {msg && <div className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>{msg}</div>}
       </div>
       <button

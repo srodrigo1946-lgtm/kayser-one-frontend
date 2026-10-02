@@ -6,6 +6,7 @@ export interface PlantaoStatus {
   turnoAtivo: boolean;
   turno?: { horaInicio: string; horaFim: string };
   naEscala: boolean;
+  janela?: "aberta" | "fechada";
   checkin: { stand: string; distancia: number; hora: string } | null;
 }
 
