@@ -59,7 +59,8 @@ export function usePlantaoPainel(enabled = true) {
 export interface MembroPlantao {
   id: string;
   nome: string;
-  bloqueado: { por: string; porDiretor: boolean; desde: string } | null;
+  cargo: string;
+  bloqueado: { por: string; porDiretor: boolean; via: string | null } | null;
   podeDesbloquear: boolean;
 }
 
