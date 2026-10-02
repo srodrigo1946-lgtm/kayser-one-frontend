@@ -13,6 +13,7 @@ export interface PlantaoPainel {
   raio: number;
   checkinObrigatorio: boolean;
   regraAtiva: boolean;
+  faltamLocalizar?: number;
   turnoAtivo: { id: string; horaInicio: string; horaFim: string; atendentes: number } | null;
   stands: { propertyId: string; nome: string; endereco: string; localizado: boolean; lat: number | null; lng: number | null }[];
   checkinsHoje: { nome: string; stand: string; distancia: number; hora: string; doTurnoAtual: boolean }[];

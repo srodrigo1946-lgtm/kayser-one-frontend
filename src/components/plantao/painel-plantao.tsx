@@ -49,6 +49,30 @@ export function PainelPlantao() {
     }
   };
 
+  // Cola "lat, lng" ou um link do Google Maps (…@-23.00,-43.36… ou ?q=-23.00,-43.36).
+  const colar = async (propertyId: string, nome: string) => {
+    const t = window.prompt(
+      `Coordenada do stand ${nome}:\nNo Google Maps, clique com o botão direito no stand e clique nos números (ex.: -23.0012, -43.3654) — ou cole o link do lugar.`,
+      ""
+    );
+    if (!t) return;
+    const m = t.match(/(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/);
+    if (!m) {
+      setMsg("Não entendi a coordenada. Cole no formato -23.0012, -43.3654 ou o link do Google Maps.");
+      return;
+    }
+    setOcupado(propertyId);
+    try {
+      await api.post(`/plantao/stand/${propertyId}/localizacao`, { lat: Number(m[1]), lng: Number(m[2]) });
+      setMsg(`✅ Localização do stand ${nome} gravada.`);
+      recarregar();
+    } catch (err) {
+      setMsg(getApiErrorMessage(err, "Falha ao gravar."));
+    } finally {
+      setOcupado(null);
+    }
+  };
+
   const alternar = async () => {
     const liga = !p?.checkinObrigatorio;
     if (!window.confirm(liga ? "Ligar o check-in obrigatório? Quem não fizer check-in no turno não recebe lead." : "Desligar o check-in obrigatório? A fila volta a mandar lead pra todos da escala.")) return;
@@ -79,7 +103,9 @@ export function PainelPlantao() {
         </button>
       </div>
       {p.checkinObrigatorio && !p.regraAtiva && (
-        <p className="text-xs mb-2" style={{ color: "#f59e0b" }}>Ainda não há stand localizado — a regra só começa a valer quando pelo menos um stand estiver no mapa.</p>
+        <p className="text-xs mb-2" style={{ color: "#f59e0b" }}>
+          A regra começa a valer quando TODOS os stands estiverem no mapa{p.faltamLocalizar ? ` — faltam ${p.faltamLocalizar} (🔴 abaixo)` : ""}. Até lá, a fila distribui normal.
+        </p>
       )}
       {msg && <p className="text-sm mb-2" style={{ color: "var(--foreground)" }}>{msg}</p>}
 
@@ -108,6 +134,9 @@ export function PainelPlantao() {
                   )}
                 </div>
               </div>
+              <button onClick={() => colar(s.propertyId, s.nome)} disabled={!!ocupado} className="text-xs px-2.5 py-1.5 rounded-lg flex-shrink-0 disabled:opacity-60" style={{ background: "var(--card)", color: "var(--foreground)" }} title="Colar coordenada/link do Google Maps">
+                🗺️ Colar do Maps
+              </button>
               <button onClick={() => estouAqui(s.propertyId, s.nome)} disabled={!!ocupado} className="text-xs px-2.5 py-1.5 rounded-lg flex-shrink-0 disabled:opacity-60" style={{ background: "var(--card)", color: "var(--foreground)" }} title="Use quando estiver no stand — fica exato">
                 {ocupado === s.propertyId ? "…" : "📍 Estou aqui"}
               </button>
