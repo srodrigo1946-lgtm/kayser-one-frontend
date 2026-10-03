@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
-type Meu = { id: string; leadId: string; nome: string; empreendimento: string | null; dueAt: string | null; transferido?: boolean };
+type Meu = { id: string; leadId: string; nome: string; empreendimento: string | null; dueAt: string | null; transferido?: boolean; anuncio?: boolean };
 const CHAVE = "kayser-leads-avisados";
 
 function lerVistos(): string[] {
@@ -120,9 +120,12 @@ export function AvisoLeadNovo() {
         <div className="text-6xl mb-2">🎉</div>
         <div className="text-2xl font-extrabold mb-1" style={{ color: "#facc15" }}>Chegou lead pra você!</div>
         {lead.empreendimento && <div className="text-sm mt-0.5" style={{ color: "#cbd5e1" }}>{lead.empreendimento}</div>}
+        {lead.anuncio && (
+          <div className="text-sm mt-3 font-semibold" style={{ color: "#86efac" }}>📣 Veio do anúncio: cliente quente, acabou de pedir informação. Chame agora!</div>
+        )}
         {min != null ? (
           <div className="text-sm mt-3" style={{ color: "#fca5a5" }}>⏱️ Você tem {min} min pra fazer o primeiro contato.</div>
-        ) : (
+        ) : lead.anuncio ? null : (
           <div className="text-sm mt-3" style={{ color: "#fde68a" }}>📨 Seu gestor mandou esse lead pra você. Faça o primeiro contato!</div>
         )}
         <button
