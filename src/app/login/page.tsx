@@ -307,6 +307,12 @@ export default function LoginPage() {
 
           {/* Caixinha pública de suporte/reclamação */}
           <SupportBox />
+
+          <p className="mt-6 text-center text-xs" style={{ color: "var(--muted-foreground)" }}>
+            <Link href="/termos" className="underline">Termos de Uso</Link>
+            {" · "}
+            <Link href="/privacidade" className="underline">Política de Privacidade</Link>
+          </p>
         </div>
       </div>
     </div>

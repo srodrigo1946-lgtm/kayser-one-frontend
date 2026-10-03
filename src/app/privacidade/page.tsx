@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 // Página PÚBLICA (sem login): exigida pelo Meta para publicar o app que recebe os
 // leads de formulário (Facebook/Instagram). Também traz as instruções de exclusão de dados.
@@ -7,7 +8,8 @@ export const metadata: Metadata = {
   description: "Como o Kayser One trata os dados pessoais de clientes e leads.",
 };
 
-const ATUALIZADO = "28 de setembro de 2026";
+const ATUALIZADO = "3 de outubro de 2026";
+const CNPJ = "53.286.988/0001-63";
 
 function Secao({ id, titulo, children }: { id?: string; titulo: string; children: React.ReactNode }) {
   return (
@@ -24,7 +26,7 @@ export default function PrivacidadePage() {
       <article className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-2 text-white">Política de Privacidade</h1>
         <p className="mb-10 text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
-          Kayser One — CRM imobiliário · Última atualização: {ATUALIZADO}
+          Kayser One — CRM imobiliário · CNPJ {CNPJ} · Última atualização: {ATUALIZADO}
         </p>
 
         <Secao titulo="1. Quem somos">
@@ -32,6 +34,12 @@ export default function PrivacidadePage() {
             O Kayser One é uma plataforma de gestão comercial (CRM) usada por imobiliárias e corretores para
             atender pessoas interessadas em imóveis. Esta política explica quais dados pessoais tratamos, por
             que tratamos e quais são os seus direitos, conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD).
+          </p>
+          <p>
+            O Kayser One é operado pela empresa inscrita no CNPJ {CNPJ}. Quando uma imobiliária usa o Kayser One para
+            atender você, <strong>ela é a controladora</strong> dos seus dados (decide como são usados) e o Kayser One
+            atua como <strong>operador</strong>, tratando os dados em nome dela. O uso da plataforma também segue os nossos{" "}
+            <Link href="/termos" className="underline" style={{ color: "#facc15" }}>Termos de Uso</Link>.
           </p>
         </Secao>
 
@@ -45,8 +53,13 @@ export default function PrivacidadePage() {
           </ul>
           <p>
             Da nossa equipe de corretores, o aplicativo registra a localização do celular só no momento do check-in
-            no plantão (para confirmar a presença no stand de vendas). A localização exata é apagada após 90 dias;
-            fica apenas o registro de que o check-in foi feito.
+            no plantão (para confirmar a presença no stand de vendas), inclusive nas tentativas de check-in que não deram
+            certo (para o gestor entender o motivo). A localização exata é apagada após 90 dias; fica apenas o registro
+            de que o check-in foi feito.
+          </p>
+          <p>
+            Dos usuários da plataforma, guardamos também nome, e-mail, cargo, equipe e o histórico de ações no sistema
+            (por exemplo, quem moveu ou transferiu um lead), para segurança e gestão da equipe.
           </p>
         </Secao>
 
@@ -66,6 +79,11 @@ export default function PrivacidadePage() {
             Usamos serviços de tecnologia para operar a plataforma (hospedagem, banco de dados, mensageria e
             inteligência artificial — OpenAI, Google e Anthropic), que tratam os dados apenas para prestar esse serviço.
           </p>
+          <p>
+            Alguns desses fornecedores ficam fora do Brasil (por exemplo, nos Estados Unidos). Nesses casos, a
+            transferência internacional é feita apenas para operar o serviço, com fornecedores que adotam medidas de
+            segurança e proteção de dados compatíveis com a LGPD.
+          </p>
         </Secao>
 
         <Secao titulo="5. Dados recebidos do Facebook e Instagram (Meta)">
@@ -82,6 +100,10 @@ export default function PrivacidadePage() {
 
         <Secao titulo="7. Seus direitos">
           <p>Você pode, a qualquer momento, pedir: confirmação e acesso aos seus dados, correção, exclusão, revogação do consentimento e informações sobre o compartilhamento.</p>
+          <p>
+            Se achar que os seus direitos não foram atendidos, você também pode reclamar à Autoridade Nacional de
+            Proteção de Dados (ANPD), em gov.br/anpd.
+          </p>
         </Secao>
 
         <Secao id="exclusao" titulo="8. Como pedir a exclusão dos seus dados">
@@ -100,9 +122,18 @@ export default function PrivacidadePage() {
           <p>Os dados são protegidos com acesso restrito por usuário e senha, controle de permissões por equipe e conexão criptografada.</p>
         </Secao>
 
-        <Secao titulo="10. Contato">
+        <Secao titulo="10. Cookies e armazenamento no aparelho">
           <p>
-            Dúvidas sobre esta política ou sobre os seus dados: use a opção <strong>&quot;Suporte ou reclamação&quot;</strong> em{" "}
+            O Kayser One não usa cookies de propaganda nem de rastreamento. No navegador ou no aplicativo, guardamos
+            apenas o necessário para funcionar: a sessão de login e preferências como o tema (claro/escuro) e os avisos
+            que você já viu.
+          </p>
+        </Secao>
+
+        <Secao titulo="11. Contato">
+          <p>
+            Dúvidas sobre esta política, sobre os seus dados ou para falar com o encarregado de dados (DPO): use a opção{" "}
+            <strong>&quot;Suporte ou reclamação&quot;</strong> em{" "}
             <a href="https://www.kayserone.com.br/login" className="underline" style={{ color: "#facc15" }}>kayserone.com.br/login</a>.
           </p>
         </Secao>
