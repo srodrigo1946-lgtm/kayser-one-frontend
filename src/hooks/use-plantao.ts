@@ -23,7 +23,7 @@ export interface PlantaoPainel {
   corretores?: { id: string; nome: string }[];
   turnosHoje?: { id: string; horaInicio: string; horaFim: string; atendentes: { id: string; nome: string; entrou: boolean; como: string | null; bloqueado?: boolean }[] }[];
   tentativasHoje?: { id: string; podeUsarPosicao: boolean; nome: string; vezes: number; hora: string; motivo: string; distancia: number | null; stand: string | null; entrou: boolean }[];
-  checkinsHoje: { nome: string; stand: string; distancia: number; precisao?: number | null; hora: string; doTurnoAtual: boolean }[];
+  checkinsHoje: { id?: string; podeUsarPosicao?: boolean; nome: string; stand: string; distancia: number; precisao?: number | null; hora: string; doTurnoAtual: boolean }[];
 }
 
 /** Situação do meu plantão (escala + check-in) — atualiza a cada minuto. */

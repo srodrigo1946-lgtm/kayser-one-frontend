@@ -100,6 +100,20 @@ export function PainelPlantao() {
     recarregar();
   };
 
+  const ajustarPeloCheckin = async (id: string, nome: string, stand: string) => {
+    if (!window.confirm(`Usar a posição do check-in de ${nome} como a localização exata do stand ${stand}?`)) return;
+    setOcupado(id);
+    try {
+      await api.post(`/plantao/checkin/${id}/usar-como-stand`);
+      setMsg(`✅ Stand ${stand} ajustado com a posição de ${nome}.`);
+      recarregar();
+    } catch (err) {
+      setMsg(getApiErrorMessage(err, "Falha ao ajustar o stand."));
+    } finally {
+      setOcupado(null);
+    }
+  };
+
   const usarPosicao = async (id: string, nome: string, stand: string | null) => {
     if (!window.confirm(`${nome} está AGORA no stand ${stand ?? ""}? A posição do celular dele vira a localização do stand (e libera o check-in de todos lá).`)) return;
     setOcupado(id);
@@ -314,6 +328,11 @@ export function PainelPlantao() {
           {p.checkinsHoje.map((c, i) => (
             <span key={i} className="text-xs px-2.5 py-1 rounded-lg" style={{ background: c.doTurnoAtual ? "#22c55e1f" : "var(--secondary)", color: "var(--foreground)" }}>
               {c.doTurnoAtual ? "🟢" : "⚪"} {c.nome} · {c.stand} · {new Date(c.hora).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+              {c.podeUsarPosicao && c.id && (
+                <button onClick={() => ajustarPeloCheckin(c.id!, c.nome, c.stand)} disabled={!!ocupado} className="ml-1.5 underline disabled:opacity-60" title="Usar a posição deste check-in como a localização exata do stand">
+                  {ocupado === c.id ? "…" : "📍 ajustar stand"}
+                </button>
+              )}
               {c.precisao != null && (
                 <span title="Precisão do GPS informada pelo celular. 0–1 m costuma ser GPS falso." style={{ color: c.precisao <= 1 ? "#ef4444" : "var(--muted-foreground)" }}>
                   {" "}· GPS ±{c.precisao} m{c.precisao <= 1 ? " ⚠️ suspeito" : ""}
