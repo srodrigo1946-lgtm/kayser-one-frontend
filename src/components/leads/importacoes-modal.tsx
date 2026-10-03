@@ -25,12 +25,15 @@ export function ImportacoesModal({ onClose, onDone }: { onClose: () => void; onD
     if (!window.confirm(`Apagar TODOS os ${imp.restantes} lead(s) da planilha "${imp.nome}"? Não dá pra desfazer — mas você pode subir a planilha de novo.`)) return;
     setApagando(imp.id);
     try {
-      const { data } = await api.delete<{ removidos: number }>(`/leads/import/${imp.id}`);
+      const { data } = await api.delete<{ removidos: number; mantidos?: number }>(`/leads/import/${imp.id}`);
       qc.invalidateQueries({ queryKey: ["leads"] });
       qc.invalidateQueries({ queryKey: ["kanban"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
-      setLista((l) => (l ?? []).filter((x) => x.id !== imp.id));
-      onDone(`🗑 Planilha "${imp.nome}" apagada: ${data.removidos} lead(s) removido(s).`);
+      setLista((l) => (data.mantidos ? (l ?? []).map((x) => (x.id === imp.id ? { ...x, restantes: data.mantidos! } : x)) : (l ?? []).filter((x) => x.id !== imp.id)));
+      onDone(
+        `🗑 Planilha "${imp.nome}": ${data.removidos} lead(s) removido(s).` +
+          (data.mantidos ? ` ${data.mantidos} ficaram (já estão com outra pessoa — só o Diretor apaga).` : "")
+      );
     } catch (err) {
       setErro(getApiErrorMessage(err, "Falha ao apagar a planilha."));
     } finally {

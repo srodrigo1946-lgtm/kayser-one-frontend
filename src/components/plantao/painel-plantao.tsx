@@ -268,6 +268,11 @@ export function PainelPlantao() {
           {p.checkinsHoje.map((c, i) => (
             <span key={i} className="text-xs px-2.5 py-1 rounded-lg" style={{ background: c.doTurnoAtual ? "#22c55e1f" : "var(--secondary)", color: "var(--foreground)" }}>
               {c.doTurnoAtual ? "🟢" : "⚪"} {c.nome} · {c.stand} · {new Date(c.hora).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+              {c.precisao != null && (
+                <span title="Precisão do GPS informada pelo celular. 0–1 m costuma ser GPS falso." style={{ color: c.precisao <= 1 ? "#ef4444" : "var(--muted-foreground)" }}>
+                  {" "}· GPS ±{c.precisao} m{c.precisao <= 1 ? " ⚠️ suspeito" : ""}
+                </span>
+              )}
             </span>
           ))}
         </div>

@@ -43,6 +43,11 @@ export default function PrivacidadePage() {
             <li>as mensagens trocadas com a nossa equipe e com o nosso assistente virtual;</li>
             <li>informações do anúncio pelo qual você chegou (campanha e plataforma).</li>
           </ul>
+          <p>
+            Da nossa equipe de corretores, o aplicativo registra a localização do celular só no momento do check-in
+            no plantão (para confirmar a presença no stand de vendas). A localização exata é apagada após 90 dias;
+            fica apenas o registro de que o check-in foi feito.
+          </p>
         </Secao>
 
         <Secao titulo="3. Para que usamos">
@@ -59,7 +64,7 @@ export default function PrivacidadePage() {
           <p>
             Os dados ficam restritos à equipe comercial responsável pelo seu atendimento. Não vendemos dados pessoais.
             Usamos serviços de tecnologia para operar a plataforma (hospedagem, banco de dados, mensageria e
-            inteligência artificial), que tratam os dados apenas para prestar esse serviço.
+            inteligência artificial — OpenAI, Google e Anthropic), que tratam os dados apenas para prestar esse serviço.
           </p>
         </Secao>
 
