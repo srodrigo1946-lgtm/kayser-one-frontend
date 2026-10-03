@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { CommandPalette } from "@/components/command-palette";
 import { CheckinPlantao } from "@/components/plantao/checkin-plantao";
+import { AvisoLeadNovo } from "@/components/fila/aviso-lead-novo";
 import { isAuthenticated, getStoredUser } from "@/lib/auth";
 import { useNewLeadAlert } from "@/hooks/use-new-lead-alert";
 
@@ -45,6 +46,7 @@ export default function DashboardLayout({
       <main className="flex-1 overflow-y-auto">
         {/* Check-in do plantão por GPS (aparece só pra quem está na escala do turno). */}
         <CheckinPlantao />
+        <AvisoLeadNovo />
         {children}
       </main>
       <CommandPalette />
