@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
-type Meu = { id: string; leadId: string; nome: string; empreendimento: string | null; dueAt: string };
+type Meu = { id: string; leadId: string; nome: string; empreendimento: string | null; dueAt: string | null; transferido?: boolean };
 const CHAVE = "kayser-leads-avisados";
 
 function lerVistos(): string[] {
@@ -111,7 +111,7 @@ export function AvisoLeadNovo() {
   }, [data, lead]);
 
   if (!lead) return null;
-  const min = Math.max(0, Math.round((new Date(lead.dueAt).getTime() - Date.now()) / 60000));
+  const min = lead.dueAt ? Math.max(0, Math.round((new Date(lead.dueAt).getTime() - Date.now()) / 60000)) : null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.85)" }}>
@@ -121,7 +121,11 @@ export function AvisoLeadNovo() {
         <div className="text-2xl font-extrabold mb-1" style={{ color: "#facc15" }}>Chegou lead pra você!</div>
         <div className="text-lg font-semibold text-white">{lead.nome}</div>
         {lead.empreendimento && <div className="text-sm mt-0.5" style={{ color: "#cbd5e1" }}>{lead.empreendimento}</div>}
-        <div className="text-sm mt-3" style={{ color: "#fca5a5" }}>⏱️ Você tem {min} min pra fazer o primeiro contato.</div>
+        {min != null ? (
+          <div className="text-sm mt-3" style={{ color: "#fca5a5" }}>⏱️ Você tem {min} min pra fazer o primeiro contato.</div>
+        ) : (
+          <div className="text-sm mt-3" style={{ color: "#fde68a" }}>📨 Seu gestor mandou esse lead pra você. Faça o primeiro contato!</div>
+        )}
         <button
           onClick={() => {
             setLead(null);
