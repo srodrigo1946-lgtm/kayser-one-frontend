@@ -74,24 +74,35 @@ export function useEquipePlantao(enabled = true) {
   });
 }
 
-/** Pega a localização do celular (GPS) — rejeita com mensagem amigável. */
+/**
+ * Pega a localização do celular. Tenta o GPS preciso; se demorar ou não responder
+ * (comum dentro do stand), tenta de novo pela localização de Wi-Fi/rede, que é mais
+ * rápida e basta pro raio do check-in. Rejeita com mensagem amigável.
+ */
 export function pegarLocalizacao(): Promise<{ lat: number; lng: number; precisao: number }> {
+  const tentar = (opts: PositionOptions) =>
+    new Promise<GeolocationPosition>((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, opts));
   return new Promise((resolve, reject) => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       reject(new Error("Este aparelho não informa localização."));
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude, precisao: p.coords.accuracy }),
-      (e) =>
-        reject(
-          new Error(
-            e.code === 1
-              ? "Permita a localização pro Kayser One (no aviso do navegador/celular) pra fazer o check-in."
-              : "Não consegui pegar sua localização. Ligue o GPS e tente de novo."
-          )
-        ),
-      { enableHighAccuracy: true, timeout: 20_000, maximumAge: 30_000 }
-    );
+    const ok = (p: GeolocationPosition) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude, precisao: p.coords.accuracy });
+    const falhou = (e: GeolocationPositionError) =>
+      reject(
+        new Error(
+          e.code === 1
+            ? "Permita a localização pro Kayser One (no aviso do navegador/celular) pra fazer o check-in."
+            : e.code === 3
+            ? "O GPS demorou pra responder. Ligue a Localização do celular (e o Wi-Fi ajuda), vá pra perto de uma janela e tente de novo."
+            : "Não consegui pegar sua localização. Ligue a Localização do celular (o Wi-Fi ajuda) e tente de novo."
+        )
+      );
+    tentar({ enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 })
+      .then(ok)
+      .catch((e: GeolocationPositionError) => {
+        if (e.code === 1) return falhou(e); // negou: não adianta tentar de novo
+        tentar({ enableHighAccuracy: false, timeout: 20_000, maximumAge: 10 * 60_000 }).then(ok).catch(falhou);
+      });
   });
 }
