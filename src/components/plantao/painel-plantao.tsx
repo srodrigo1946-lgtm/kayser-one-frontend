@@ -100,6 +100,20 @@ export function PainelPlantao() {
     recarregar();
   };
 
+  const usarPosicao = async (id: string, nome: string, stand: string | null) => {
+    if (!window.confirm(`${nome} está AGORA no stand ${stand ?? ""}? A posição do celular dele vira a localização do stand (e libera o check-in de todos lá).`)) return;
+    setOcupado(id);
+    try {
+      await api.post(`/plantao/tentativa/${id}/usar-como-stand`);
+      setMsg(`✅ Stand ${stand ?? ""} corrigido com a posição de ${nome}. Peça pra ele tentar o check-in de novo.`);
+      recarregar();
+    } catch (err) {
+      setMsg(getApiErrorMessage(err, "Falha ao corrigir o stand."));
+    } finally {
+      setOcupado(null);
+    }
+  };
+
   const alternar = async () => {
     const liga = !p?.checkinObrigatorio;
     if (!window.confirm(liga ? "Ligar o check-in obrigatório? Quem não fizer check-in no turno não recebe lead." : "Desligar o check-in obrigatório? A fila volta a mandar lead pra todos da escala.")) return;
@@ -273,6 +287,16 @@ export function PainelPlantao() {
                   {t.vezes > 1 ? ` · ${t.vezes} tentativas` : ""}
                   {t.distancia != null && t.stand ? ` · ${t.distancia >= 1000 ? (t.distancia / 1000).toFixed(1) + " km" : t.distancia + " m"} do ${t.stand}` : ""}
                   <div style={{ color: "var(--muted-foreground)" }}>{t.motivo}</div>
+                  {t.podeUsarPosicao && (
+                    <button
+                      onClick={() => usarPosicao(t.id, t.nome, t.stand)}
+                      disabled={!!ocupado}
+                      className="mt-1.5 text-xs px-2.5 py-1 rounded-lg disabled:opacity-60"
+                      style={{ background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)" }}
+                    >
+                      {ocupado === t.id ? "…" : `📍 Ele está no stand: usar a posição dele como o ${t.stand}`}
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
