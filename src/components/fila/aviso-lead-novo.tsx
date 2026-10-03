@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { getStoredUser } from "@/lib/auth";
 
 type Meu = { id: string; leadId: string; nome: string; empreendimento: string | null; dueAt: string | null; transferido?: boolean; anuncio?: boolean };
 const CHAVE = "kayser-leads-avisados";
@@ -89,8 +90,11 @@ function Fogos() {
  */
 export function AvisoLeadNovo() {
   const router = useRouter();
+  // Diretor não recebe o aviso (pedido do Rodrigo).
+  const ehDiretor = getStoredUser()?.role === "diretor";
   const { data } = useQuery({
     queryKey: ["lead-queue", "meus"],
+    enabled: !ehDiretor,
     refetchInterval: 15_000,
     queryFn: async () => (await api.get<Meu[]>("/lead-queue/meus")).data,
   });
@@ -110,7 +114,7 @@ export function AvisoLeadNovo() {
     }
   }, [data, lead]);
 
-  if (!lead) return null;
+  if (!lead || ehDiretor) return null;
   const min = lead.dueAt ? Math.max(0, Math.round((new Date(lead.dueAt).getTime() - Date.now()) / 60000)) : null;
 
   return (
