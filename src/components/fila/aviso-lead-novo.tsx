@@ -119,7 +119,6 @@ export function AvisoLeadNovo() {
       <div className="relative mx-4 max-w-md w-full rounded-3xl p-6 text-center" style={{ background: "linear-gradient(160deg,#1f2937,#0b0f19)", border: "2px solid #facc15", boxShadow: "0 0 60px #facc1566" }}>
         <div className="text-6xl mb-2">🎉</div>
         <div className="text-2xl font-extrabold mb-1" style={{ color: "#facc15" }}>Chegou lead pra você!</div>
-        <div className="text-lg font-semibold text-white">{lead.nome}</div>
         {lead.empreendimento && <div className="text-sm mt-0.5" style={{ color: "#cbd5e1" }}>{lead.empreendimento}</div>}
         {min != null ? (
           <div className="text-sm mt-3" style={{ color: "#fca5a5" }}>⏱️ Você tem {min} min pra fazer o primeiro contato.</div>
