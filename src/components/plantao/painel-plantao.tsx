@@ -258,6 +258,28 @@ export function PainelPlantao() {
         </>
       )}
 
+      {(() => {
+        const falhas = (p.tentativasHoje ?? []).filter((t) => !t.entrou);
+        if (!falhas.length) return null;
+        return (
+          <>
+            <div className="text-sm font-semibold mt-4 mb-1" style={{ color: "var(--foreground)" }}>
+              ⚠️ Tentaram e não conseguiram entrar hoje ({falhas.length})
+            </div>
+            <div className="space-y-1.5">
+              {falhas.map((t, i) => (
+                <div key={i} className="text-xs px-3 py-2 rounded-xl" style={{ background: "#f59e0b1a", color: "var(--foreground)" }}>
+                  <b>{t.nome}</b> · {new Date(t.hora).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                  {t.vezes > 1 ? ` · ${t.vezes} tentativas` : ""}
+                  {t.distancia != null && t.stand ? ` · ${t.distancia >= 1000 ? (t.distancia / 1000).toFixed(1) + " km" : t.distancia + " m"} do ${t.stand}` : ""}
+                  <div style={{ color: "var(--muted-foreground)" }}>{t.motivo}</div>
+                </div>
+              ))}
+            </div>
+          </>
+        );
+      })()}
+
       <div className="text-sm font-semibold mt-4 mb-1" style={{ color: "var(--foreground)" }}>
         Check-ins de hoje {p.turnoAtivo ? `· turno atual ${p.turnoAtivo.horaInicio}–${p.turnoAtivo.horaFim}` : "· sem turno agora"}
       </div>

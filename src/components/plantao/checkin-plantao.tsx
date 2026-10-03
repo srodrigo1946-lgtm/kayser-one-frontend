@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MapPin, Loader2, CheckCircle2 } from "lucide-react";
-import { getApiErrorMessage } from "@/lib/api";
+import { api, getApiErrorMessage } from "@/lib/api";
 import { usePlantaoStatus, useCheckin, pegarLocalizacao } from "@/hooks/use-plantao";
 
 /**
  * Check-in do plantão por GPS. Quem está na escala do turno ativo faz check-in
- * AUTOMÁTICO ao abrir o Kayser (se estiver a até 200 m de um stand). Sem check-in,
+ * AUTOMÁTICO ao abrir o Kayser (se estiver a até 500 m de um stand). Sem check-in,
  * a fila não manda lead. Fica no topo das telas do sistema.
  */
 export function CheckinPlantao() {
@@ -27,7 +27,10 @@ export function CheckinPlantao() {
       const r = await checkin.mutateAsync(loc);
       setMsg(`✅ Check-in feito no ${r.stand} (${r.distancia} m). Você já está recebendo leads do plantão!`);
     } catch (err) {
-      setMsg(err instanceof Error && !(err as any).response ? err.message : getApiErrorMessage(err, "Não consegui fazer o check-in."));
+      const local = err instanceof Error && !(err as any).response;
+      setMsg(local ? err.message : getApiErrorMessage(err, "Não consegui fazer o check-in."));
+      // Falha do lado do celular (GPS negado/desligado) não chega no servidor sozinha — avisa o painel do Diretor.
+      if (local) api.post("/plantao/tentativa", { motivo: (err as Error).message }).catch(() => {});
     } finally {
       setTentando(false);
     }
