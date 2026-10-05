@@ -214,7 +214,7 @@ export default function IaOnePage() {
               <input value={planilha} onChange={(e) => setPlanilha(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..." className={input} style={inputStyle} />
             </div>
             <div>
-              <label className="text-xs" style={{ color: "var(--muted-foreground)" }}>Link da tabela de preços (Data Studio) — a One manda pro corretor consultar</label>
+              <label className="text-xs" style={{ color: "var(--muted-foreground)" }}>Link do painel de preços (Data Studio) — só referência, a One não manda link</label>
               <input value={precos} onChange={(e) => setPrecos(e.target.value)} placeholder="https://datastudio.google.com/reporting/..." className={input} style={inputStyle} />
             </div>
             <div>
