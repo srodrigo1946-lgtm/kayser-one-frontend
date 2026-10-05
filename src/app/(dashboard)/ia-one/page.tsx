@@ -262,7 +262,7 @@ export default function IaOnePage() {
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {dados.empreendimentos.map((e: any, i: number) => (
                     <span key={i} className="px-2 py-1 rounded-lg" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>
-                      {e.nome} · R$ {Number(e.valorVenda).toLocaleString("pt-BR")} · {e.mesesEntrega ? `${e.mesesEntrega}m` : "pronto"}
+                      {e.nome} · {e.valorVenda ? `R$ ${Number(e.valorVenda).toLocaleString("pt-BR")}` : "sem valor"} · {e.estoque} un. · {e.mesesEntrega ? `${e.mesesEntrega}m` : "pronto"}
                     </span>
                   ))}
                 </div>
