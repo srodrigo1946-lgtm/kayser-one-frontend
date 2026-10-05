@@ -32,7 +32,6 @@ export default function IaOnePage() {
   const [openai, setOpenai] = useState("");
   const [planilha, setPlanilha] = useState("");
   const [unidades, setUnidades] = useState("");
-  const [precos, setPrecos] = useState("");
   const [info, setInfo] = useState("");
   const [pergunta, setPergunta] = useState("");
   const [resposta, setResposta] = useState<{ limpo: string; fotos: string[]; condicoes: boolean } | null>(null);
@@ -42,7 +41,6 @@ export default function IaOnePage() {
     if (!s) return;
     setPlanilha(cfg.ionePlanilhaUrl || "");
     setUnidades(cfg.ioneUnidadesUrl || "");
-    setPrecos(cfg.ionePrecosUrl || "");
     setInfo(cfg.ioneInfo || "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s]);
@@ -113,7 +111,6 @@ export default function IaOnePage() {
         ...(openai ? { ioneOpenaiKey: openai } : {}),
         ionePlanilhaUrl: planilha,
         ioneUnidadesUrl: unidades,
-        ionePrecosUrl: precos,
         ioneInfo: info,
       } as any);
       setClaude("");
@@ -212,10 +209,6 @@ export default function IaOnePage() {
             <div>
               <label className="text-xs" style={{ color: "var(--muted-foreground)" }}>Planilha do Simulador Pro Soluto (Google Sheets, link de leitura)</label>
               <input value={planilha} onChange={(e) => setPlanilha(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..." className={input} style={inputStyle} />
-            </div>
-            <div>
-              <label className="text-xs" style={{ color: "var(--muted-foreground)" }}>Link do painel de preços (Data Studio) — só referência, a One não manda link</label>
-              <input value={precos} onChange={(e) => setPrecos(e.target.value)} placeholder="https://datastudio.google.com/reporting/..." className={input} style={inputStyle} />
             </div>
             <div>
               <label className="text-xs" style={{ color: "var(--muted-foreground)" }}>Planilha das unidades (se a Riva compartilhar) — opcional</label>
