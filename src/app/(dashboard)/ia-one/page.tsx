@@ -119,11 +119,14 @@ export default function IaOnePage() {
       refDados();
     });
 
+  // Excel (.xlsx/.xls) ou CSV — vai em base64; o servidor descobre o formato.
   const subirCsv = (f: File) =>
     acao("csv", async () => {
-      const csv = await f.text();
-      await api.post("/ia-one/unidades-csv", { csv });
-      setMsg(`✅ Tabela de unidades enviada (${f.name}).`);
+      const bytes = new Uint8Array(await f.arrayBuffer());
+      let bin = "";
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...Array.from(bytes.subarray(i, i + 0x8000)));
+      const { data } = await api.post("/ia-one/unidades-arquivo", { nome: f.name, base64: btoa(bin) });
+      setMsg(`✅ ${data.importadas} unidade(s) do ${data.empreendimento} carregadas (${f.name}).`);
       refDados();
       qc.invalidateQueries({ queryKey: ["settings"] });
     });
@@ -216,11 +219,16 @@ export default function IaOnePage() {
             </div>
             <div>
               <label className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-                Ou suba o CSV das unidades (Data Studio → ⋮ da tabela → Exportar → CSV) {cfg.hasIoneUnidadesCsv && <span style={{ color: "#22c55e" }}>— enviado</span>}
+                Ou suba as unidades em Excel ou CSV (nome do arquivo = empreendimento, ex.: ilhamar.xlsx) {cfg.hasIoneUnidadesCsv && <span style={{ color: "#22c55e" }}>— enviado</span>}
               </label>
               <label className={`${btn} inline-flex items-center gap-2 cursor-pointer`} style={{ background: "var(--secondary)", color: "var(--foreground)" }}>
-                <Upload size={14} /> {ocupado === "csv" ? "Enviando…" : "Escolher arquivo CSV"}
-                <input type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => e.target.files?.[0] && subirCsv(e.target.files[0])} />
+                <Upload size={14} /> {ocupado === "csv" ? "Enviando…" : "Escolher arquivo (Excel ou CSV)"}
+                <input type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = ""; // permite subir o mesmo arquivo de novo
+                    if (f) subirCsv(f);
+                  }}
+                />
               </label>
             </div>
             <div className="md:col-span-2">
