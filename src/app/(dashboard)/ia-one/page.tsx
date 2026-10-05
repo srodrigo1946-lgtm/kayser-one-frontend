@@ -259,6 +259,18 @@ export default function IaOnePage() {
               <div>
                 🏢 {dados.empreendimentos?.length ?? 0} empreendimento(s) na planilha · 🔢 {dados.unidades ?? 0} unidade(s) na tabela de preços
               </div>
+              {!!dados.disponiveisPorProduto?.length && (
+                <div className="pt-1">
+                  <div className="mb-1" style={{ color: "var(--foreground)" }}>✅ Unidades carregadas (a One responde status e preço destes):</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {dados.disponiveisPorProduto.map((p: any, i: number) => (
+                      <span key={i} className="px-2 py-1 rounded-lg" style={{ background: "#22c55e1f", color: "var(--foreground)" }}>
+                        {p.produto} · {p.disponiveis} disponíveis · R$ {Number(p.precoMin).toLocaleString("pt-BR")} a R$ {Number(p.precoMax).toLocaleString("pt-BR")}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               {!!dados.empreendimentos?.length && (
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {dados.empreendimentos.map((e: any, i: number) => (
