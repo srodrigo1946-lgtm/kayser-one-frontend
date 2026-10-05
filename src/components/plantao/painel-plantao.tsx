@@ -34,6 +34,25 @@ export function PainelPlantao() {
     }
   };
 
+  // Acerta todos os stands pela posição dos check-ins por GPS (últimos 7 dias, GPS bom, 2+ pessoas).
+  const recalibrar = async () => {
+    if (!window.confirm("Recalibrar os stands pela posição dos check-ins por GPS dos últimos 7 dias?")) return;
+    setOcupado("recalibrar");
+    try {
+      const { data } = await api.post<{ stand: string; pessoas: number; moveuMetros: number | null; motivo?: string }[]>("/plantao/recalibrar-stands");
+      setMsg(
+        data.length
+          ? "✅ " + data.map((r) => (r.moveuMetros != null ? `${r.stand}: ajustado ${r.moveuMetros} m (${r.pessoas} pessoas)` : `${r.stand}: mantido (${r.motivo})`)).join(" · ")
+          : "Ainda não há check-ins por GPS suficientes pra recalibrar."
+      );
+      recarregar();
+    } catch (err) {
+      setMsg(getApiErrorMessage(err, "Falha ao recalibrar."));
+    } finally {
+      setOcupado(null);
+    }
+  };
+
   const estouAqui = async (propertyId: string, nome: string) => {
     if (!window.confirm(`Você está AGORA no stand do ${nome}? A localização deste aparelho vira a do stand.`)) return;
     setOcupado(propertyId);
@@ -193,6 +212,9 @@ export function PainelPlantao() {
         <div className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Stands (endereço de stand dos imóveis)</div>
         <button onClick={localizar} disabled={!!ocupado} className="text-xs px-3 py-1.5 rounded-lg border flex items-center gap-1.5 disabled:opacity-60" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>
           {ocupado === "localizar" ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />} Localizar stands
+        </button>
+        <button onClick={recalibrar} disabled={!!ocupado} className="text-xs px-3 py-1.5 rounded-lg border flex items-center gap-1.5 disabled:opacity-60" style={{ borderColor: "var(--border)", color: "var(--foreground)" }} title="Usa a posição dos check-ins por GPS pra acertar os stands">
+          {ocupado === "recalibrar" ? <Loader2 size={13} className="animate-spin" /> : "🎯"} Recalibrar pelos check-ins
         </button>
       </div>
       {p.stands.length === 0 ? (

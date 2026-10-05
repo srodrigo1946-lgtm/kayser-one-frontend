@@ -7,7 +7,7 @@ import { usePlantaoStatus, useCheckin, pegarLocalizacao } from "@/hooks/use-plan
 
 /**
  * Check-in do plantão por GPS. Quem está na escala do turno ativo faz check-in
- * AUTOMÁTICO ao abrir o Kayser (se estiver a até 1500 m de um stand). Sem check-in,
+ * AUTOMÁTICO ao abrir o Kayser (se estiver a até 500 m de um stand). Sem check-in,
  * a fila não manda lead. Fica no topo das telas do sistema.
  */
 export function CheckinPlantao() {
