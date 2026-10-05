@@ -29,6 +29,7 @@ import {
   CalendarClock,
   Wallet,
   MessagesSquare,
+  Sparkles,
 } from "lucide-react";
 import { Coruja } from "@/components/icons/coruja";
 import { cn, getInitials } from "@/lib/utils";
@@ -56,6 +57,8 @@ const navItems = [
   { href: "/reunioes", label: "Reuniões", icon: Video },
   // IA Agente (Kayser, conhecimento, chaves): só o Diretor vê — pedido do Rodrigo.
   { href: "/ia", label: "IA Agente", icon: Bot, diretorOnly: true },
+  // IA One: assistente da equipe (número próprio) — só o Diretor configura.
+  { href: "/ia-one", label: "IA One", icon: Sparkles, diretorOnly: true },
   { href: "/metas", label: "Metas", icon: Target },
   { href: "/ranking", label: "Ranking", icon: Trophy },
   { href: "/relatorios", label: "Relatórios", icon: BarChart3 },
