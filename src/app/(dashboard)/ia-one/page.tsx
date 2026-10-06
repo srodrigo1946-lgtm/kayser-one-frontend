@@ -272,6 +272,23 @@ export default function IaOnePage() {
                           {p.produto} · {p.disponiveis} disponíveis · R$ {Number(p.precoMin).toLocaleString("pt-BR")} a R$ {Number(p.precoMax).toLocaleString("pt-BR")} · entrega {p.entrega}
                           {p.enviadoEm && ` · atualizado ${p.enviadoEm.split("-").reverse().join("/")}`}
                           {velho && " ⚠️ suba a planilha nova"}
+                          {p.enviadoEm && (
+                            <button
+                              onClick={() =>
+                                window.confirm(`Apagar as unidades enviadas do ${p.produto}?`) &&
+                                acao("apagar", async () => {
+                                  await api.delete(`/ia-one/unidades/${encodeURIComponent(p.produto)}`);
+                                  setMsg(`🗑️ Unidades enviadas do ${p.produto} apagadas.`);
+                                  refDados();
+                                })
+                              }
+                              className="ml-1.5 font-bold"
+                              style={{ color: "#ef4444" }}
+                              title="Apagar as unidades enviadas deste empreendimento"
+                            >
+                              ✕
+                            </button>
+                          )}
                         </span>
                       );
                     })}
