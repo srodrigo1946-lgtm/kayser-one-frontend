@@ -123,7 +123,19 @@ export function AvisoLeadNovo() {
       <div className="relative mx-4 max-w-md w-full rounded-3xl p-6 text-center" style={{ background: "linear-gradient(160deg,#1f2937,#0b0f19)", border: "2px solid #facc15", boxShadow: "0 0 60px #facc1566" }}>
         <div className="text-6xl mb-2">🎉</div>
         <div className="text-2xl font-extrabold mb-1" style={{ color: "#facc15" }}>Chegou lead pra você!</div>
-        {lead.empreendimento && <div className="text-sm mt-0.5" style={{ color: "#cbd5e1" }}>{lead.empreendimento}</div>}
+        {/* Selo "#BORA VENDER" no lugar do nome do empreendimento (pedido do Rodrigo 06/10). */}
+        <div
+          className="inline-block mt-2 px-3 py-1 rounded-md leading-none"
+          style={{
+            background: "linear-gradient(135deg,#1e3a8a,#4f46e5 60%,#7c3aed)",
+            boxShadow: "0 0 18px #4f46e588",
+            fontFamily: "Bangers, Impact, sans-serif",
+            letterSpacing: 1,
+          }}
+        >
+          <div className="text-white text-2xl">#BORA</div>
+          <div className="text-white text-2xl">VENDER 📈</div>
+        </div>
         {lead.anuncio && (
           <div className="text-sm mt-3 font-semibold" style={{ color: "#86efac" }}>📣 Veio do anúncio: cliente quente, acabou de pedir informação. Chame agora!</div>
         )}
