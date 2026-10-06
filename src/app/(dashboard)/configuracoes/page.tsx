@@ -6,6 +6,7 @@ import { User as UserIcon, Bot, Users, Building2, Trash2, Plus, Loader2, Upload,
 import { useRef } from "react";
 import { getStoredUser } from "@/lib/auth";
 import { api, getApiErrorMessage, API_URL } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useUpdateProfile, useUploadAvatar, avatarUrl } from "@/hooks/use-profile";
 import { useMe, useSetRecoveryCode } from "@/hooks/use-recovery";
@@ -871,6 +872,19 @@ function UsersManager() {
   const me = getStoredUser();
   const isDiretor = (me as any)?.role === "diretor";
 
+  // Gestor que deixa a função: vira corretor e o time dele vai pro Diretor.
+  const qcEquipe = useQueryClient();
+  const tornarCorretor = async (u: { id: string; name: string }) => {
+    if (!window.confirm(`${u.name} vai virar CORRETOR. O time que responde a ele passa pra você (Diretor) até você levar pra outro gerente. Confirmar?`)) return;
+    try {
+      const { data } = await api.post<{ message: string }>(`/users/${u.id}/tornar-corretor`);
+      setFeedback(data.message);
+      qcEquipe.invalidateQueries({ queryKey: ["users"] });
+    } catch (err) {
+      setFeedback(getApiErrorMessage(err, "Não consegui mudar o cargo."));
+    }
+  };
+
   const handleReset = (u: { id: string; name: string }) => {
     if (!window.confirm(`Redefinir a senha de ${u.name} para a padrão (123456789)? A pessoa criará uma nova no próximo acesso.`)) return;
     resetPw.mutate(u.id, {
@@ -1034,6 +1048,16 @@ function UsersManager() {
             <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: u.active ? "#22c55e18" : "var(--border)", color: u.active ? "#22c55e" : "var(--muted-foreground)" }}>
               {u.active ? "Ativo" : "Inativo"}
             </span>
+            {isDiretor && u.role !== "corretor" && u.role !== "diretor" && (
+              <button
+                onClick={() => tornarCorretor(u)}
+                className="text-xs px-3 py-1.5 rounded-lg font-medium inline-flex items-center gap-1.5"
+                style={{ background: "#f59e0b1f", color: "#f59e0b" }}
+                title="Deixa a função de gestor: vira corretor e o time dele passa pro Diretor"
+              >
+                ⬇️ Tornar corretor
+              </button>
+            )}
             <button
               onClick={() => handleReset(u)}
               disabled={resetPw.isPending}
