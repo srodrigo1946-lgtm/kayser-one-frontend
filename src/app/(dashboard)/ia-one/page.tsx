@@ -165,6 +165,21 @@ export default function IaOnePage() {
                 {ocupado === "conectar" ? <Loader2 size={14} className="animate-spin inline" /> : "Conectar número (QR)"}
               </button>
             )}
+            <button
+              onClick={() =>
+                acao("reiniciar", async () => {
+                  await api.post("/ia-one/reiniciar");
+                  setMsg("🔄 Conexão da One reiniciada. Mande uma mensagem de teste no WhatsApp.");
+                  refStatus();
+                })
+              }
+              disabled={!!ocupado}
+              className={btn}
+              style={{ background: "var(--secondary)", color: "var(--foreground)" }}
+              title="Use quando ela responde aqui no Kayser mas a mensagem não chega no WhatsApp"
+            >
+              {ocupado === "reiniciar" ? <Loader2 size={14} className="animate-spin inline" /> : "🔄 Reiniciar conexão"}
+            </button>
             <button onClick={() => conectar(true)} disabled={!!ocupado} className={btn} style={{ background: "var(--secondary)", color: "var(--foreground)" }}>
               Gerar novo QR
             </button>
