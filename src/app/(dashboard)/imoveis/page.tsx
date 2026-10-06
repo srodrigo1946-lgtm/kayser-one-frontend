@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Header } from "@/components/layout/header";
 import { formatCurrency } from "@/lib/utils";
-import { getApiErrorMessage } from "@/lib/api";
+import { api, getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 import {
   useProperties,
@@ -326,6 +326,35 @@ function PropertyForm({
     return f;
   });
   const [photos, setPhotos] = useState<string[]>(initial?.photos ?? []);
+  const [bookNome, setBookNome] = useState<string | null>(initial?.bookKey ? initial.bookNome || "book.pdf" : null);
+  const [enviandoBook, setEnviandoBook] = useState(false);
+
+  // Book em PDF: vai direto pro servidor (não entra no "Salvar"); só pra imóvel já cadastrado.
+  const subirBook = async (f: File) => {
+    if (!initial) return;
+    if (f.size > 40 * 1024 * 1024) return onError("O book pode ter até 40 MB.");
+    setEnviandoBook(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", f);
+      await api.post(`/properties/${initial.id}/book`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+      setBookNome(f.name);
+    } catch (err) {
+      onError(getApiErrorMessage(err, "Falha ao enviar o book."));
+    } finally {
+      setEnviandoBook(false);
+    }
+  };
+  const verBook = async () => {
+    if (!initial) return;
+    const { data } = await api.get(`/properties/${initial.id}/book`, { responseType: "blob" });
+    window.open(URL.createObjectURL(data), "_blank");
+  };
+  const removerBook = async () => {
+    if (!initial || !window.confirm("Remover o book deste empreendimento?")) return;
+    await api.delete(`/properties/${initial.id}/book`);
+    setBookNome(null);
+  };
 
   const set = (k: string, v: string) => setForm((s) => ({ ...s, [k]: v }));
 
@@ -500,6 +529,31 @@ function PropertyForm({
             </label>
           </div>
           <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Até 12 fotos, redimensionadas automaticamente.</p>
+
+          {/* Book (PDF) */}
+          <div className="text-xs font-semibold pt-1" style={{ color: "var(--muted-foreground)" }}>📘 BOOK DO EMPREENDIMENTO (PDF)</div>
+          {!initial ? (
+            <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Cadastre o imóvel primeiro; depois edite pra subir o book.</p>
+          ) : (
+            <div className="flex items-center gap-2 flex-wrap">
+              {bookNome && (
+                <span className="text-xs px-2.5 py-1.5 rounded-lg truncate max-w-[220px]" style={{ background: "#22c55e1f", color: "var(--foreground)" }} title={bookNome}>
+                  ✅ {bookNome}
+                </span>
+              )}
+              <label className="text-xs px-3 py-1.5 rounded-lg border cursor-pointer flex items-center gap-1.5" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>
+                {enviandoBook ? <Loader2 size={13} className="animate-spin" /> : "📤"} {bookNome ? "Trocar book" : "Subir book (PDF)"}
+                <input type="file" accept="application/pdf,.pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) subirBook(f); }} />
+              </label>
+              {bookNome && (
+                <>
+                  <button onClick={verBook} className="text-xs underline" style={{ color: "var(--primary)" }}>ver</button>
+                  <button onClick={removerBook} className="text-xs underline" style={{ color: "#ef4444" }}>remover</button>
+                </>
+              )}
+            </div>
+          )}
+          <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>A IA One manda este PDF pro corretor quando ele pedir o book. Até 40 MB.</p>
 
           <Field label="URL de capa (opcional — link externo)">
             <input value={form.imageUrl} onChange={(e) => set("imageUrl", e.target.value)} placeholder="https://..." className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} />

@@ -30,6 +30,9 @@ export interface Property {
   standAddress?: string | null;
   imageUrl?: string | null;
   photos?: string[] | null;
+  /** Book (PDF) do empreendimento — a IA One manda pro corretor. */
+  bookKey?: string | null;
+  bookNome?: string | null;
   active?: boolean;
   createdAt?: string;
 }
