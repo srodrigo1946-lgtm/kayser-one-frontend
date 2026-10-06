@@ -263,11 +263,18 @@ export default function IaOnePage() {
                 <div className="pt-1">
                   <div className="mb-1" style={{ color: "var(--foreground)" }}>✅ Unidades carregadas (a One responde status e preço destes):</div>
                   <div className="flex flex-wrap gap-1.5">
-                    {dados.disponiveisPorProduto.map((p: any, i: number) => (
-                      <span key={i} className="px-2 py-1 rounded-lg" style={{ background: "#22c55e1f", color: "var(--foreground)" }}>
-                        {p.produto} · {p.disponiveis} disponíveis · R$ {Number(p.precoMin).toLocaleString("pt-BR")} a R$ {Number(p.precoMax).toLocaleString("pt-BR")}
-                      </span>
-                    ))}
+                    {dados.disponiveisPorProduto.map((p: any, i: number) => {
+                      // Atualização mensal: passou de 35 dias sem planilha nova → vermelho.
+                      const dias = p.enviadoEm ? Math.floor((Date.now() - new Date(`${p.enviadoEm}T12:00:00`).getTime()) / 86_400_000) : null;
+                      const velho = dias != null && dias > 35;
+                      return (
+                        <span key={i} className="px-2 py-1 rounded-lg" style={{ background: velho ? "#ef44441f" : "#22c55e1f", color: "var(--foreground)" }}>
+                          {p.produto} · {p.disponiveis} disponíveis · R$ {Number(p.precoMin).toLocaleString("pt-BR")} a R$ {Number(p.precoMax).toLocaleString("pt-BR")} · entrega {p.entrega}
+                          {p.enviadoEm && ` · atualizado ${p.enviadoEm.split("-").reverse().join("/")}`}
+                          {velho && " ⚠️ suba a planilha nova"}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
               )}
