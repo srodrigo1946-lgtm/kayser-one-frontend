@@ -481,10 +481,12 @@ function AutomationsPanel() {
   const { data: s } = useSettings();
   const updateSettings = useUpdateSettings();
   const isDiretor = getStoredUser()?.role === "diretor";
-  const rows: { label: string; key: "aiAutoReply" | "followupEnabled" | "aiReplyGroups"; active: boolean }[] = [
+  const rows: { label: string; key: "aiAutoReply" | "followupEnabled" | "aiReplyGroups" | "reengajarAtivo"; active: boolean }[] = [
     { label: "Resposta imediata (IA)", key: "aiAutoReply", active: !!s?.aiAutoReply },
     { label: `Follow-up ${s?.followupDays ?? 3} dias`, key: "followupEnabled", active: !!s?.followupEnabled },
     { label: "IA responde em grupos", key: "aiReplyGroups", active: !!s?.aiReplyGroups },
+    // Reengajar "Cliente sem interesse": 25/h, 9h–21h, 1 mensagem por cliente.
+    { label: "Reengajar 'sem interesse' (25/h · 9h–21h)", key: "reengajarAtivo", active: (s as any)?.reengajarAtivo !== false },
   ];
   return (
     <div className="rounded-2xl border p-4" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
