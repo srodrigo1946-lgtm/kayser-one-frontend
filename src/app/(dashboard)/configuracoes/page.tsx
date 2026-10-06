@@ -1048,6 +1048,32 @@ function UsersManager() {
             <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: u.active ? "#22c55e18" : "var(--border)", color: u.active ? "#22c55e" : "var(--muted-foreground)" }}>
               {u.active ? "Ativo" : "Inativo"}
             </span>
+            {isDiretor && u.role === "corretor" && !(u as any).empresaId && (
+              <select
+                value=""
+                onChange={async (e) => {
+                  const cargo = e.target.value;
+                  if (!cargo) return;
+                  const nome = { gerente: "Gerente", gerente_geral: "Gerente geral", superintendente: "Superintendente" }[cargo];
+                  if (!window.confirm(`${u.name} vai virar ${nome}. Confirmar?`)) return;
+                  try {
+                    const { data } = await api.post<{ message: string }>(`/users/${u.id}/tornar-gestor`, { cargo });
+                    setFeedback(data.message);
+                    qcEquipe.invalidateQueries({ queryKey: ["users"] });
+                  } catch (err) {
+                    setFeedback(getApiErrorMessage(err, "Não consegui mudar o cargo."));
+                  }
+                }}
+                title="Promover o corretor a gestor"
+                className="text-xs px-2 py-1.5 rounded-lg border outline-none"
+                style={{ background: "#22c55e1f", borderColor: "#22c55e55", color: "#16a34a" }}
+              >
+                <option value="">⬆️ Tornar gestor…</option>
+                <option value="gerente">Gerente</option>
+                <option value="gerente_geral">Gerente geral</option>
+                <option value="superintendente">Superintendente</option>
+              </select>
+            )}
             {isDiretor && u.role !== "corretor" && u.role !== "diretor" && (
               <button
                 onClick={() => tornarCorretor(u)}
