@@ -189,6 +189,7 @@ function IAPageDiretor() {
           <KnowledgePanel />
           <AudioPanel />
           <AutomationsPanel />
+          <ReengajamentoPanel />
         </div>
       </div>
     </div>
@@ -471,6 +472,80 @@ function AudioPanel() {
           ))}
           {diag.ultimoErro && <div style={{ color: "#f97316" }}>Último erro: {diag.ultimoErro}</div>}
         </div>
+      )}
+    </div>
+  );
+}
+
+/* Acompanhamento do reengajamento dos "sem interesse" (atualiza a cada 1 min). */
+type PainelReengajar = {
+  ativo: boolean; porHora: number;
+  enviadosHoje: number; simHoje: number; naoHoje: number;
+  enviadosTotal: number; simTotal: number; naoTotal: number;
+  aguardando: number; faltam: number;
+  ultimas: { nome: string | null; phone: string | null; tipo: "sim" | "nao"; texto: string | null; createdAt: string }[];
+};
+function ReengajamentoPanel() {
+  const [p, setP] = useState<PainelReengajar | null>(null);
+  const [erro, setErro] = useState("");
+  useEffect(() => {
+    const carregar = () =>
+      api.get("/reengajamento/painel").then((r) => { setP(r.data); setErro(""); }).catch((e) => setErro(getApiErrorMessage(e)));
+    carregar();
+    const t = setInterval(carregar, 60_000);
+    return () => clearInterval(t);
+  }, []);
+  const caixa = (titulo: string, hoje: number, total: number, cor: string) => (
+    <div className="rounded-xl p-2 text-center" style={{ background: `${cor}18`, border: `1px solid ${cor}44` }}>
+      <div className="text-lg font-bold" style={{ color: cor }}>{hoje}</div>
+      <div className="text-[10px]" style={{ color: "var(--foreground)" }}>{titulo}</div>
+      <div className="text-[10px]" style={{ color: "var(--muted-foreground)" }}>total {total}</div>
+    </div>
+  );
+  return (
+    <div className="rounded-2xl border p-4" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
+      <div className="flex items-center gap-2 mb-1">
+        <RefreshCw size={16} style={{ color: "#22c55e" }} />
+        <h3 className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>Reengajamento — hoje</h3>
+      </div>
+      {erro ? (
+        <p className="text-xs" style={{ color: "#f97316" }}>{erro}</p>
+      ) : !p ? (
+        <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Carregando…</p>
+      ) : (
+        <>
+          <p className="text-[11px] mb-2" style={{ color: p.ativo ? "#22c55e" : "#f97316" }}>
+            {p.ativo ? `Ligado · ${p.porHora}/h das 9h às 21h` : "Desligado"}
+          </p>
+          <div className="grid grid-cols-3 gap-1.5">
+            {caixa("enviadas", p.enviadosHoje, p.enviadosTotal, "#3b82f6")}
+            {caixa("sim → fila", p.simHoje, p.simTotal, "#22c55e")}
+            {caixa("não → removido", p.naoHoje, p.naoTotal, "#ef4444")}
+          </div>
+          <div className="flex justify-between text-[11px] mt-2" style={{ color: "var(--muted-foreground)" }}>
+            <span>⏳ Aguardando resposta: <b style={{ color: "var(--foreground)" }}>{p.aguardando}</b></span>
+            <span>Faltam: <b style={{ color: "var(--foreground)" }}>{p.faltam}</b></span>
+          </div>
+          <div className="mt-3 text-[11px] font-semibold" style={{ color: "var(--foreground)" }}>Últimas respostas</div>
+          {p.ultimas.length === 0 ? (
+            <p className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>Ninguém respondeu ainda.</p>
+          ) : (
+            <div className="mt-1 space-y-1.5 max-h-72 overflow-y-auto">
+              {p.ultimas.map((u, i) => (
+                <div key={i} className="text-[11px] rounded-lg p-1.5" style={{ background: "var(--secondary)" }}>
+                  <div className="flex justify-between gap-1">
+                    <b style={{ color: u.tipo === "sim" ? "#22c55e" : "#ef4444" }}>{u.tipo === "sim" ? "✅ Sim → fila" : "❌ Não → removido"}</b>
+                    <span style={{ color: "var(--muted-foreground)" }}>
+                      {new Date(u.createdAt.endsWith("Z") ? u.createdAt : `${u.createdAt}Z`).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                  <div style={{ color: "var(--foreground)" }}>{u.nome || u.phone || "Cliente"}</div>
+                  {u.texto && <div className="italic" style={{ color: "var(--muted-foreground)" }}>“{u.texto}”</div>}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
