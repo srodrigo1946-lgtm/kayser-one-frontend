@@ -142,8 +142,8 @@ export default function CorujaoPage() {
           ) : (
             <div className="flex flex-wrap gap-2">
               {pool.pegosHoje.map((p) => (
-                <span key={p.nome} className="text-xs px-2.5 py-1 rounded-lg" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>
-                  {p.nome}: <b>{p.qtd}</b>
+                <span key={p.nome} className="text-xs px-2.5 py-1 rounded-lg border" style={{ background: `${corDoEmpreendimento(p.nome)}22`, borderColor: `${corDoEmpreendimento(p.nome)}66`, color: "var(--foreground)" }}>
+                  {p.nome}: <b style={{ color: corDoEmpreendimento(p.nome) }}>{p.qtd}</b>
                 </span>
               ))}
             </div>
@@ -201,7 +201,8 @@ export default function CorujaoPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {visiveis.map((l) => {
-            const cor = corDoEmpreendimento(l.empreendimento);
+            // Sem empreendimento, a cor vem do nome (antes ficava tudo cinza).
+            const cor = corDoEmpreendimento(l.empreendimento || l.name || l.id);
             const og = origemInfo(l.origem);
             const dias = (l as any).desde ? Math.max(0, Math.floor((Date.now() - new Date((l as any).desde).getTime()) / 86400000)) : null;
             return (
