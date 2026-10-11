@@ -3,12 +3,31 @@
 import { useState, useEffect, useRef } from "react";
 import { Header } from "@/components/layout/header";
 import { Search, Send, Bot, QrCode, Loader2, Smile, Paperclip, RefreshCw, ArrowLeft } from "lucide-react";
-import { api, getApiErrorMessage, API_URL } from "@/lib/api";
-import { getToken, getStoredUser } from "@/lib/auth";
+import { api, getApiErrorMessage } from "@/lib/api";
+import { getStoredUser } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
+import { useArquivoProtegido } from "@/hooks/use-arquivo-protegido";
 
-// Mídia protegida: o token vai na query pra funcionar dentro de <img>/<audio>/<video>.
-const mediaUrl = (id: string) => `${API_URL}/conversations/media/${id}?token=${getToken() ?? ""}`;
+// Mídia protegida: baixada com o token no CABEÇALHO (antes ia na URL e ficava nos logs).
+function Midia({ msg }: { msg: { id: string; mediaType?: string | null; content?: string } }) {
+  const url = useArquivoProtegido(`/conversations/media/${msg.id}`);
+  if (!url) return <span className="text-xs opacity-60">carregando mídia…</span>;
+  if (msg.mediaType === "image" || msg.mediaType === "sticker") {
+    return (
+      <a href={url} target="_blank" rel="noreferrer">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={url} alt="imagem" className="rounded-lg max-w-full max-h-64 object-cover" />
+      </a>
+    );
+  }
+  if (msg.mediaType === "audio") return <audio controls src={url} className="max-w-full" />;
+  if (msg.mediaType === "video") return <video controls src={url} className="rounded-lg max-w-full max-h-64" />;
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className="text-sm underline break-all">
+      {msg.content}
+    </a>
+  );
+}
 
 // Emojis mais usados no atendimento — lista curta e própria (sem biblioteca extra).
 const EMOJIS = [
@@ -402,28 +421,7 @@ export default function WhatsAppPage() {
                     )}
                     {msg.hasMedia && (
                       <div className="mb-1">
-                        {msg.mediaType === "image" || msg.mediaType === "sticker" ? (
-                          <a href={mediaUrl(msg.id)} target="_blank" rel="noreferrer">
-                            <img
-                              src={mediaUrl(msg.id)}
-                              alt="imagem"
-                              className="rounded-lg max-w-full max-h-64 object-cover"
-                            />
-                          </a>
-                        ) : msg.mediaType === "audio" ? (
-                          <audio controls src={mediaUrl(msg.id)} className="max-w-full" />
-                        ) : msg.mediaType === "video" ? (
-                          <video controls src={mediaUrl(msg.id)} className="rounded-lg max-w-full max-h-64" />
-                        ) : (
-                          <a
-                            href={mediaUrl(msg.id)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-sm underline break-all"
-                          >
-                            {msg.content}
-                          </a>
-                        )}
+                        <Midia msg={msg} />
                       </div>
                     )}
                     {/* Mostra o texto quando não é mídia baixada, ou como legenda de imagem/vídeo. */}

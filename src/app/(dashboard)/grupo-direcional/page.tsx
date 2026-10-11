@@ -3,8 +3,9 @@
 import { useRef, useState } from "react";
 import { Header } from "@/components/layout/header";
 import { ExternalLink, Table, Upload, Loader2, Pencil } from "lucide-react";
-import { api, getApiErrorMessage, API_URL } from "@/lib/api";
-import { getToken, getStoredUser } from "@/lib/auth";
+import { api, getApiErrorMessage } from "@/lib/api";
+import { getStoredUser } from "@/lib/auth";
+import { useArquivoProtegido } from "@/hooks/use-arquivo-protegido";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 
 // Links padrão (usados enquanto o Diretor não trocar pela UI).
@@ -39,7 +40,8 @@ export default function GrupoDirecionalPage() {
   // Muda a cada upload para furar o cache da <img> e mostrar a imagem nova.
   const [versao, setVersao] = useState(0);
 
-  const imgUrl = `${API_URL}/settings/direcional-image?token=${getToken() ?? ""}&v=${versao}`;
+  // Token no cabeçalho (antes ia na URL e ficava nos logs). `v` fura o cache depois do upload.
+  const imgUrl = useArquivoProtegido(settings?.hasDirecionalImage ? `/settings/direcional-image?v=${versao}` : null);
 
   const enviarImagem = async (file: File) => {
     if (!file.type.startsWith("image/")) {
@@ -148,7 +150,7 @@ export default function GrupoDirecionalPage() {
             )}
           </div>
 
-          {settings?.hasDirecionalImage ? (
+          {settings?.hasDirecionalImage && imgUrl ? (
             <a href={imgUrl} target="_blank" rel="noopener noreferrer">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

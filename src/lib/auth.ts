@@ -37,6 +37,8 @@ export async function register(payload: RegisterPayload): Promise<RegisterResult
 
 export async function changePassword(currentPassword: string, newPassword: string) {
   const { data } = await api.put("/auth/change-password", { currentPassword, newPassword });
+  // Trocar a senha derruba os tokens antigos: guarda o novo que o servidor devolve.
+  if (data?.accessToken) localStorage.setItem(TOKEN_KEY, data.accessToken);
   // Após trocar a senha, atualiza o usuário em cache (firstLogin = false)
   const user = getStoredUser();
   if (user) {
