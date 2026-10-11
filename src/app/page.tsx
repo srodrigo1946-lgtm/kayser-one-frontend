@@ -82,11 +82,10 @@ export default async function Home() {
       {/* Topo */}
       <header className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex flex-col items-center justify-center border-2" style={{ borderColor: Y, background: "#0a0a0a" }}>
+          <div className="w-10 h-10 rounded-xl flex flex-col items-center justify-center border-2" style={{ borderColor: Y, background: "#0a0a0a" }} aria-label="Kayser One">
             <b className="text-lg leading-none" style={{ color: Y }}>K1</b>
             <i className="block w-5 h-[3px] mt-0.5 rounded" style={{ background: Y }} />
           </div>
-          <span className="font-extrabold text-lg">Kayser One</span>
         </div>
         <div className="flex items-center gap-2">
           <a href="#planos" className="px-3 py-2 rounded-xl text-sm font-semibold" style={{ color: "#f5f5f4" }}>
