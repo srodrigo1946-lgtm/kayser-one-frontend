@@ -228,7 +228,8 @@ export default async function Home() {
           {PLANOS.map((p) => (
             <div
               key={p.nome}
-              className="rounded-2xl p-6 border flex flex-col"
+              tabIndex={0}
+              className="group rounded-2xl p-6 border flex flex-col outline-none"
               style={{ background: p.destaque ? "rgba(250,204,21,.07)" : "#141414", borderColor: p.destaque ? Y : "rgba(250,204,21,.18)" }}
             >
               {p.destaque && (
@@ -238,9 +239,15 @@ export default async function Home() {
               )}
               <h3 className="font-bold text-xl">{p.nome}</h3>
               <p className="text-sm mt-1" style={{ color: "#a8a29e" }}>{p.para}</p>
-              <div className="mt-4">
-                <span className="text-4xl font-extrabold" style={{ color: Y }}>R$ {p.preco}</span>
-                <span className="text-sm" style={{ color: "#a8a29e" }}>/mês</span>
+              {/* Preço oculto (borrado) até passar o mouse / tocar no card — pedido do Rodrigo. */}
+              <div className="mt-4 relative">
+                <div className="blur-md select-none transition duration-300 group-hover:blur-none group-focus:blur-none group-focus-within:blur-none" aria-label={`R$ ${p.preco} por mês`}>
+                  <span className="text-4xl font-extrabold" style={{ color: Y }}>R$ {p.preco}</span>
+                  <span className="text-sm" style={{ color: "#a8a29e" }}>/mês</span>
+                </div>
+                <span className="absolute inset-0 flex items-center text-xs font-semibold transition-opacity duration-300 group-hover:opacity-0 group-focus:opacity-0 group-focus-within:opacity-0 pointer-events-none" style={{ color: "#f5f5f4" }}>
+                  👆 Passe o mouse para ver o valor
+                </span>
               </div>
               <p className="mt-2 font-semibold">
                 até {p.usuarios} usuário{p.usuarios > 1 ? "s" : ""}
