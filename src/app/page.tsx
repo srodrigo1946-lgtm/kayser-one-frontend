@@ -98,6 +98,25 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Vídeo de apresentação (51s, vertical) */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-14 flex flex-col items-center">
+        <div
+          className="w-full max-w-[340px] rounded-[44px] p-3 border-4"
+          style={{ borderColor: "#2a2a2a", background: "#0f0f0f", boxShadow: "0 30px 90px rgba(0,0,0,.6), 0 0 70px rgba(250,204,21,.18)" }}
+        >
+          <video
+            className="w-full rounded-[32px] block"
+            style={{ aspectRatio: "9 / 16", background: "#0a0a0a" }}
+            src="/video/kayser-one-vendas.mp4"
+            poster="/video/kayser-one-vendas-capa.jpg"
+            controls
+            playsInline
+            preload="metadata"
+          />
+        </div>
+        <p className="mt-4 text-sm" style={{ color: "#a8a29e" }}>▶ Veja o Kayser One em 50 segundos</p>
+      </section>
+
       {/* Dores */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-14">
         <h2 className="text-3xl sm:text-4xl font-extrabold text-center">
