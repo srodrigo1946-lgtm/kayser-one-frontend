@@ -55,9 +55,9 @@ const recursos = [
 const PLANOS: { nome: string; preco: number; usuarios: number; para: string; destaque?: boolean; link?: string }[] = [
   { nome: "Corretor", preco: 30, usuarios: 1, para: "Corretor autônomo" },
   { nome: "Gerente de Vendas", preco: 110, usuarios: 16, para: "Gerente + equipe" },
-  { nome: "Gerente Geral", preco: 330, usuarios: 49, para: "Várias equipes", destaque: true },
-  { nome: "Superintendente", preco: 530, usuarios: 99, para: "Regional" },
-  { nome: "Diretor completo", preco: 750, usuarios: 199, para: "Imobiliária inteira" },
+  { nome: "Gerente Geral", preco: 330, usuarios: 57, para: "Várias equipes", destaque: true },
+  { nome: "Superintendente", preco: 530, usuarios: 120, para: "Regional" },
+  { nome: "Diretor completo", preco: 750, usuarios: 250, para: "Imobiliária inteira" },
 ];
 const assinar = (p: (typeof PLANOS)[number]) =>
   p.link ||
@@ -65,9 +65,9 @@ const assinar = (p: (typeof PLANOS)[number]) =>
     encodeURIComponent(`Olá! Quero assinar o plano ${p.nome} do Kayser One (R$ ${p.preco}/mês, até ${p.usuarios} usuário${p.usuarios > 1 ? "s" : ""}).`);
 const CEO_EMAIL =
   "mailto:contato@kayserone.com.br?subject=" +
-  encodeURIComponent("Kayser One — mais de 199 usuários") +
+  encodeURIComponent("Kayser One — mais de 250 usuários") +
   "&body=" +
-  encodeURIComponent("Olá! Tenho uma operação com mais de 199 usuários e quero uma reunião para entender o Kayser One.\n\nNome:\nEmpresa:\nTelefone:\nNº de corretores:");
+  encodeURIComponent("Olá! Tenho uma operação com mais de 250 usuários e quero uma reunião para entender o Kayser One.\n\nNome:\nEmpresa:\nTelefone:\nNº de corretores:");
 
 const passos = [
   ["1", "Fale com a gente", "Um papo rápido no WhatsApp para entender sua operação."],
@@ -265,7 +265,7 @@ export default async function Home() {
           ))}
           <div className="rounded-2xl p-6 border flex flex-col" style={{ background: "#141414", borderColor: "rgba(250,204,21,.18)" }}>
             <h3 className="font-bold text-xl">Rede / Empresa</h3>
-            <p className="text-sm mt-1" style={{ color: "#a8a29e" }}>Acima de 199 usuários</p>
+            <p className="text-sm mt-1" style={{ color: "#a8a29e" }}>Acima de 250 usuários</p>
             <div className="mt-4 text-2xl font-extrabold" style={{ color: Y }}>Sob medida</div>
             <p className="mt-2 text-sm" style={{ color: "#a8a29e" }}>
               Reunião personalizada com o CEO para entender o seu negócio.
