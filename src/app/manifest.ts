@@ -12,7 +12,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
   try {
     // `x-kayser-host`: subdomínio original repassado pelo Cloudflare (o Vercel vê o endereço dele).
     const h = await headers();
-    const api = apiDoHost(h.get("x-kayser-host") || h.get("host"));
+    const api = apiDoHost(h.get("x-kayser-host") || h.get("host"), h.get("x-kayser-api"));
     const r = await fetch(`${api}/marca`, { next: { revalidate: 300 } });
     if (r.ok) {
       const m = await r.json();
