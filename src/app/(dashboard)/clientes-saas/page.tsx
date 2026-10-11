@@ -19,7 +19,7 @@ type Cliente = {
   erro: string | null;
   createdAt: string;
 };
-type Resposta = { configurado: boolean; planos: Record<string, number>; clientes: Cliente[] };
+type Resposta = { configurado: boolean; planos: Record<string, number>; personalizado: string; clientes: Cliente[] };
 
 const slug = (t: string) =>
   t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\b(ltda|me|eireli|s\/?a)\b/g, "").replace(/[^a-z0-9-]+/g, "").slice(0, 30);
@@ -31,7 +31,7 @@ const slug = (t: string) =>
 export default function ClientesSaasPage() {
   const [permitido, setPermitido] = useState<boolean | null>(null);
   const [dados, setDados] = useState<Resposta | null>(null);
-  const [f, setF] = useState({ empresa: "", subdominio: "", plano: "Gerente de Vendas", diretorNome: "", diretorEmail: "" });
+  const [f, setF] = useState({ empresa: "", subdominio: "", plano: "Gerente de Vendas", limiteUsuarios: "", diretorNome: "", diretorEmail: "" });
   const [enviando, setEnviando] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -58,16 +58,17 @@ export default function ClientesSaasPage() {
   if (!permitido) return <div className="p-6 text-sm">Área restrita ao Diretor.</div>;
 
   const sub = slug(f.subdominio || f.empresa);
+  const personalizado = f.plano === dados?.personalizado;
 
   const criar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!confirm(`Criar o Kayser One da ${f.empresa} em ${sub}.kayserone.com.br, plano ${f.plano}?\n\nIsso cria um servidor no Railway (custo mensal).`)) return;
+    if (!confirm(`Criar o Kayser One da ${f.empresa} em ${sub}.kayserone.com.br, plano ${f.plano}${personalizado ? ` (${f.limiteUsuarios} usuários)` : ""}?\n\nIsso cria um servidor no Railway (custo mensal).`)) return;
     setEnviando(true);
     setMsg("");
     try {
-      await api.post("/clientes-saas", { ...f, subdominio: f.subdominio || undefined });
+      await api.post("/clientes-saas", { ...f, subdominio: f.subdominio || undefined, limiteUsuarios: personalizado ? Number(f.limiteUsuarios) : undefined });
       setMsg("✅ Criando! Acompanhe abaixo — leva uns 5 a 10 minutos.");
-      setF({ empresa: "", subdominio: "", plano: f.plano, diretorNome: "", diretorEmail: "" });
+      setF({ empresa: "", subdominio: "", plano: f.plano, limiteUsuarios: "", diretorNome: "", diretorEmail: "" });
       carregar();
     } catch (err) {
       setMsg(getApiErrorMessage(err, "Não consegui criar."));
@@ -115,7 +116,11 @@ export default function ClientesSaasPage() {
                   {p} — até {n} usuário{n > 1 ? "s" : ""}
                 </option>
               ))}
+              {dados?.personalizado && <option value={dados.personalizado}>{dados.personalizado} — digitar usuários</option>}
             </select>
+            {personalizado && (
+              <input required type="number" min={1} max={100000} value={f.limiteUsuarios} onChange={(e) => setF({ ...f, limiteUsuarios: e.target.value })} className={input + " mt-2"} style={estilo} placeholder="Quantidade de usuários (ex.: 450)" />
+            )}
           </label>
           <label className="text-sm" style={{ color: "var(--foreground)" }}>
             Nome do Diretor
