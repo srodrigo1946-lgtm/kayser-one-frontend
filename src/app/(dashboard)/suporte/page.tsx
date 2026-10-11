@@ -45,7 +45,7 @@ export default function SuportePage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: recl ? "#f59e0b22" : "var(--primary)22", color: recl ? "#f59e0b" : "var(--primary)" }}>
-                          {recl ? "Reclamação" : "Suporte"}
+                          {recl ? "Reclamação" : m.type === "ceo" ? "👑 Reunião CEO" : "Suporte"}
                         </span>
                         {!m.read && <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "#ef444422", color: "#ef4444" }}>Nova</span>}
                         <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{m.name || "Sem nome"}</span>
