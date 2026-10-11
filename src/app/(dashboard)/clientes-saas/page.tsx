@@ -92,7 +92,7 @@ export default function ClientesSaasPage() {
       <div className="p-6 space-y-6 max-w-5xl">
         {dados && !dados.configurado && (
           <div className="p-4 rounded-2xl text-sm" style={{ background: "#f59e0b1a", color: "#f59e0b", border: "1px solid #f59e0b55" }}>
-            Falta configurar as chaves do Railway no servidor da Kayser (RAILWAY_API_TOKEN e CLIENTES_PG_URL). Até lá, o botão Criar não funciona.
+            Falta configurar as chaves do Railway no servidor da Kayser (RAILWAY_API_TOKEN e os IDs do projeto dos clientes). Até lá, o botão Criar não funciona.
           </div>
         )}
 
