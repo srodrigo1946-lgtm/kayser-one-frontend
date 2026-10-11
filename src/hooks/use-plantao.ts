@@ -8,7 +8,15 @@ export interface PlantaoStatus {
   naEscala: boolean;
   janela?: "aberta" | "fechada";
   bloqueado?: { por: string } | null;
-  checkin: { stand: string; distancia: number; hora: string } | null;
+  checkin: {
+    stand: string;
+    distancia: number;
+    hora: string;
+    // Check-in por GPS: o app manda a posição a cada 2 min (menos no plantão das 21h).
+    acompanhar?: boolean;
+    // Se afastou mais de 500 m do stand → saiu do plantão do turno.
+    saiu?: { hora: string; distancia: number | null } | null;
+  } | null;
 }
 
 export interface PlantaoPainel {
@@ -21,9 +29,9 @@ export interface PlantaoPainel {
   modoLivre?: boolean;
   plantaoLivreDesde?: string | null;
   corretores?: { id: string; nome: string }[];
-  turnosHoje?: { id: string; horaInicio: string; horaFim: string; atendentes: { id: string; nome: string; entrou: boolean; como: string | null; bloqueado?: boolean }[] }[];
+  turnosHoje?: { id: string; horaInicio: string; horaFim: string; atendentes: { id: string; nome: string; entrou: boolean; como: string | null; bloqueado?: boolean; saiu?: { hora: string; distancia: number | null } | null }[] }[];
   tentativasHoje?: { id: string; podeUsarPosicao: boolean; nome: string; vezes: number; hora: string; motivo: string; distancia: number | null; stand: string | null; entrou: boolean }[];
-  checkinsHoje: { id?: string; podeUsarPosicao?: boolean; nome: string; stand: string; distancia: number; precisao?: number | null; hora: string; doTurnoAtual: boolean }[];
+  checkinsHoje: { id?: string; podeUsarPosicao?: boolean; nome: string; stand: string; distancia: number; precisao?: number | null; hora: string; doTurnoAtual: boolean; saiu?: { hora: string; distancia: number | null } | null }[];
 }
 
 /** Situação do meu plantão (escala + check-in) — atualiza a cada minuto. */

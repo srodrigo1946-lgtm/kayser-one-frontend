@@ -296,7 +296,11 @@ export function PainelPlantao() {
                           className="text-xs px-2.5 py-1.5 rounded-lg disabled:opacity-60"
                           style={{ background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)" }}
                         >
-                          {ocupado === a.id + t.id ? "…" : `🔓 Liberar ${a.nome}`}
+                          {ocupado === a.id + t.id
+                            ? "…"
+                            : a.saiu
+                              ? `🚶 ${a.nome} saiu do stand ${new Date(a.saiu.hora).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} · 🔓 Liberar de novo`
+                              : `🔓 Liberar ${a.nome}`}
                         </button>
                       )
                     )}
@@ -349,7 +353,13 @@ export function PainelPlantao() {
         <div className="flex flex-wrap gap-2">
           {p.checkinsHoje.map((c, i) => (
             <span key={i} className="text-xs px-2.5 py-1 rounded-lg" style={{ background: c.doTurnoAtual ? "#22c55e1f" : "var(--secondary)", color: "var(--foreground)" }}>
-              {c.doTurnoAtual ? "🟢" : "⚪"} {c.nome} · {c.stand} · {new Date(c.hora).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+              {c.saiu ? "🚶" : c.doTurnoAtual ? "🟢" : "⚪"} {c.nome} · {c.stand} · {new Date(c.hora).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+              {c.saiu && (
+                <b style={{ color: "#ef4444" }}>
+                  {" "}· saiu do stand {new Date(c.saiu.hora).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                  {c.saiu.distancia != null ? ` (${c.saiu.distancia} m)` : ""}
+                </b>
+              )}
               {c.podeUsarPosicao && c.id && (
                 <button onClick={() => ajustarPeloCheckin(c.id!, c.nome, c.stand)} disabled={!!ocupado} className="ml-1.5 underline disabled:opacity-60" title="Usar a posição deste check-in como a localização exata do stand">
                   {ocupado === c.id ? "…" : "📍 ajustar stand"}

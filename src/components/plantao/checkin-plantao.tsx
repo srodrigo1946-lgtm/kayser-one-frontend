@@ -2,8 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MapPin, Loader2, CheckCircle2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { usePlantaoStatus, useCheckin, pegarLocalizacao } from "@/hooks/use-plantao";
+
+const hora = (d: string) => new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
 /**
  * Check-in do plantão por GPS. Quem está na escala do turno ativo faz check-in
@@ -36,6 +39,31 @@ export function CheckinPlantao() {
     }
   };
 
+  // Depois do check-in (menos no plantão das 21h): manda a posição a cada 2 min com o app
+  // aberto. Mais de 500 m do stand em 2 leituras seguidas → sai do plantão.
+  const qc = useQueryClient();
+  const [longe, setLonge] = useState<number | null>(null);
+  const acompanhar = !!st?.checkin?.acompanhar;
+  useEffect(() => {
+    if (!acompanhar) {
+      setLonge(null);
+      return;
+    }
+    const enviar = async () => {
+      try {
+        const loc = await pegarLocalizacao();
+        const { data } = await api.post<{ status: string; distancia?: number }>("/plantao/posicao", loc);
+        if (data.status === "aviso") setLonge(data.distancia ?? null);
+        else if (data.status === "ok") setLonge(null);
+        else if (data.status === "saiu") qc.invalidateQueries({ queryKey: ["plantao"] });
+      } catch {
+        // GPS desligado/negado ou sem internet: tenta de novo na próxima.
+      }
+    };
+    const t = setInterval(enviar, 120_000);
+    return () => clearInterval(t);
+  }, [acompanhar, qc]);
+
   // Automático: na primeira vez que o sistema vê que ele precisa de check-in.
   useEffect(() => {
     if (precisa && !tentouAuto.current) {
@@ -55,6 +83,23 @@ export function CheckinPlantao() {
   }
 
   if (!st?.regraAtiva || !st.turnoAtivo || !st.naEscala) return null;
+
+  if (st.checkin?.saiu) {
+    return (
+      <div className="mx-4 lg:mx-6 mt-3 px-3 py-2 rounded-xl text-xs flex items-center gap-2" style={{ background: "#ef44441a", color: "#ef4444", border: "1px solid #ef444455" }}>
+        <MapPin size={15} /> Você se afastou do stand às <b>{hora(st.checkin.saiu.hora)}</b>
+        {st.checkin.saiu.distancia != null && <> ({st.checkin.saiu.distancia} m)</>} e <b>saiu do plantão</b> {st.turno?.horaInicio}–{st.turno?.horaFim}. Fale com seu gestor pra voltar.
+      </div>
+    );
+  }
+
+  if (st.checkin && longe != null) {
+    return (
+      <div className="mx-4 lg:mx-6 mt-3 px-3 py-2 rounded-xl text-xs flex items-center gap-2" style={{ background: "#f59e0b1a", color: "#d97706", border: "1px solid #f59e0b66" }}>
+        <MapPin size={15} /> Você está a <b>{longe} m</b> do stand. Volte pra até 500 m ou vai <b>sair do plantão</b> em 2 minutos.
+      </div>
+    );
+  }
 
   if (st.checkin) {
     return (
