@@ -9,11 +9,16 @@ import { login } from "@/lib/auth";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { SupportBox } from "@/components/support/support-box";
 import { Cena3D } from "@/components/login/cena-3d";
+import { useMarca, logoDaMarca, corDoTexto } from "@/hooks/use-marca";
 
 // Cores do painel do login (amarelo e preto — pedido do Rodrigo).
-const AMARELO = "#facc15";
+// Cor padrão (Kayser). Com marca própria, vale a cor da imobiliária.
+const AMARELO_PADRAO = "#facc15";
 
 export default function LoginPage() {
+  const marca = useMarca();
+  const logo = logoDaMarca(marca);
+  const AMARELO = marca.cor || AMARELO_PADRAO;
   const router = useRouter();
   const { theme, toggle } = useTheme();
   const [email, setEmail] = useState("");
@@ -88,10 +93,15 @@ export default function LoginPage() {
         />
         <div className="relative z-10 flex flex-col justify-between p-12 w-full pointer-events-none">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: AMARELO }}>
-              <Building2 size={22} color="#0a0a0a" />
-            </div>
-            <span className="text-xl font-bold text-white">Kayser One</span>
+            {logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logo} alt={marca.nome} className="w-10 h-10 rounded-xl object-contain bg-white" />
+            ) : (
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: AMARELO }}>
+                <Building2 size={22} color="#0a0a0a" />
+              </div>
+            )}
+            <span className="text-xl font-bold text-white">{marca.nome}</span>
           </div>
 
           <div>
@@ -130,7 +140,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
-            © 2025 Kayser One. Todos os direitos reservados.
+            © 2025 {marca.nome}. Todos os direitos reservados.
           </p>
         </div>
       </div>
@@ -157,14 +167,19 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: AMARELO }}
-            >
-              <Building2 size={22} color="#0a0a0a" />
-            </div>
+            {logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logo} alt={marca.nome} className="w-10 h-10 rounded-xl object-contain bg-white" />
+            ) : (
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: AMARELO }}
+              >
+                <Building2 size={22} color="#0a0a0a" />
+              </div>
+            )}
             <span className="text-xl font-bold" style={{ color: "var(--foreground)" }}>
-              Kayser One
+              {marca.nome}
             </span>
           </div>
 
@@ -285,7 +300,7 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               className="w-full py-3 rounded-xl font-semibold text-sm transition-all disabled:opacity-70"
-              style={{ background: AMARELO, color: "#0a0a0a" }}
+              style={{ background: AMARELO, color: corDoTexto(AMARELO) }}
             >
               {loading ? "Entrando..." : "Entrar"}
             </button>

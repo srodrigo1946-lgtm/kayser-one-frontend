@@ -37,6 +37,7 @@ import { getStoredUser, logout } from "@/lib/auth";
 import { avatarUrl } from "@/hooks/use-profile";
 import { useSupportUnread } from "@/hooks/use-support";
 import { useSettings } from "@/hooks/use-settings";
+import { useMarca, logoDaMarca } from "@/hooks/use-marca";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -82,6 +83,10 @@ export function Sidebar() {
   const isDiretor = (user as any).role === "diretor";
   const { data: settings } = useSettings();
   const { data: supportUnread } = useSupportUnread(isDiretor);
+  // Marca própria: nome/logo da imobiliária. Fora da Kayser não aparece o Grupo Direcional.
+  const marca = useMarca();
+  const logo = logoDaMarca(marca);
+  const marcaPropria = marca.nome !== "Kayser One";
 
   // O botão hambúrguer do Header dispara este evento (mesmo padrão da busca ⌘K).
   useEffect(() => {
@@ -113,16 +118,21 @@ export function Sidebar() {
     >
       {/* Logo */}
       <div className="flex items-center gap-3 p-4 h-16 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: "var(--primary)" }}
-        >
-          <Building2 size={18} color="white" />
-        </div>
+        {logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logo} alt={marca.nome} className="w-9 h-9 rounded-xl object-contain flex-shrink-0" style={{ background: "white" }} />
+        ) : (
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "var(--primary)" }}
+          >
+            <Building2 size={18} color="white" />
+          </div>
+        )}
         {!collapsed && (
           <div>
             <div className="font-bold text-sm" style={{ color: "var(--sidebar-foreground)" }}>
-              Kayser One
+              {marca.nome}
             </div>
             <div className="text-xs" style={{ color: "var(--sidebar-muted)" }}>
               CRM Inteligente
@@ -195,6 +205,8 @@ export function Sidebar() {
           .filter((item) => {
             // Empresa parceira (usuário com empresaId) só enxerga as análises.
             if ((user as any).empresaId) return item.href === "/pastas";
+            // Grupo Direcional é da Kayser: imobiliária com marca própria não vê.
+            if (marcaPropria && item.href === "/grupo-direcional") return false;
             // Itens com lista de cargos: só os cargos permitidos veem.
             if ((item as any).roles) return (item as any).roles.includes(user.role);
             // Itens liberáveis pelo Diretor (toggle nas settings): Diretor sempre vê;

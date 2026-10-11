@@ -8,6 +8,7 @@ import { getStoredUser } from "@/lib/auth";
 import { api, getApiErrorMessage, API_URL } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
+import { useMarca, corDoTexto } from "@/hooks/use-marca";
 import { useUpdateProfile, useUploadAvatar, avatarUrl } from "@/hooks/use-profile";
 import { useMe, useSetRecoveryCode } from "@/hooks/use-recovery";
 import { useKnowledge, useCreateKnowledge, useDeleteKnowledge, useUploadKnowledge } from "@/hooks/use-knowledge";
@@ -84,16 +85,153 @@ export default function ConfiguracoesPage() {
             </>
           )}
 
-          {activeTab === "empresa" && (
-            <Card title="Empresa">
-              <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-                Dados da empresa e logo serão configuráveis em breve.
-              </p>
-            </Card>
-          )}
+          {activeTab === "empresa" &&
+            (isDiretor ? (
+              <MarcaCard />
+            ) : (
+              <Card title="Empresa">
+                <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+                  O nome, a cor e o logo da empresa são definidos pelo Diretor.
+                </p>
+              </Card>
+            ))}
         </div>
       </div>
     </div>
+  );
+}
+
+/** Marca própria (white-label): nome, cor e logo da imobiliária. Só o Diretor muda. */
+function MarcaCard() {
+  const { data: settings } = useSettings();
+  const update = useUpdateSettings();
+  const marca = useMarca();
+  const [nome, setNome] = useState("");
+  const [cor, setCor] = useState("#facc15");
+  const [msg, setMsg] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const arquivo = useRef<HTMLInputElement | null>(null);
+  const [versaoLogo, setVersaoLogo] = useState(0);
+
+  useEffect(() => {
+    if (!settings) return;
+    setNome((settings as any).marcaNome || "");
+    setCor((settings as any).marcaCor || "#facc15");
+  }, [settings]);
+
+  const temLogo = !!(settings as any)?.hasMarcaLogo;
+  const logo = temLogo ? `${API_URL}/marca/logo?v=${marca.versao}-${versaoLogo}` : null;
+  const recarregar = () => setTimeout(() => window.location.reload(), 600);
+
+  const salvar = async (padrao = false) => {
+    setMsg("");
+    try {
+      await update.mutateAsync({ marcaNome: padrao ? "" : nome.trim(), marcaCor: padrao ? "" : cor } as any);
+      setMsg("✅ Marca salva. Recarregando…");
+      recarregar();
+    } catch (e) {
+      setMsg(getApiErrorMessage(e, "Não consegui salvar a marca."));
+    }
+  };
+
+  const enviarLogo = async (f: File) => {
+    if (!/^image\/(png|jpeg|webp)$/.test(f.type)) return setMsg("Envie o logo em PNG, JPG ou WEBP.");
+    if (f.size > 2 * 1024 * 1024) return setMsg("O logo pode ter até 2 MB.");
+    setEnviando(true);
+    setMsg("");
+    try {
+      const fd = new FormData();
+      fd.append("file", f);
+      await api.post("/settings/marca-logo", fd);
+      setVersaoLogo((v) => v + 1);
+      setMsg("✅ Logo enviado. Recarregando…");
+      recarregar();
+    } catch (e) {
+      setMsg(getApiErrorMessage(e, "Não consegui enviar o logo."));
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  const tirarLogo = async () => {
+    await api.delete("/settings/marca-logo").catch(() => null);
+    setMsg("Logo removido. Recarregando…");
+    recarregar();
+  };
+
+  return (
+    <Card title="Marca da empresa">
+      <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
+        Nome, cor e logo que aparecem no sistema, na tela de login e no app do celular. Em branco = Kayser One.
+      </p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="text-sm" style={{ color: "var(--foreground)" }}>
+          Nome da empresa
+          <input
+            value={nome}
+            maxLength={60}
+            onChange={(e) => setNome(e.target.value)}
+            placeholder="Kayser One"
+            className="mt-1 w-full px-3 py-2 rounded-xl border text-sm"
+            style={{ background: "var(--background)", borderColor: "var(--border)", color: "var(--foreground)" }}
+          />
+        </label>
+        <label className="text-sm" style={{ color: "var(--foreground)" }}>
+          Cor principal
+          <div className="mt-1 flex items-center gap-2">
+            <input type="color" value={cor} onChange={(e) => setCor(e.target.value)} className="w-12 h-10 rounded-lg border" style={{ borderColor: "var(--border)" }} />
+            <span className="text-xs font-mono" style={{ color: "var(--muted-foreground)" }}>{cor}</span>
+          </div>
+        </label>
+      </div>
+
+      <div className="mt-4 flex items-center gap-3 flex-wrap">
+        <div className="w-14 h-14 rounded-xl border flex items-center justify-center overflow-hidden" style={{ borderColor: "var(--border)", background: "white" }}>
+          {logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logo} alt="logo" className="w-full h-full object-contain" />
+          ) : (
+            <Building2 size={22} color="#0a0a0a" />
+          )}
+        </div>
+        <input ref={arquivo} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => e.target.files?.[0] && enviarLogo(e.target.files[0])} />
+        <button onClick={() => arquivo.current?.click()} disabled={enviando} className="px-3 py-2 rounded-xl text-sm border flex items-center gap-2 disabled:opacity-60" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>
+          {enviando ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} {temLogo ? "Trocar logo" : "Enviar logo"}
+        </button>
+        {temLogo && (
+          <button onClick={tirarLogo} className="px-3 py-2 rounded-xl text-sm" style={{ color: "#ef4444" }}>
+            Tirar logo
+          </button>
+        )}
+        <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>PNG, JPG ou WEBP, até 2 MB (quadrado fica melhor).</span>
+      </div>
+
+      {/* Prévia */}
+      <div className="mt-5 p-3 rounded-xl flex items-center gap-3" style={{ background: "#0a0a0a" }}>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden" style={{ background: logo ? "white" : cor }}>
+          {logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logo} alt="" className="w-full h-full object-contain" />
+          ) : (
+            <Building2 size={18} color={corDoTexto(cor)} />
+          )}
+        </div>
+        <span className="font-bold text-sm text-white">{nome.trim() || "Kayser One"}</span>
+        <span className="ml-auto px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: cor, color: corDoTexto(cor) }}>
+          Botão de exemplo
+        </span>
+      </div>
+
+      <div className="mt-4 flex gap-2 items-center flex-wrap">
+        <button onClick={() => salvar(false)} disabled={update.isPending} className="px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-60" style={{ background: cor, color: corDoTexto(cor) }}>
+          {update.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Salvar marca
+        </button>
+        <button onClick={() => salvar(true)} disabled={update.isPending} className="px-3 py-2 rounded-xl text-sm" style={{ color: "var(--muted-foreground)" }}>
+          Voltar pro padrão Kayser One
+        </button>
+        {msg && <span className="text-sm" style={{ color: "var(--muted-foreground)" }}>{msg}</span>}
+      </div>
+    </Card>
   );
 }
 

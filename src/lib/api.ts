@@ -1,7 +1,23 @@
 import axios from "axios";
 
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
+const API_PADRAO = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
+
+/**
+ * Marca própria (Fase 1 = uma instalação por imobiliária): cada subdomínio
+ * (imobx.kayserone.com.br) aponta pro backend daquela imobiliária. O mapa fica na env
+ * NEXT_PUBLIC_CLIENTES do Vercel: {"imobx":"https://imobx-api.up.railway.app/api/v1"}.
+ * Sem subdomínio (ou não cadastrado) = backend da Kayser.
+ */
+export function apiDoHost(host?: string | null): string {
+  let mapa: Record<string, string> = {};
+  try {
+    mapa = JSON.parse(process.env.NEXT_PUBLIC_CLIENTES || "{}");
+  } catch {}
+  const sub = (host || "").toLowerCase().split(":")[0].match(/^([a-z0-9-]+)\.kayserone\.com\.br$/)?.[1];
+  return (sub && sub !== "www" && mapa[sub]) || API_PADRAO;
+}
+
+export const API_URL = typeof window !== "undefined" ? apiDoHost(window.location.hostname) : API_PADRAO;
 
 export const TOKEN_KEY = "kayser-token";
 export const USER_KEY = "kayser-user";
