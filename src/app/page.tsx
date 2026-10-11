@@ -58,7 +58,9 @@ const passos = [
 
 export default async function Home() {
   // Subdomínio de cliente = login da imobiliária (a página de vendas é só da Kayser).
-  const host = ((await headers()).get("host") || "").toLowerCase().split(":")[0];
+  // `x-kayser-host`: o repassador do Cloudflare manda o subdomínio original (imobx.kayserone.com.br).
+  const h = await headers();
+  const host = (h.get("x-kayser-host") || h.get("host") || "").toLowerCase().split(":")[0];
   if (/^[a-z0-9-]+\.kayserone\.com\.br$/.test(host) && !host.startsWith("www.")) redirect("/login");
 
   return (
