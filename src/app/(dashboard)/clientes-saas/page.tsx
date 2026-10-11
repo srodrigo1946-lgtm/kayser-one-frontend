@@ -19,7 +19,7 @@ type Cliente = {
   erro: string | null;
   createdAt: string;
 };
-type Resposta = { configurado: boolean; planos: Record<string, number>; personalizado: string; clientes: Cliente[] };
+type Resposta = { configurado: boolean; faltam?: string[]; planos: Record<string, number>; personalizado: string; clientes: Cliente[] };
 
 const slug = (t: string) =>
   t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\b(ltda|me|eireli|s\/?a)\b/g, "").replace(/[^a-z0-9-]+/g, "").slice(0, 30);
@@ -92,7 +92,7 @@ export default function ClientesSaasPage() {
       <div className="p-6 space-y-6 max-w-5xl">
         {dados && !dados.configurado && (
           <div className="p-4 rounded-2xl text-sm" style={{ background: "#f59e0b1a", color: "#f59e0b", border: "1px solid #f59e0b55" }}>
-            Falta configurar as chaves do Railway no servidor da Kayser (RAILWAY_API_TOKEN e os IDs do projeto dos clientes). Até lá, o botão Criar não funciona.
+            Falta configurar no Railway do servidor da Kayser: {(dados.faltam ?? []).join(", ") || "chaves do Railway"}. Até lá, o botão Criar não funciona.
           </div>
         )}
 
