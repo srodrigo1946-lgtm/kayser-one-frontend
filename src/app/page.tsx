@@ -51,14 +51,14 @@ const recursos = [
   ["📊", "O gestor vê tudo", "Kanban, conversas ao vivo por equipe, ranking, metas, VGV, custo por lead e relatórios — cada cargo vê só o seu time."],
 ];
 
-// Planos (planilha do Rodrigo, 12/10/2026). `link` = link de assinatura do Mercado Pago
+// Planos (planilha do Rodrigo, 12/10/2026). `link` = link de assinatura MENSAL do Mercado Pago
 // (o Rodrigo manda, colar aqui). Sem link, "Assinar" abre o WhatsApp com o plano.
 const PLANOS: { nome: string; preco: number; usuarios: number; para: string; destaque?: boolean; link?: string }[] = [
-  { nome: "Corretor", preco: 30, usuarios: 1, para: "Corretor autônomo", link: "https://mpago.la/1fqCwQo" },
-  { nome: "Gerente de Vendas", preco: 110, usuarios: 16, para: "Gerente + equipe", link: "https://mpago.la/2NxVJas" },
-  { nome: "Gerente Geral", preco: 330, usuarios: 57, para: "Várias equipes", destaque: true, link: "https://mpago.la/2mn66hG" },
-  { nome: "Superintendente", preco: 530, usuarios: 120, para: "Regional", link: "https://mpago.la/1TBCxkA" },
-  { nome: "Diretor completo", preco: 750, usuarios: 250, para: "Imobiliária inteira", link: "https://mpago.la/1HFPF2m" },
+  { nome: "Corretor", preco: 30, usuarios: 1, para: "Corretor autônomo", link: "https://mpago.la/2zi93Z4" },
+  { nome: "Gerente de Vendas", preco: 110, usuarios: 16, para: "Gerente + equipe", link: "https://mpago.la/2mC5She" },
+  { nome: "Gerente Geral", preco: 330, usuarios: 57, para: "Várias equipes", destaque: true, link: "https://mpago.la/2dw1dew" },
+  { nome: "Superintendente", preco: 530, usuarios: 120, para: "Regional", link: "https://mpago.la/1MUfq2X" },
+  { nome: "Diretor completo", preco: 750, usuarios: 250, para: "Imobiliária inteira", link: "https://mpago.la/1Vaj8aY" },
 ];
 const assinar = (p: (typeof PLANOS)[number]) =>
   p.link ||
