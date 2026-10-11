@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { FalarComCeo } from "@/components/vendas/falar-com-ceo";
 
 // Página de vendas do Kayser One (kayserone.com.br). Texto: Rebeca (marketing), 11/10/2026.
 // Subdomínio de cliente (imobx.kayserone.com.br) vai direto pro login da imobiliária.
@@ -63,12 +64,6 @@ const assinar = (p: (typeof PLANOS)[number]) =>
   p.link ||
   "https://wa.me/5521998236607?text=" +
     encodeURIComponent(`Olá! Quero assinar o plano ${p.nome} do Kayser One (R$ ${p.preco}/mês, até ${p.usuarios} usuário${p.usuarios > 1 ? "s" : ""}).`);
-const CEO_EMAIL =
-  "mailto:contato@kayserone.com.br?subject=" +
-  encodeURIComponent("Kayser One — mais de 250 usuários") +
-  "&body=" +
-  encodeURIComponent("Olá! Tenho uma operação com mais de 250 usuários e quero uma reunião para entender o Kayser One.\n\nNome:\nEmpresa:\nTelefone:\nNº de corretores:");
-
 const passos = [
   ["1", "Fale com a gente", "Um papo rápido no WhatsApp para entender sua operação."],
   ["2", "Demonstração", "Mostramos o sistema funcionando com o seu fluxo de lançamento."],
@@ -270,13 +265,7 @@ export default async function Home() {
             <p className="mt-2 text-sm" style={{ color: "#a8a29e" }}>
               Reunião personalizada com o CEO para entender o seu negócio.
             </p>
-            <a
-              href={CEO_EMAIL}
-              className="mt-6 text-center rounded-xl px-4 py-3 font-bold border transition-transform hover:scale-[1.02]"
-              style={{ borderColor: Y, color: Y }}
-            >
-              Falar com o CEO
-            </a>
+            <FalarComCeo />
             <p className="mt-2 text-xs text-center" style={{ color: "#78716c" }}>contato@kayserone.com.br</p>
           </div>
         </div>
