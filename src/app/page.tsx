@@ -50,6 +50,25 @@ const recursos = [
   ["📊", "O gestor vê tudo", "Kanban, conversas ao vivo por equipe, ranking, metas, VGV, custo por lead e relatórios — cada cargo vê só o seu time."],
 ];
 
+// Planos (planilha do Rodrigo, 12/10/2026). `link` = link de pagamento recorrente do Asaas
+// (quando a conta for aprovada, colar aqui). Sem link, "Assinar" abre o WhatsApp com o plano.
+const PLANOS: { nome: string; preco: number; usuarios: number; para: string; destaque?: boolean; link?: string }[] = [
+  { nome: "Corretor", preco: 30, usuarios: 1, para: "Corretor autônomo" },
+  { nome: "Gerente de Vendas", preco: 110, usuarios: 16, para: "Gerente + equipe" },
+  { nome: "Gerente Geral", preco: 330, usuarios: 49, para: "Várias equipes", destaque: true },
+  { nome: "Superintendente", preco: 530, usuarios: 99, para: "Regional" },
+  { nome: "Diretor completo", preco: 750, usuarios: 199, para: "Imobiliária inteira" },
+];
+const assinar = (p: (typeof PLANOS)[number]) =>
+  p.link ||
+  "https://wa.me/5521998236607?text=" +
+    encodeURIComponent(`Olá! Quero assinar o plano ${p.nome} do Kayser One (R$ ${p.preco}/mês, até ${p.usuarios} usuário${p.usuarios > 1 ? "s" : ""}).`);
+const CEO_EMAIL =
+  "mailto:contato@kayserone.com.br?subject=" +
+  encodeURIComponent("Kayser One — mais de 199 usuários") +
+  "&body=" +
+  encodeURIComponent("Olá! Tenho uma operação com mais de 199 usuários e quero uma reunião para entender o Kayser One.\n\nNome:\nEmpresa:\nTelefone:\nNº de corretores:");
+
 const passos = [
   ["1", "Fale com a gente", "Um papo rápido no WhatsApp para entender sua operação."],
   ["2", "Demonstração", "Mostramos o sistema funcionando com o seu fluxo de lançamento."],
@@ -74,9 +93,14 @@ export default async function Home() {
           </div>
           <span className="font-extrabold text-lg">Kayser One</span>
         </div>
-        <Link href="/login" className="px-4 py-2 rounded-xl text-sm font-semibold border" style={{ borderColor: "rgba(250,204,21,.4)", color: Y }}>
-          Entrar
-        </Link>
+        <div className="flex items-center gap-2">
+          <a href="#planos" className="px-3 py-2 rounded-xl text-sm font-semibold" style={{ color: "#f5f5f4" }}>
+            Planos
+          </a>
+          <Link href="/login" className="px-4 py-2 rounded-xl text-sm font-semibold border" style={{ borderColor: "rgba(250,204,21,.4)", color: Y }}>
+            Entrar
+          </Link>
+        </div>
       </header>
 
       {/* Hero */}
@@ -94,8 +118,8 @@ export default async function Home() {
         </p>
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center items-center">
           <BotaoWhats grande />
-          <a href="#como-funciona" className="px-6 py-4 rounded-2xl text-base font-semibold" style={{ color: "#f5f5f4" }}>
-            Ver como funciona ↓
+          <a href="#planos" className="px-6 py-4 rounded-2xl text-base font-semibold border" style={{ color: Y, borderColor: "rgba(250,204,21,.4)" }}>
+            Ver planos ↓
           </a>
         </div>
       </section>
@@ -189,6 +213,65 @@ export default async function Home() {
         </p>
         <div className="mt-6 inline-block px-5 py-3 rounded-2xl font-bold break-all" style={{ background: "#141414", color: Y, border: "1px solid rgba(250,204,21,.3)" }}>
           suaimobiliaria.kayserone.com.br
+        </div>
+      </section>
+
+      {/* Planos */}
+      <section id="planos" className="max-w-6xl mx-auto px-4 sm:px-6 py-14">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-center">
+          Planos <span style={{ color: Y }}>para o tamanho da sua equipe</span>
+        </h2>
+        <p className="mt-3 text-center text-sm sm:text-base" style={{ color: "#a8a29e" }}>
+          Todos com tudo incluso: IA no WhatsApp, fila de plantão com GPS, Corujão, reengajamento, app no celular e a sua marca.
+        </p>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {PLANOS.map((p) => (
+            <div
+              key={p.nome}
+              className="rounded-2xl p-6 border flex flex-col"
+              style={{ background: p.destaque ? "rgba(250,204,21,.07)" : "#141414", borderColor: p.destaque ? Y : "rgba(250,204,21,.18)" }}
+            >
+              {p.destaque && (
+                <span className="self-start text-xs font-bold px-3 py-1 rounded-full mb-3" style={{ background: Y, color: "#0a0a0a" }}>
+                  Mais escolhido
+                </span>
+              )}
+              <h3 className="font-bold text-xl">{p.nome}</h3>
+              <p className="text-sm mt-1" style={{ color: "#a8a29e" }}>{p.para}</p>
+              <div className="mt-4">
+                <span className="text-4xl font-extrabold" style={{ color: Y }}>R$ {p.preco}</span>
+                <span className="text-sm" style={{ color: "#a8a29e" }}>/mês</span>
+              </div>
+              <p className="mt-2 font-semibold">
+                até {p.usuarios} usuário{p.usuarios > 1 ? "s" : ""}
+              </p>
+              <a
+                href={assinar(p)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 text-center rounded-xl px-4 py-3 font-bold transition-transform hover:scale-[1.02]"
+                style={p.destaque ? { background: Y, color: "#0a0a0a" } : { background: "#22c55e", color: "#ffffff" }}
+              >
+                Assinar
+              </a>
+            </div>
+          ))}
+          <div className="rounded-2xl p-6 border flex flex-col" style={{ background: "#141414", borderColor: "rgba(250,204,21,.18)" }}>
+            <h3 className="font-bold text-xl">Rede / Empresa</h3>
+            <p className="text-sm mt-1" style={{ color: "#a8a29e" }}>Acima de 199 usuários</p>
+            <div className="mt-4 text-2xl font-extrabold" style={{ color: Y }}>Sob medida</div>
+            <p className="mt-2 text-sm" style={{ color: "#a8a29e" }}>
+              Reunião personalizada com o CEO para entender o seu negócio.
+            </p>
+            <a
+              href={CEO_EMAIL}
+              className="mt-6 text-center rounded-xl px-4 py-3 font-bold border transition-transform hover:scale-[1.02]"
+              style={{ borderColor: Y, color: Y }}
+            >
+              Falar com o CEO
+            </a>
+            <p className="mt-2 text-xs text-center" style={{ color: "#78716c" }}>contato@kayserone.com.br</p>
+          </div>
         </div>
       </section>
 
