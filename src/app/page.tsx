@@ -55,10 +55,10 @@ const recursos = [
 // (o Rodrigo manda, colar aqui). Sem link, "Assinar" abre o WhatsApp com o plano.
 const PLANOS: { nome: string; preco: number; usuarios: number; para: string; destaque?: boolean; link?: string }[] = [
   { nome: "Corretor", preco: 30, usuarios: 1, para: "Corretor autônomo", link: "https://mpago.la/1fqCwQo" },
-  { nome: "Gerente de Vendas", preco: 110, usuarios: 16, para: "Gerente + equipe" },
-  { nome: "Gerente Geral", preco: 330, usuarios: 57, para: "Várias equipes", destaque: true },
-  { nome: "Superintendente", preco: 530, usuarios: 120, para: "Regional" },
-  { nome: "Diretor completo", preco: 750, usuarios: 250, para: "Imobiliária inteira" },
+  { nome: "Gerente de Vendas", preco: 110, usuarios: 16, para: "Gerente + equipe", link: "https://mpago.la/2NxVJas" },
+  { nome: "Gerente Geral", preco: 330, usuarios: 57, para: "Várias equipes", destaque: true, link: "https://mpago.la/2mn66hG" },
+  { nome: "Superintendente", preco: 530, usuarios: 120, para: "Regional", link: "https://mpago.la/1TBCxkA" },
+  { nome: "Diretor completo", preco: 750, usuarios: 250, para: "Imobiliária inteira", link: "https://mpago.la/1HFPF2m" },
 ];
 const assinar = (p: (typeof PLANOS)[number]) =>
   p.link ||
