@@ -16,7 +16,7 @@ export interface Marca {
   bloqueado?: boolean;
 }
 
-const PADRAO: Marca = { nome: "Kayser One", cor: null, temLogo: false, versao: 0 };
+const PADRAO: Marca = { nome: "K1", cor: null, temLogo: false, versao: 0 };
 const CHAVE = "kayser-marca";
 
 /** Logo da marca própria (público) — muda de endereço quando o Diretor troca. */

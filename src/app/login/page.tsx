@@ -193,7 +193,7 @@ export default function LoginPage() {
           {/* Conta bloqueada/encerrada pela Kayser (painel Business K1). */}
           {marca.bloqueado && (
             <div role="alert" className="mb-4 rounded-xl px-4 py-3 text-sm" style={{ background: "rgba(239,68,68,.12)", color: "#f87171", border: "1px solid rgba(239,68,68,.35)" }}>
-              Esta conta do Kayser One está bloqueada. Fale com a Kayser One: contato@kayserone.com.br
+              Esta conta do K1 está bloqueada. Fale com a K1: contato@kayserone.com.br
             </div>
           )}
 

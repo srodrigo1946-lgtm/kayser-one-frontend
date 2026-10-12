@@ -4,18 +4,18 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { FalarComCeo } from "@/components/vendas/falar-com-ceo";
 
-// Página de vendas do Kayser One (kayserone.com.br). Texto: Rebeca (marketing), 11/10/2026.
+// Página de vendas do K1 (kayserone.com.br). Texto: Rebeca (marketing), 11/10/2026.
 // Subdomínio de cliente (imobx.kayserone.com.br) vai direto pro login da imobiliária.
 
 export const metadata: Metadata = {
-  title: "Kayser One | CRM para imobiliárias de lançamento",
+  title: "K1 | CRM para imobiliárias de lançamento",
   description:
     "IA que atende seu cliente no WhatsApp 24h, lead em segundos só para quem está no stand, plantão com check-in por GPS e gestão completa — com a sua marca.",
 };
 
 const WHATS =
   "https://wa.me/5521998236607?text=" +
-  encodeURIComponent("Olá! Vi o site do Kayser One e quero agendar uma demonstração.");
+  encodeURIComponent("Olá! Vi o site do K1 e quero agendar uma demonstração.");
 
 const Y = "#facc15";
 
@@ -63,7 +63,7 @@ const PLANOS: { nome: string; preco: number; usuarios: number; para: string; des
 const assinar = (p: (typeof PLANOS)[number]) =>
   p.link ||
   "https://wa.me/5521998236607?text=" +
-    encodeURIComponent(`Olá! Quero assinar o plano ${p.nome} do Kayser One (R$ ${p.preco}/mês, até ${p.usuarios} usuário${p.usuarios > 1 ? "s" : ""}).`);
+    encodeURIComponent(`Olá! Quero assinar o plano ${p.nome} do K1 (R$ ${p.preco}/mês, até ${p.usuarios} usuário${p.usuarios > 1 ? "s" : ""}).`);
 const passos = [
   ["1", "Fale com a gente", "Um papo rápido no WhatsApp para entender sua operação."],
   ["2", "Demonstração", "Mostramos o sistema funcionando com o seu fluxo de lançamento."],
@@ -82,7 +82,7 @@ export default async function Home() {
       {/* Topo */}
       <header className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex flex-col items-center justify-center border-2" style={{ borderColor: Y, background: "#0a0a0a" }} aria-label="Kayser One">
+          <div className="w-10 h-10 rounded-xl flex flex-col items-center justify-center border-2" style={{ borderColor: Y, background: "#0a0a0a" }} aria-label="K1">
             <b className="text-lg leading-none" style={{ color: Y }}>K1</b>
             <i className="block w-5 h-[3px] mt-0.5 rounded" style={{ background: Y }} />
           </div>
@@ -134,7 +134,7 @@ export default async function Home() {
             preload="metadata"
           />
         </div>
-        <p className="mt-4 text-sm" style={{ color: "#a8a29e" }}>▶ Veja o Kayser One em 50 segundos</p>
+        <p className="mt-4 text-sm" style={{ color: "#a8a29e" }}>▶ Veja o K1 em 50 segundos</p>
       </section>
 
       {/* Dores */}
@@ -152,7 +152,7 @@ export default async function Home() {
           ))}
         </div>
         <p className="mt-8 text-center text-lg font-semibold">
-          O Kayser One roda no navegador e no celular, <span style={{ color: Y }}>sem depender de loja nem de “atualizar o app”</span>.
+          O K1 roda no navegador e no celular, <span style={{ color: Y }}>sem depender de loja nem de “atualizar o app”</span>.
         </p>
       </section>
 
@@ -299,7 +299,7 @@ export default async function Home() {
       </section>
 
       <footer className="max-w-6xl mx-auto px-4 sm:px-6 py-8 text-xs flex flex-col sm:flex-row gap-3 justify-between" style={{ color: "#78716c" }}>
-        <span>© {new Date().getFullYear()} Kayser One · CNPJ 53.286.988/0001-63</span>
+        <span>© {new Date().getFullYear()} K1 · CNPJ 53.286.988/0001-63</span>
         <span className="flex gap-4">
           <Link href="/termos">Termos de Uso</Link>
           <Link href="/privacidade">Privacidade</Link>

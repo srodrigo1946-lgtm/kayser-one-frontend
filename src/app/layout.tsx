@@ -15,11 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kayser One | CRM Inteligente",
+  title: "K1 | CRM Inteligente",
   description: "Plataforma SaaS de CRM com IA para gestão comercial imobiliária",
-  applicationName: "Kayser One",
+  applicationName: "K1",
   // App no iPhone (Adicionar à Tela de Início): tela cheia, nome e ícone.
-  appleWebApp: { capable: true, title: "Kayser One", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: "K1", statusBarStyle: "black-translucent" },
   icons: { apple: "/icons/apple-touch-icon.png" },
 };
 
