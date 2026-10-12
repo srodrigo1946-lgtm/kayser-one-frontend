@@ -6,6 +6,7 @@ import { Loader2, Plus, ExternalLink, RefreshCw } from "lucide-react";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 import { useMarca } from "@/hooks/use-marca";
+import { PainelBusiness } from "@/components/business/painel-business";
 
 type Cliente = {
   id: string;
@@ -20,6 +21,10 @@ type Cliente = {
   cobrancaLink: string | null;
   assinatura: string | null;
   pagoEm: string | null;
+  bloqueadoEm: string | null;
+  encerradoEm: string | null;
+  agendaAcao: string | null;
+  agendaEm: string | null;
   origem: string | null;
   status: "criando" | "ativo" | "erro" | "aguardando";
   etapa: string | null;
@@ -145,6 +150,39 @@ Deixe vazio para voltar ao preço de tabela.`, c.valorMensal != null ? String(c.
     ajustar(c, { valorMensal: t.trim() === "" ? null : n });
   };
 
+  // Bloquear / encerrar a conta do cliente, na hora ou numa data (dados ficam guardados).
+  const contaCliente = async (c: Cliente, acao: "bloquear" | "encerrar" | "desbloquear" | "cancelar_agenda") => {
+    let quando: string | undefined;
+    if (acao === "bloquear" || acao === "encerrar") {
+      const nome = acao === "bloquear" ? "Bloquear" : "Encerrar";
+      const t = prompt(
+        `${nome} a conta de ${c.empresa}?\n\n` +
+          (acao === "encerrar" ? "Encerrar = bloqueia o acesso e cancela a assinatura no Mercado Pago. Os dados ficam guardados (dá para reativar).\n\n" : "Bloquear = ninguém da imobiliária consegue entrar. Os dados ficam guardados.\n\n") +
+          "Deixe vazio para fazer AGORA, ou digite a data (dd/mm/aaaa):",
+        ""
+      );
+      if (t === null) return;
+      const m = t.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (t.trim() && !m) return setMsg("Data inválida. Use dd/mm/aaaa.");
+      if (m) quando = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]), 8, 0).toISOString();
+    } else if (acao === "desbloquear" && !confirm(`Reativar a conta de ${c.empresa}?`)) return;
+    try {
+      const r = await api.post<{ agendado?: string }>(`/clientes-saas/${c.id}/conta`, { acao, quando });
+      setMsg(
+        r.data.agendado
+          ? `${c.empresa}: marcado para ${new Date(r.data.agendado).toLocaleDateString("pt-BR")}.`
+          : acao === "desbloquear"
+            ? `${c.empresa} reativada. Volta a funcionar em uns 3 minutos.`
+            : acao === "cancelar_agenda"
+              ? "Agendamento cancelado."
+              : `${c.empresa} ${acao === "bloquear" ? "bloqueada" : "encerrada"}. Vale em uns 3 minutos.`
+      );
+      carregar();
+    } catch (e) {
+      setMsg(getApiErrorMessage(e, "Não consegui fazer isso agora."));
+    }
+  };
+
   const cobrar = async (c: Cliente, pix = false) => {
     const tipo = pix ? `a mensalidade deste mês (Pix ou cartão) de ${brl(valor(c))}` : `a assinatura mensal no cartão de ${brl(valor(c))}`;
     if (!confirm(`Gerar ${tipo} para ${c.empresa}?
@@ -167,7 +205,7 @@ O link do Mercado Pago vai por e-mail para ${c.diretorEmail} (cópia para você)
 
   return (
     <div>
-      <Header title="Clientes" subtitle="Imobiliárias que usam o Kayser One" />
+      <Header title="Business K1" subtitle="Clientes, cobrança e resultado do Kayser One" />
       <div className="p-4 sm:p-6 space-y-6 max-w-5xl">
         {dados && !dados.configurado && (
           <div className="p-4 rounded-2xl text-sm" style={{ background: "#f59e0b1a", color: "#f59e0b", border: "1px solid #f59e0b55" }}>
@@ -187,6 +225,8 @@ O link do Mercado Pago vai por e-mail para ${c.diretorEmail} (cópia para você)
             <button onClick={() => setMsg("")} aria-label="Fechar aviso" style={fraco}>✕</button>
           </div>
         )}
+
+        <PainelBusiness />
 
         {/* Resumo: uma faixa só, sem cartões. */}
         <div className="rounded-2xl border px-5 py-4 flex flex-wrap items-end gap-x-10 gap-y-3" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
@@ -359,6 +399,37 @@ O link do Mercado Pago vai por e-mail para ${c.diretorEmail} (cópia para você)
                       {c.subdominio}.kayserone.com.br <ExternalLink size={12} />
                     </a>
                   )}
+                  <div className="w-full flex flex-wrap items-center gap-2 text-xs">
+                    {c.encerradoEm ? (
+                      <span className="font-semibold" style={{ color: "#ef4444" }}>⛔ Conta encerrada em {new Date(c.encerradoEm).toLocaleDateString("pt-BR")}</span>
+                    ) : c.bloqueadoEm ? (
+                      <span className="font-semibold" style={{ color: "#ef4444" }}>🔒 Bloqueada desde {new Date(c.bloqueadoEm).toLocaleDateString("pt-BR")}</span>
+                    ) : null}
+                    {c.agendaAcao && c.agendaEm && (
+                      <span className="font-semibold" style={{ color: "#f59e0b" }}>
+                        ⏰ {c.agendaAcao === "encerrar" ? "Encerra" : "Bloqueia"} em {new Date(c.agendaEm).toLocaleDateString("pt-BR")}
+                        <button onClick={() => contaCliente(c, "cancelar_agenda")} className="ml-2 underline underline-offset-2 font-normal" style={fraco}>cancelar</button>
+                      </span>
+                    )}
+                    {c.status === "ativo" && (
+                      <span className="ml-auto flex gap-2">
+                        {c.bloqueadoEm ? (
+                          <button onClick={() => contaCliente(c, "desbloquear")} className="px-2.5 py-1 rounded-lg border font-semibold" style={{ borderColor: "#22c55e", color: "#22c55e" }}>
+                            Reativar
+                          </button>
+                        ) : (
+                          <button onClick={() => contaCliente(c, "bloquear")} className="px-2.5 py-1 rounded-lg border" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>
+                            Bloquear
+                          </button>
+                        )}
+                        {!c.encerradoEm && (
+                          <button onClick={() => contaCliente(c, "encerrar")} className="px-2.5 py-1 rounded-lg border" style={{ borderColor: "#ef444466", color: "#ef4444" }}>
+                            Encerrar conta
+                          </button>
+                        )}
+                      </span>
+                    )}
+                  </div>
                   {c.status === "erro" && (
                     <button onClick={() => tentar(c.id)} className="text-xs px-3 py-1.5 rounded-lg border flex items-center gap-1" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>
                       <RefreshCw size={12} /> Tentar de novo

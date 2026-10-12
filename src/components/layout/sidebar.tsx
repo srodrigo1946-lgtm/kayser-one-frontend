@@ -53,7 +53,7 @@ const navItems = [
   { href: "/escala", label: "Escala de Atendimento", icon: CalendarClock },
   { href: "/empresas", label: "Empresas", icon: Building2, diretorOnly: true },
   // Venda do Kayser One: criar instalação de imobiliária (só na Kayser — some em quem tem marca própria).
-  { href: "/clientes-saas", label: "Clientes", icon: Crown, diretorOnly: true },
+  { href: "/clientes-saas", label: "Business K1", icon: Crown, diretorOnly: true },
   { href: "/ranking-analises", label: "Ranking Análises", icon: Trophy, roles: ["diretor", "superintendente", "gerente_geral"] },
   { href: "/suporte", label: "Suporte", icon: LifeBuoy, diretorOnly: true },
   { href: "/agenda", label: "Agenda", icon: Calendar },

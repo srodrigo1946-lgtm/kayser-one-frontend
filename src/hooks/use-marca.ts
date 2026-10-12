@@ -12,6 +12,8 @@ export interface Marca {
   limiteUsuarios?: number | null;
   // Serviços adicionais comprados: ia (IA de resposta), ione (IA One), meta (Anúncios Meta).
   adicionais?: string[];
+  // Conta bloqueada/encerrada pela Kayser (a tela de login avisa).
+  bloqueado?: boolean;
 }
 
 const PADRAO: Marca = { nome: "Kayser One", cor: null, temLogo: false, versao: 0 };
