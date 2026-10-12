@@ -183,6 +183,27 @@ Deixe vazio para voltar ao preço de tabela.`, c.valorMensal != null ? String(c.
     }
   };
 
+  // Apagar de vez (só conta encerrada): servidor, banco e cadastro. Não tem volta.
+  const apagar = async (c: Cliente) => {
+    const t = prompt(
+      `APAGAR DE VEZ ${c.empresa}?
+
+Isso apaga o servidor e TODOS os dados dessa imobiliária (leads, conversas, usuários). NÃO TEM VOLTA.
+O histórico de pagamentos do caixa fica.
+
+Para confirmar, digite o endereço: ${c.subdominio}`,
+      ""
+    );
+    if (t === null) return;
+    try {
+      await api.delete(`/clientes-saas/${c.id}`, { data: { confirmacao: t } });
+      setMsg(`${c.empresa} apagado.`);
+      carregar();
+    } catch (e) {
+      setMsg(getApiErrorMessage(e, "Não consegui apagar."));
+    }
+  };
+
   const cobrar = async (c: Cliente, pix = false) => {
     const tipo = pix ? `a mensalidade deste mês (Pix ou cartão) de ${brl(valor(c))}` : `a assinatura mensal no cartão de ${brl(valor(c))}`;
     if (!confirm(`Gerar ${tipo} para ${c.empresa}?
@@ -420,6 +441,11 @@ O link do Mercado Pago vai por e-mail para ${c.diretorEmail} (cópia para você)
                         ) : (
                           <button onClick={() => contaCliente(c, "bloquear")} className="px-2.5 py-1 rounded-lg border" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>
                             Bloquear
+                          </button>
+                        )}
+                        {c.encerradoEm && (
+                          <button onClick={() => apagar(c)} className="px-2.5 py-1 rounded-lg font-semibold" style={{ background: "#ef4444", color: "#fff" }}>
+                            Apagar de vez
                           </button>
                         )}
                         {!c.encerradoEm && (
