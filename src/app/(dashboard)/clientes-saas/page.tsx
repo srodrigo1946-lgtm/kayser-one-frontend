@@ -17,12 +17,14 @@ type Cliente = {
   diretorEmail: string;
   adicionais: string;
   valorMensal: number | null;
+  cobrancaLink: string | null;
+  assinatura: string | null;
   status: "criando" | "ativo" | "erro";
   etapa: string | null;
   erro: string | null;
   createdAt: string;
 };
-type Resposta = { configurado: boolean; faltam?: string[]; planos: Record<string, number>; personalizado: string; clientes: Cliente[] };
+type Resposta = { configurado: boolean; mercadoPago?: boolean; faltam?: string[]; planos: Record<string, number>; personalizado: string; clientes: Cliente[] };
 
 // Mesmos preços da página de vendas (R$/mês). Personalizado é negociado com o CEO.
 const PRECO: Record<string, number> = { Corretor: 49, "Gerente de Vendas": 110, "Gerente Geral": 330, Superintendente: 530, "Diretor completo": 750 };
@@ -36,6 +38,14 @@ const lista = (a: string) => (a ? a.split(",").filter(Boolean) : []);
 // Preço de tabela = plano + adicionais ligados. O valor negociado (se tiver) vale mais.
 const tabela = (plano: string, adicionais: string[]) => (PRECO[plano] ?? 0) + adicionais.reduce((t, a) => t + (ADIC.find((x) => x.id === a)?.preco[plano] ?? 0), 0);
 const valor = (c: Cliente) => c.valorMensal ?? tabela(c.plano, lista(c.adicionais));
+
+// Situação da assinatura no Mercado Pago.
+const PAGAMENTO: Record<string, { cor: string; texto: string }> = {
+  authorized: { cor: "#22c55e", texto: "Pagamento em dia" },
+  pending: { cor: "#f59e0b", texto: "Aguardando pagamento" },
+  paused: { cor: "#f59e0b", texto: "Assinatura pausada" },
+  cancelled: { cor: "#ef4444", texto: "Assinatura cancelada" },
+};
 
 const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
@@ -126,6 +136,20 @@ Deixe vazio para voltar ao preço de tabela.`, c.valorMensal != null ? String(c.
     ajustar(c, { valorMensal: t.trim() === "" ? null : n });
   };
 
+  const cobrar = async (c: Cliente) => {
+    if (!confirm(`Gerar a cobrança mensal de ${brl(valor(c))} para ${c.empresa}?
+
+O link do Mercado Pago vai por e-mail para ${c.diretorEmail} (cópia para você).`)) return;
+    try {
+      const r = await api.post<{ link: string }>(`/clientes-saas/${c.id}/cobrar`);
+      await navigator.clipboard?.writeText(r.data.link).catch(() => {});
+      setMsg(`Cobrança de ${c.empresa} enviada por e-mail. O link também foi copiado.`);
+      carregar();
+    } catch (e) {
+      setMsg(getApiErrorMessage(e, "Não consegui gerar a cobrança."));
+    }
+  };
+
   const input = "mt-1 w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]";
   const estilo = { background: "var(--background)", borderColor: "var(--border)", color: "var(--foreground)" };
   const fraco = { color: "var(--muted-foreground)" };
@@ -138,6 +162,19 @@ Deixe vazio para voltar ao preço de tabela.`, c.valorMensal != null ? String(c.
         {dados && !dados.configurado && (
           <div className="p-4 rounded-2xl text-sm" style={{ background: "#f59e0b1a", color: "#f59e0b", border: "1px solid #f59e0b55" }}>
             Falta configurar no Railway do servidor da Kayser: {(dados.faltam ?? []).join(", ") || "chaves do Railway"}. Até lá, não dá para criar clientes.
+          </div>
+        )}
+
+        {dados?.configurado && dados.mercadoPago === false && (
+          <div className="p-4 rounded-2xl text-sm" style={{ background: "#f59e0b1a", color: "#f59e0b", border: "1px solid #f59e0b55" }}>
+            Para cobrar pelo painel, falta colar o Access Token do Mercado Pago (MP_ACCESS_TOKEN) no Railway da Kayser.
+          </div>
+        )}
+
+        {msg && (
+          <div role="status" className="sticky top-2 z-10 p-3 rounded-xl border text-sm flex justify-between gap-3" style={{ background: "var(--card)", borderColor: "var(--primary)", color: "var(--foreground)" }}>
+            {msg}
+            <button onClick={() => setMsg("")} aria-label="Fechar aviso" style={fraco}>✕</button>
           </div>
         )}
 
@@ -240,7 +277,6 @@ Deixe vazio para voltar ao preço de tabela.`, c.valorMensal != null ? String(c.
             <button type="submit" disabled={enviando || !dados?.configurado} className="px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary)]" style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}>
               {enviando ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Criar cliente
             </button>
-            {msg && <span role="status" className="text-sm" style={fraco}>{msg}</span>}
           </div>
         </form>
 
@@ -269,6 +305,21 @@ Deixe vazio para voltar ao preço de tabela.`, c.valorMensal != null ? String(c.
                           </button>
                         );
                       })}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 mt-2 text-xs">
+                      {c.assinatura && PAGAMENTO[c.assinatura] && (
+                        <span className="font-semibold" style={{ color: PAGAMENTO[c.assinatura].cor }}>● {PAGAMENTO[c.assinatura].texto}</span>
+                      )}
+                      {c.assinatura !== "authorized" && (
+                        <button onClick={() => cobrar(c)} disabled={!dados?.mercadoPago} className="px-2.5 py-1 rounded-lg font-semibold disabled:opacity-40" style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}>
+                          {c.cobrancaLink ? "Cobrar de novo" : "Cobrar"}
+                        </button>
+                      )}
+                      {c.cobrancaLink && c.assinatura !== "authorized" && (
+                        <button onClick={() => navigator.clipboard?.writeText(c.cobrancaLink!).then(() => setMsg("Link de pagamento copiado."))} className="underline underline-offset-2" style={fraco}>
+                          copiar link de pagamento
+                        </button>
+                      )}
                     </div>
                     {c.status === "erro" && c.erro && <div className="text-xs mt-1" style={{ color: STATUS.erro.cor }}>{c.erro}</div>}
                   </div>
