@@ -19,7 +19,8 @@ type Cliente = {
   valorMensal: number | null;
   cobrancaLink: string | null;
   assinatura: string | null;
-  status: "criando" | "ativo" | "erro";
+  origem: string | null;
+  status: "criando" | "ativo" | "erro" | "aguardando";
   etapa: string | null;
   erro: string | null;
   createdAt: string;
@@ -53,6 +54,7 @@ const STATUS: Record<Cliente["status"], { cor: string; texto: string }> = {
   ativo: { cor: "#22c55e", texto: "No ar" },
   criando: { cor: "#f59e0b", texto: "Criando" },
   erro: { cor: "#ef4444", texto: "Com erro" },
+  aguardando: { cor: "#f59e0b", texto: "Pago, falta cadastro" },
 };
 
 const slug = (t: string) =>
@@ -184,7 +186,7 @@ O link do Mercado Pago vai por e-mail para ${c.diretorEmail} (cópia para você)
             <div className="text-3xl font-bold" style={{ color: "var(--primary)" }}>{brl(mensal)}</div>
             <div className="text-xs" style={fraco}>por mês dos clientes no ar</div>
           </div>
-          {(["ativo", "criando", "erro"] as const).map((s) => (
+          {(["ativo", "criando", "erro", "aguardando"] as const).map((s) => (
             <div key={s}>
               <div className="text-xl font-semibold" style={{ color: conta(s) ? STATUS[s].cor : "var(--muted-foreground)" }}>{conta(s)}</div>
               <div className="text-xs" style={fraco}>{STATUS[s].texto.toLowerCase()}</div>
@@ -294,7 +296,7 @@ O link do Mercado Pago vai por e-mail para ${c.diretorEmail} (cópia para você)
                   <div className="flex-1 min-w-[200px]">
                     <div className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>{c.empresa}</div>
                     <div className="text-xs mt-0.5" style={fraco}>
-                      {c.plano}, até {c.limiteUsuarios} usuário{c.limiteUsuarios > 1 ? "s" : ""}. Diretor: {c.diretorNome} ({c.diretorEmail}). Criado em {new Date(c.createdAt).toLocaleDateString("pt-BR")}.
+                      {c.plano}, até {c.limiteUsuarios} usuário{c.limiteUsuarios > 1 ? "s" : ""}. {c.status === "aguardando" ? `Pagou com o e-mail ${c.diretorEmail || "(não informado)"}; chame no WhatsApp para completar o cadastro.` : `Diretor: ${c.diretorNome} (${c.diretorEmail}).`} {c.origem === "site" ? "Assinou pelo site" : "Criado"} em {new Date(c.createdAt).toLocaleDateString("pt-BR")}.
                     </div>
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {ADIC.map((a) => {
