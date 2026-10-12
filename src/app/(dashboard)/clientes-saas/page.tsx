@@ -19,6 +19,7 @@ type Cliente = {
   valorMensal: number | null;
   cobrancaLink: string | null;
   assinatura: string | null;
+  pagoEm: string | null;
   origem: string | null;
   status: "criando" | "ativo" | "erro" | "aguardando";
   etapa: string | null;
@@ -46,6 +47,7 @@ const PAGAMENTO: Record<string, { cor: string; texto: string }> = {
   pending: { cor: "#f59e0b", texto: "Aguardando pagamento" },
   paused: { cor: "#f59e0b", texto: "Assinatura pausada" },
   cancelled: { cor: "#ef4444", texto: "Assinatura cancelada" },
+  pix_pago: { cor: "#22c55e", texto: "Mês pago (Pix/avulso)" },
 };
 
 const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -68,7 +70,7 @@ export default function ClientesSaasPage() {
   const marca = useMarca();
   const [permitido, setPermitido] = useState<boolean | null>(null);
   const [dados, setDados] = useState<Resposta | null>(null);
-  const [f, setF] = useState({ empresa: "", subdominio: "", plano: "Gerente de Vendas", limiteUsuarios: "", diretorNome: "", diretorEmail: "", adicionais: [] as string[] });
+  const [f, setF] = useState({ empresa: "", subdominio: "", plano: "Gerente de Vendas", limiteUsuarios: "", diretorNome: "", diretorEmail: "", adicionais: [] as string[], valorMensal: "" });
   const [enviando, setEnviando] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -106,9 +108,14 @@ export default function ClientesSaasPage() {
     setEnviando(true);
     setMsg("");
     try {
-      await api.post("/clientes-saas", { ...f, subdominio: f.subdominio || undefined, limiteUsuarios: personalizado ? Number(f.limiteUsuarios) : undefined });
+      await api.post("/clientes-saas", {
+        ...f,
+        subdominio: f.subdominio || undefined,
+        limiteUsuarios: personalizado ? Number(f.limiteUsuarios) : undefined,
+        valorMensal: f.valorMensal.trim() ? Number(f.valorMensal.replace(/[^0-9,.]/g, "").replace(",", ".")) : undefined,
+      });
       setMsg(`Criando ${f.empresa}. Fica pronto em 5 a 10 minutos e o Diretor recebe o login por e-mail.`);
-      setF({ empresa: "", subdominio: "", plano: f.plano, limiteUsuarios: "", diretorNome: "", diretorEmail: "", adicionais: [] });
+      setF({ empresa: "", subdominio: "", plano: f.plano, limiteUsuarios: "", diretorNome: "", diretorEmail: "", adicionais: [], valorMensal: "" });
       carregar();
     } catch (err) {
       setMsg(getApiErrorMessage(err, "Não consegui criar. Confira os dados e tente de novo."));
@@ -138,12 +145,13 @@ Deixe vazio para voltar ao preço de tabela.`, c.valorMensal != null ? String(c.
     ajustar(c, { valorMensal: t.trim() === "" ? null : n });
   };
 
-  const cobrar = async (c: Cliente) => {
-    if (!confirm(`Gerar a cobrança mensal de ${brl(valor(c))} para ${c.empresa}?
+  const cobrar = async (c: Cliente, pix = false) => {
+    const tipo = pix ? `a mensalidade deste mês (Pix ou cartão) de ${brl(valor(c))}` : `a assinatura mensal no cartão de ${brl(valor(c))}`;
+    if (!confirm(`Gerar ${tipo} para ${c.empresa}?
 
 O link do Mercado Pago vai por e-mail para ${c.diretorEmail} (cópia para você).`)) return;
     try {
-      const r = await api.post<{ link: string }>(`/clientes-saas/${c.id}/cobrar`);
+      const r = await api.post<{ link: string }>(`/clientes-saas/${c.id}/${pix ? "cobrar-pix" : "cobrar"}`);
       await navigator.clipboard?.writeText(r.data.link).catch(() => {});
       setMsg(`Cobrança de ${c.empresa} enviada por e-mail. O link também foi copiado.`);
       carregar();
@@ -247,8 +255,13 @@ O link do Mercado Pago vai por e-mail para ${c.diretorEmail} (cópia para você)
               })}
             </div>
             <p className="text-xs mt-2" style={fraco}>
-              Total de tabela: {brl(tabela(f.plano, f.adicionais))}/mês. Depois de criado, dá para negociar outro valor na lista abaixo.
+              Total de tabela: {brl(tabela(f.plano, f.adicionais))}/mês.
             </p>
+            <label className="block text-sm mt-3 max-w-xs" style={{ color: "var(--foreground)" }}>
+              Valor negociado (opcional)
+              <input inputMode="decimal" value={f.valorMensal} onChange={(e) => setF({ ...f, valorMensal: e.target.value })} className={input} style={estilo} placeholder={`ex.: ${tabela(f.plano, f.adicionais) || 500}`} />
+              <span className="text-xs" style={fraco}>Qualquer valor por mês. Vazio = preço de tabela. Dá para mudar depois na lista.</span>
+            </label>
           </fieldset>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -310,11 +323,19 @@ O link do Mercado Pago vai por e-mail para ${c.diretorEmail} (cópia para você)
                     </div>
                     <div className="flex flex-wrap items-center gap-3 mt-2 text-xs">
                       {c.assinatura && PAGAMENTO[c.assinatura] && (
-                        <span className="font-semibold" style={{ color: PAGAMENTO[c.assinatura].cor }}>● {PAGAMENTO[c.assinatura].texto}</span>
+                        <span className="font-semibold" style={{ color: PAGAMENTO[c.assinatura].cor }}>
+                          ● {PAGAMENTO[c.assinatura].texto}
+                          {c.assinatura === "pix_pago" && c.pagoEm ? ` em ${new Date(c.pagoEm).toLocaleDateString("pt-BR")}` : ""}
+                        </span>
                       )}
                       {c.assinatura !== "authorized" && (
-                        <button onClick={() => cobrar(c)} disabled={!dados?.mercadoPago} className="px-2.5 py-1 rounded-lg font-semibold disabled:opacity-40" style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}>
-                          {c.cobrancaLink ? "Cobrar de novo" : "Cobrar"}
+                        <button onClick={() => cobrar(c)} disabled={!dados?.mercadoPago} title="Assinatura mensal: o cartão é cobrado sozinho todo mês" className="px-2.5 py-1 rounded-lg font-semibold disabled:opacity-40" style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}>
+                          Cobrar assinatura (cartão)
+                        </button>
+                      )}
+                      {c.assinatura !== "authorized" && (
+                        <button onClick={() => cobrar(c, true)} disabled={!dados?.mercadoPago} title="Link do mês: paga com Pix ou cartão, uma vez" className="px-2.5 py-1 rounded-lg font-semibold border disabled:opacity-40" style={{ borderColor: "var(--primary)", color: "var(--primary)" }}>
+                          Cobrar Pix (mês)
                         </button>
                       )}
                       {c.cobrancaLink && c.assinatura !== "authorized" && (
