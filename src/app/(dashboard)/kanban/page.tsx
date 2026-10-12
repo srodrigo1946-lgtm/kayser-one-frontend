@@ -20,6 +20,10 @@ import { api, getApiErrorMessage } from "@/lib/api";
 import { useAlerts } from "@/hooks/use-alerts";
 import { LeadDetailDrawer } from "@/components/leads/lead-detail-drawer";
 
+// Dias sem contato que acendem o alerta, por etapa (regra do Rodrigo, 13/10/2026).
+const limiteSemContato = (status: string) =>
+  ["agendamento", "visita_agendada"].includes(status) ? 7 : ["visita_realizada", "simulacao", "subida_pasta", "aprovacao", "reprovacao"].includes(status) ? 15 : 3;
+
 // Relógio de contagem regressiva do SLA (tempo pra atender antes de passar pro próximo).
 function Countdown({ dueAt }: { dueAt: string }) {
   const [now, setNow] = useState(() => Date.now());
@@ -72,10 +76,11 @@ function LeadCard({
   const desde = lead.stageSince ? new Date(lead.stageSince) : null;
   const dias = desde ? Math.floor((Date.now() - desde.getTime()) / 86400000) : 0;
   const tempoEtapa = desde ? (dias <= 0 ? "hoje" : dias === 1 ? "1 dia" : `${dias} dias`) : "";
-  // Alerta: 3+ dias sem contato (venda ganha/perdida não conta).
+  // Alerta de dias sem contato, conforme a etapa (mesma regra do follow-up da IA):
+  // 3 dias; agendamento 7; depois da visita 15; venda ganha/perdida não conta.
   const fechado = lead.status === "venda_ganha" || lead.status === "venda_perdida";
   const diasSemContato = lead.lastContactAt ? Math.floor((Date.now() - new Date(lead.lastContactAt).getTime()) / 86400000) : 0;
-  const alertaContato = !fechado && diasSemContato >= 3;
+  const alertaContato = !fechado && diasSemContato >= limiteSemContato(lead.status);
 
   return (
     <div
@@ -374,7 +379,7 @@ export default function KanbanPage() {
         )}
       </div>
 
-      {/* Quadro de avisos: cliente respondeu / 3+ dias sem contato (cada cargo vê a sua equipe). */}
+      {/* Quadro de avisos: cliente respondeu / sem contato (3, 7 ou 15 dias conforme a etapa) (cada cargo vê a sua equipe). */}
       {(visitasIA.length > 0 || responderam.length > 0 || semContato.length > 0) && (
         <div className="mx-6 mt-3 rounded-2xl border" style={{ background: "var(--card)", borderColor: "#f9731655" }}>
           <button onClick={() => setAvisosAbertos((v) => !v)} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-left" style={{ color: "var(--foreground)" }}>
@@ -382,7 +387,7 @@ export default function KanbanPage() {
             Avisos: {visitasIA.length > 0 && <span style={{ color: "#3b82f6" }}>{visitasIA.length} visita(s) agendada(s) pela IA · </span>}
             {totalResponderam > 0 && <span style={{ color: "#22c55e" }}>{totalResponderam} cliente(s) responderam</span>}
             {totalResponderam > 0 && totalSemContato > 0 && " · "}
-            {totalSemContato > 0 && <span style={{ color: "#f97316" }}>{totalSemContato} sem contato há 3+ dias</span>}
+            {totalSemContato > 0 && <span style={{ color: "#f97316" }}>{totalSemContato} sem contato</span>}
             <span className="ml-auto text-xs font-normal" style={{ color: "var(--muted-foreground)" }}>{avisosAbertos ? "esconder" : "ver"}</span>
           </button>
           {avisosAbertos && (
