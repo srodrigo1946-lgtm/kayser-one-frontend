@@ -15,6 +15,8 @@ type Cliente = {
   limiteUsuarios: number;
   diretorNome: string;
   diretorEmail: string;
+  adicionais: string;
+  valorMensal: number | null;
   status: "criando" | "ativo" | "erro";
   etapa: string | null;
   erro: string | null;
@@ -23,7 +25,18 @@ type Cliente = {
 type Resposta = { configurado: boolean; faltam?: string[]; planos: Record<string, number>; personalizado: string; clientes: Cliente[] };
 
 // Mesmos preços da página de vendas (R$/mês). Personalizado é negociado com o CEO.
-const PRECO: Record<string, number> = { Corretor: 30, "Gerente de Vendas": 110, "Gerente Geral": 330, Superintendente: 530, "Diretor completo": 750 };
+const PRECO: Record<string, number> = { Corretor: 49, "Gerente de Vendas": 110, "Gerente Geral": 330, Superintendente: 530, "Diretor completo": 750 };
+// Serviços adicionais (vendidos à parte em todos os planos), preço promocional de lançamento por plano.
+const ADIC: { id: string; nome: string; preco: Record<string, number> }[] = [
+  { id: "ia", nome: "IA de resposta", preco: { Corretor: 29, "Gerente de Vendas": 149, "Gerente Geral": 399, Superintendente: 790, "Diretor completo": 1290 } },
+  { id: "ione", nome: "IA One", preco: { Corretor: 19, "Gerente de Vendas": 59, "Gerente Geral": 99, Superintendente: 199, "Diretor completo": 449 } },
+  { id: "meta", nome: "Anúncios Meta", preco: { Corretor: 9, "Gerente de Vendas": 29, "Gerente Geral": 59, Superintendente: 79, "Diretor completo": 99 } },
+];
+const lista = (a: string) => (a ? a.split(",").filter(Boolean) : []);
+// Preço de tabela = plano + adicionais ligados. O valor negociado (se tiver) vale mais.
+const tabela = (plano: string, adicionais: string[]) => (PRECO[plano] ?? 0) + adicionais.reduce((t, a) => t + (ADIC.find((x) => x.id === a)?.preco[plano] ?? 0), 0);
+const valor = (c: Cliente) => c.valorMensal ?? tabela(c.plano, lista(c.adicionais));
+
 const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
 const STATUS: Record<Cliente["status"], { cor: string; texto: string }> = {
@@ -43,7 +56,7 @@ export default function ClientesSaasPage() {
   const marca = useMarca();
   const [permitido, setPermitido] = useState<boolean | null>(null);
   const [dados, setDados] = useState<Resposta | null>(null);
-  const [f, setF] = useState({ empresa: "", subdominio: "", plano: "Gerente de Vendas", limiteUsuarios: "", diretorNome: "", diretorEmail: "" });
+  const [f, setF] = useState({ empresa: "", subdominio: "", plano: "Gerente de Vendas", limiteUsuarios: "", diretorNome: "", diretorEmail: "", adicionais: [] as string[] });
   const [enviando, setEnviando] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -73,7 +86,7 @@ export default function ClientesSaasPage() {
   const personalizado = f.plano === dados?.personalizado;
   const clientes = dados?.clientes ?? [];
   const conta = (s: Cliente["status"]) => clientes.filter((c) => c.status === s).length;
-  const mensal = clientes.filter((c) => c.status === "ativo").reduce((t, c) => t + (PRECO[c.plano] ?? 0), 0);
+  const mensal = clientes.filter((c) => c.status === "ativo").reduce((t, c) => t + valor(c), 0);
 
   const criar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +96,7 @@ export default function ClientesSaasPage() {
     try {
       await api.post("/clientes-saas", { ...f, subdominio: f.subdominio || undefined, limiteUsuarios: personalizado ? Number(f.limiteUsuarios) : undefined });
       setMsg(`Criando ${f.empresa}. Fica pronto em 5 a 10 minutos e o Diretor recebe o login por e-mail.`);
-      setF({ empresa: "", subdominio: "", plano: f.plano, limiteUsuarios: "", diretorNome: "", diretorEmail: "" });
+      setF({ empresa: "", subdominio: "", plano: f.plano, limiteUsuarios: "", diretorNome: "", diretorEmail: "", adicionais: [] });
       carregar();
     } catch (err) {
       setMsg(getApiErrorMessage(err, "Não consegui criar. Confira os dados e tente de novo."));
@@ -95,6 +108,22 @@ export default function ClientesSaasPage() {
   const tentar = async (id: string) => {
     await api.post(`/clientes-saas/${id}/tentar-de-novo`).catch((e) => setMsg(getApiErrorMessage(e)));
     carregar();
+  };
+
+  const ajustar = async (c: Cliente, corpo: { adicionais?: string[]; valorMensal?: number | null }) => {
+    await api.post(`/clientes-saas/${c.id}/ajustar`, corpo).catch((e) => setMsg(getApiErrorMessage(e, "Não consegui salvar.")));
+    carregar();
+  };
+  const alternar = (c: Cliente, id: string) => {
+    const atual = lista(c.adicionais);
+    ajustar(c, { adicionais: atual.includes(id) ? atual.filter((a) => a !== id) : [...atual, id] });
+  };
+  const negociar = (c: Cliente) => {
+    const t = prompt(`Valor mensal negociado para ${c.empresa} (R$). Tabela: ${brl(tabela(c.plano, lista(c.adicionais)))}.
+Deixe vazio para voltar ao preço de tabela.`, c.valorMensal != null ? String(c.valorMensal) : "");
+    if (t === null) return;
+    const n = Number(t.replace(/[^0-9,.]/g, "").replace(",", "."));
+    ajustar(c, { valorMensal: t.trim() === "" ? null : n });
   };
 
   const input = "mt-1 w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]";
@@ -159,6 +188,30 @@ export default function ClientesSaasPage() {
             )}
           </fieldset>
 
+          <fieldset>
+            <legend className="text-sm mb-2" style={{ color: "var(--foreground)" }}>Serviços adicionais</legend>
+            <div className="flex flex-wrap gap-2">
+              {ADIC.map((a) => {
+                const ligado = f.adicionais.includes(a.id);
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    aria-pressed={ligado}
+                    onClick={() => setF({ ...f, adicionais: ligado ? f.adicionais.filter((x) => x !== a.id) : [...f.adicionais, a.id] })}
+                    className="rounded-xl border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+                    style={{ borderColor: ligado ? "var(--primary)" : "var(--border)", background: ligado ? "color-mix(in srgb, var(--primary) 12%, transparent)" : "var(--background)", color: "var(--foreground)" }}
+                  >
+                    {ligado ? "✓ " : "+ "}{a.nome} <span style={fraco}>{a.preco[f.plano] ? `${brl(a.preco[f.plano])}/mês` : "a combinar"}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs mt-2" style={fraco}>
+              Total de tabela: {brl(tabela(f.plano, f.adicionais))}/mês. Depois de criado, dá para negociar outro valor na lista abaixo.
+            </p>
+          </fieldset>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-sm" style={{ color: "var(--foreground)" }}>
               Imobiliária
@@ -207,8 +260,22 @@ export default function ClientesSaasPage() {
                     <div className="text-xs mt-0.5" style={fraco}>
                       {c.plano}, até {c.limiteUsuarios} usuário{c.limiteUsuarios > 1 ? "s" : ""}. Diretor: {c.diretorNome} ({c.diretorEmail}). Criado em {new Date(c.createdAt).toLocaleDateString("pt-BR")}.
                     </div>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {ADIC.map((a) => {
+                        const ligado = lista(c.adicionais).includes(a.id);
+                        return (
+                          <button key={a.id} onClick={() => alternar(c, a.id)} title={ligado ? "Clique para desligar" : "Clique para ligar"} className="text-[11px] px-2 py-0.5 rounded-full border" style={{ borderColor: ligado ? "var(--primary)" : "var(--border)", color: ligado ? "var(--primary)" : "var(--muted-foreground)" }}>
+                            {ligado ? "✓" : "+"} {a.nome}
+                          </button>
+                        );
+                      })}
+                    </div>
                     {c.status === "erro" && c.erro && <div className="text-xs mt-1" style={{ color: STATUS.erro.cor }}>{c.erro}</div>}
                   </div>
+                  <button onClick={() => negociar(c)} className="text-right" title="Negociar valor">
+                    <div className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>{brl(valor(c))}/mês</div>
+                    <div className="text-[11px] underline underline-offset-2" style={fraco}>{c.valorMensal != null ? "valor negociado" : "negociar valor"}</div>
+                  </button>
                   <span className="text-xs px-2.5 py-1 rounded-full font-semibold flex items-center gap-1.5" style={{ background: `${STATUS[c.status].cor}22`, color: STATUS[c.status].cor }}>
                     {c.status === "criando" && <Loader2 size={11} className="animate-spin" />}
                     {c.status === "criando" ? c.etapa || "Criando" : STATUS[c.status].texto}

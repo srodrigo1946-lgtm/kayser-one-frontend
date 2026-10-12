@@ -18,8 +18,9 @@ import type { UserRole } from "@/types";
 const tabs = [
   { id: "perfil", label: "Perfil", icon: UserIcon },
   { id: "usuarios", label: "Usuários", icon: Users },
-  { id: "ia", label: "Inteligência Artificial", icon: Bot },
-  { id: "integracoes", label: "Integrações", icon: Megaphone, diretorOnly: true },
+  // Serviços adicionais: só aparecem se o cliente comprou (ia = IA de resposta, meta = Anúncios Meta).
+  { id: "ia", label: "Inteligência Artificial", icon: Bot, adicional: "ia" },
+  { id: "integracoes", label: "Integrações", icon: Megaphone, diretorOnly: true, adicional: "meta" },
   { id: "empresa", label: "Empresa", icon: Building2 },
 ];
 
@@ -43,7 +44,10 @@ const ROLE_RANK: Record<string, number> = {
 export default function ConfiguracoesPage() {
   const [activeTab, setActiveTab] = useState("perfil");
   const isDiretor = getStoredUser()?.role === "diretor";
-  const visibleTabs = tabs.filter((t) => !(t as any).diretorOnly || isDiretor);
+  const { adicionais } = useMarca();
+  const visibleTabs = tabs.filter(
+    (t) => (!(t as any).diretorOnly || isDiretor) && (!(t as any).adicional || !adicionais || adicionais.includes((t as any).adicional))
+  );
 
   // Permite abrir direto numa aba via ?tab= (ex.: notificação de novo cadastro → Usuários).
   useEffect(() => {

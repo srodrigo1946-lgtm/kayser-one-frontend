@@ -54,7 +54,7 @@ const recursos = [
 // Planos (planilha do Rodrigo, 12/10/2026). `link` = link de assinatura MENSAL do Mercado Pago
 // (o Rodrigo manda, colar aqui). Sem link, "Assinar" abre o WhatsApp com o plano.
 const PLANOS: { nome: string; preco: number; usuarios: number; para: string; destaque?: boolean; link?: string }[] = [
-  { nome: "Corretor", preco: 30, usuarios: 1, para: "Corretor autônomo", link: "https://mpago.la/2zi93Z4" },
+  { nome: "Corretor", preco: 49, usuarios: 1, para: "Corretor autônomo" /* link novo de R$ 49 do Mercado Pago: o Rodrigo vai criar */ },
   { nome: "Gerente de Vendas", preco: 110, usuarios: 16, para: "Gerente + equipe", link: "https://mpago.la/2mC5She" },
   { nome: "Gerente Geral", preco: 330, usuarios: 57, para: "Várias equipes", destaque: true, link: "https://mpago.la/2dw1dew" },
   { nome: "Superintendente", preco: 530, usuarios: 120, para: "Regional", link: "https://mpago.la/1MUfq2X" },
@@ -216,7 +216,8 @@ export default async function Home() {
           Planos <span style={{ color: Y }}>para o tamanho da sua equipe</span>
         </h2>
         <p className="mt-3 text-center text-sm sm:text-base" style={{ color: "#a8a29e" }}>
-          Todos com tudo incluso: IA no WhatsApp, fila de plantão com GPS, Corujão, reengajamento, app no celular e a sua marca.
+          Todos com CRM, Kanban, app no celular e a sua marca. Gestão de equipe (fila de plantão com GPS, Corujão, escala) a partir do Gerente de Vendas.
+          IA de resposta no WhatsApp, IA One e Anúncios Meta são serviços adicionais, em qualquer plano.
         </p>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {PLANOS.map((p) => (

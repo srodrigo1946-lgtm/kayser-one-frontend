@@ -10,6 +10,8 @@ export interface Marca {
   versao: number;
   matriz?: boolean;
   limiteUsuarios?: number | null;
+  // Serviços adicionais comprados: ia (IA de resposta), ione (IA One), meta (Anúncios Meta).
+  adicionais?: string[];
 }
 
 const PADRAO: Marca = { nome: "Kayser One", cor: null, temLogo: false, versao: 0 };

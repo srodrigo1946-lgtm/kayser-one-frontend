@@ -214,6 +214,9 @@ export function Sidebar() {
             // Telas da Kayser (venda do sistema e Grupo Direcional): só na instalação matriz, nunca nos clientes.
             if ((item.href === "/clientes-saas" || item.href === "/grupo-direcional") && !marca.matriz) return false;
             if (marca.limiteUsuarios === 1 && !SO_CORRETOR.has(item.href)) return false;
+            // Serviços adicionais: IA Agente e IA One só aparecem se o cliente comprou.
+            const adicional = item.href === "/ia" ? "ia" : item.href === "/ia-one" ? "ione" : null;
+            if (adicional && marca.adicionais && !marca.adicionais.includes(adicional)) return false;
             // Itens com lista de cargos: só os cargos permitidos veem.
             if ((item as any).roles) return (item as any).roles.includes(user.role);
             // Itens liberáveis pelo Diretor (toggle nas settings): Diretor sempre vê;
