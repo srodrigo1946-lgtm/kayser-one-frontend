@@ -53,7 +53,7 @@ const navItems = [
   { href: "/escala", label: "Escala de Atendimento", icon: CalendarClock },
   { href: "/empresas", label: "Empresas", icon: Building2, diretorOnly: true },
   // Venda do Kayser One: criar instalação de imobiliária (só na Kayser — some em quem tem marca própria).
-  { href: "/clientes-saas", label: "Clientes (venda)", icon: Crown, diretorOnly: true },
+  { href: "/clientes-saas", label: "Clientes", icon: Crown, diretorOnly: true },
   { href: "/ranking-analises", label: "Ranking Análises", icon: Trophy, roles: ["diretor", "superintendente", "gerente_geral"] },
   { href: "/suporte", label: "Suporte", icon: LifeBuoy, diretorOnly: true },
   { href: "/agenda", label: "Agenda", icon: Calendar },
@@ -68,6 +68,9 @@ const navItems = [
   { href: "/grupo-direcional", label: "Grupo Direcional", icon: Table },
   { href: "/configuracoes", label: "Configurações", icon: Settings },
 ];
+
+// Plano Corretor (1 usuário): só as telas do dia a dia, sem gestão de equipe.
+const SO_CORRETOR = new Set(["/dashboard", "/leads", "/imoveis", "/pastas", "/kanban", "/whatsapp", "/agenda", "/reunioes", "/ia", "/metas", "/relatorios", "/configuracoes"]);
 
 const roleLabels: Record<string, string> = {
   diretor: "Diretor",
@@ -208,7 +211,9 @@ export function Sidebar() {
             // Empresa parceira (usuário com empresaId) só enxerga as análises.
             if ((user as any).empresaId) return item.href === "/pastas";
             // Grupo Direcional é da Kayser: imobiliária com marca própria não vê.
-            if (marcaPropria && (item.href === "/grupo-direcional" || item.href === "/clientes-saas")) return false;
+            // Telas da Kayser (venda do sistema e Grupo Direcional): só na instalação matriz, nunca nos clientes.
+            if ((item.href === "/clientes-saas" || item.href === "/grupo-direcional") && !marca.matriz) return false;
+            if (marca.limiteUsuarios === 1 && !SO_CORRETOR.has(item.href)) return false;
             // Itens com lista de cargos: só os cargos permitidos veem.
             if ((item as any).roles) return (item as any).roles.includes(user.role);
             // Itens liberáveis pelo Diretor (toggle nas settings): Diretor sempre vê;

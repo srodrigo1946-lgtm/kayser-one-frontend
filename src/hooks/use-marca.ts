@@ -8,6 +8,8 @@ export interface Marca {
   cor: string | null;
   temLogo: boolean;
   versao: number;
+  matriz?: boolean;
+  limiteUsuarios?: number | null;
 }
 
 const PADRAO: Marca = { nome: "Kayser One", cor: null, temLogo: false, versao: 0 };
