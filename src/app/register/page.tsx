@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Building2, Eye, EyeOff } from "lucide-react";
 import { register } from "@/lib/auth";
 import { api, getApiErrorMessage } from "@/lib/api";
-import { useMarca } from "@/hooks/use-marca";
+import { useMarca, logoDaMarca, corDoTexto } from "@/hooks/use-marca";
 
 type Role = "superintendente" | "gerente_geral" | "gerente" | "corretor";
 
@@ -33,6 +33,10 @@ interface ManagerOption {
 
 export default function RegisterPage() {
   const marca = useMarca();
+  const logo = logoDaMarca(marca);
+  // Mesmas cores do login: amarelo do K1, ou a cor da imobiliária com marca própria.
+  const COR = marca.cor || "#facc15";
+  const TEXTO_COR = corDoTexto(COR);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -89,9 +93,14 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center p-6" style={{ background: "var(--background)" }}>
       <div className="w-full max-w-md">
         <div className="flex items-center gap-3 mb-8 justify-center">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "var(--primary)" }}>
-            <Building2 size={22} color="white" />
-          </div>
+          {logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logo} alt={marca.nome} className="w-10 h-10 rounded-xl object-contain bg-white" />
+          ) : (
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: COR }}>
+              <Building2 size={22} color={TEXTO_COR} />
+            </div>
+          )}
           <span className="text-xl font-bold" style={{ color: "var(--foreground)" }}>{marca.nome}</span>
         </div>
 
@@ -105,7 +114,7 @@ export default function RegisterPage() {
             <div className="text-sm p-4 rounded-xl" style={{ background: "#dcfce7", color: "#16a34a" }}>
               {success}
             </div>
-            <Link href="/login" className="block text-center py-3 rounded-xl font-semibold text-sm" style={{ background: "var(--primary)", color: "white" }}>
+            <Link href="/login" className="block text-center py-3 rounded-xl font-semibold text-sm" style={{ background: COR, color: TEXTO_COR }}>
               Ir para o login
             </Link>
           </div>
@@ -169,8 +178,8 @@ export default function RegisterPage() {
                     className="w-full text-left px-4 py-2.5 text-sm border-b last:border-b-0 flex items-center justify-between gap-2"
                     style={{
                       borderColor: "var(--border)",
-                      background: managerId === m.id ? "var(--primary)" : "transparent",
-                      color: managerId === m.id ? "white" : "var(--foreground)",
+                      background: managerId === m.id ? COR : "transparent",
+                      color: managerId === m.id ? TEXTO_COR : "var(--foreground)",
                     }}
                   >
                     <span>{m.name}</span>
@@ -188,7 +197,7 @@ export default function RegisterPage() {
             <div className="text-sm p-3 rounded-xl" style={{ background: "#fee2e2", color: "#dc2626" }}>{error}</div>
           )}
 
-          <button type="submit" disabled={loading} className="w-full py-3 rounded-xl font-semibold text-sm disabled:opacity-70" style={{ background: "var(--primary)", color: "white" }}>
+          <button type="submit" disabled={loading} className="w-full py-3 rounded-xl font-semibold text-sm disabled:opacity-70" style={{ background: COR, color: TEXTO_COR }}>
             {loading ? "Cadastrando..." : "Cadastrar"}
           </button>
         </form>
@@ -196,7 +205,7 @@ export default function RegisterPage() {
 
         <p className="mt-6 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
           Já tem conta?{" "}
-          <Link href="/login" style={{ color: "var(--primary)" }}>Entrar</Link>
+          <Link href="/login" style={{ color: COR }}>Entrar</Link>
         </p>
       </div>
     </div>
