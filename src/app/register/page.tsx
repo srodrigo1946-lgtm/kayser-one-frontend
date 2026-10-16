@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Building2, Eye, EyeOff } from "lucide-react";
 import { register } from "@/lib/auth";
 import { api, getApiErrorMessage } from "@/lib/api";
+import { useMarca } from "@/hooks/use-marca";
 
 type Role = "superintendente" | "gerente_geral" | "gerente" | "corretor";
 
@@ -31,6 +32,7 @@ interface ManagerOption {
 }
 
 export default function RegisterPage() {
+  const marca = useMarca();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -90,7 +92,7 @@ export default function RegisterPage() {
           <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "var(--primary)" }}>
             <Building2 size={22} color="white" />
           </div>
-          <span className="text-xl font-bold" style={{ color: "var(--foreground)" }}>Kayser One</span>
+          <span className="text-xl font-bold" style={{ color: "var(--foreground)" }}>{marca.nome}</span>
         </div>
 
         <h2 className="text-2xl font-bold mb-1 text-center" style={{ color: "var(--foreground)" }}>Criar conta</h2>
