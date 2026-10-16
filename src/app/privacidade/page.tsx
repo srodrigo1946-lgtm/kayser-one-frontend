@@ -4,8 +4,8 @@ import Link from "next/link";
 // Página PÚBLICA (sem login): exigida pelo Meta para publicar o app que recebe os
 // leads de formulário (Facebook/Instagram). Também traz as instruções de exclusão de dados.
 export const metadata: Metadata = {
-  title: "Política de Privacidade | Kayser One",
-  description: "Como o Kayser One trata os dados pessoais de clientes e leads.",
+  title: "Política de Privacidade | K1",
+  description: "Como o K1 trata os dados pessoais de clientes e leads.",
 };
 
 const ATUALIZADO = "3 de outubro de 2026";
@@ -26,18 +26,18 @@ export default function PrivacidadePage() {
       <article className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-2 text-white">Política de Privacidade</h1>
         <p className="mb-10 text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
-          Kayser One — CRM imobiliário · CNPJ {CNPJ} · Última atualização: {ATUALIZADO}
+          K1 — CRM imobiliário · CNPJ {CNPJ} · Última atualização: {ATUALIZADO}
         </p>
 
         <Secao titulo="1. Quem somos">
           <p>
-            O Kayser One é uma plataforma de gestão comercial (CRM) usada por imobiliárias e corretores para
+            O K1 é uma plataforma de gestão comercial (CRM) usada por imobiliárias e corretores para
             atender pessoas interessadas em imóveis. Esta política explica quais dados pessoais tratamos, por
             que tratamos e quais são os seus direitos, conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD).
           </p>
           <p>
-            O Kayser One é operado pela empresa inscrita no CNPJ {CNPJ}. Quando uma imobiliária usa o Kayser One para
-            atender você, <strong>ela é a controladora</strong> dos seus dados (decide como são usados) e o Kayser One
+            O K1 é operado pela empresa inscrita no CNPJ {CNPJ}. Quando uma imobiliária usa o K1 para
+            atender você, <strong>ela é a controladora</strong> dos seus dados (decide como são usados) e o K1
             atua como <strong>operador</strong>, tratando os dados em nome dela. O uso da plataforma também segue os nossos{" "}
             <Link href="/termos" className="underline" style={{ color: "#facc15" }}>Termos de Uso</Link>.
           </p>
@@ -107,7 +107,7 @@ export default function PrivacidadePage() {
         </Secao>
 
         <Secao id="exclusao" titulo="8. Como pedir a exclusão dos seus dados">
-          <p>Para excluir os seus dados do Kayser One:</p>
+          <p>Para excluir os seus dados do K1:</p>
           <ol className="list-decimal pl-6 space-y-1">
             <li>responda &quot;EXCLUIR MEUS DADOS&quot; na conversa de WhatsApp em que falamos com você; <strong>ou</strong></li>
             <li>
@@ -124,7 +124,7 @@ export default function PrivacidadePage() {
 
         <Secao titulo="10. Cookies e armazenamento no aparelho">
           <p>
-            O Kayser One não usa cookies de propaganda nem de rastreamento. No navegador ou no aplicativo, guardamos
+            O K1 não usa cookies de propaganda nem de rastreamento. No navegador ou no aplicativo, guardamos
             apenas o necessário para funcionar: a sessão de login e preferências como o tema (claro/escuro) e os avisos
             que você já viu.
           </p>

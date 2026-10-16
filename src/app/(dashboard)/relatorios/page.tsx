@@ -42,7 +42,7 @@ export default function RelatoriosPage() {
     const sep = ";";
     const q = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const linhas: string[] = [];
-    linhas.push("Relatório - Kayser One");
+    linhas.push("Relatório - K1");
     linhas.push(`Gerado em${sep}${q(new Date().toLocaleString("pt-BR"))}`);
     linhas.push("");
     linhas.push(`Leads no mês${sep}${metrics?.leadsMes ?? 0}`);

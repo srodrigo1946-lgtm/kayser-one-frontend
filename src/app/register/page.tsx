@@ -119,6 +119,7 @@ export default function RegisterPage() {
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mínimo 6 caracteres"
@@ -208,6 +209,7 @@ function Field({ label, value, onChange, placeholder, type = "text" }: { label: 
       <label className="block text-sm font-medium mb-2" style={{ color: "var(--foreground)" }}>{label}</label>
       <input
         type={type}
+        autoComplete="off"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}

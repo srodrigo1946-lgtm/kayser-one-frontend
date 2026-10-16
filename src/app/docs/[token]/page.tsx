@@ -64,7 +64,7 @@ export default function PublicDocsPage({ params }: { params: Promise<{ token: st
             <FileText size={20} />
           </div>
           <div>
-            <div className="font-bold" style={{ color: "var(--foreground)" }}>Kayser One</div>
+            <div className="font-bold" style={{ color: "var(--foreground)" }}>K1</div>
             <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>Envio de documentos</div>
           </div>
         </div>

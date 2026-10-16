@@ -383,7 +383,7 @@ export default function WhatsAppPage() {
             </div>
 
             {/* Transferir a conversa (e o lead junto) para outro corretor — tudo dentro
-                do Kayser One. O histórico fica; o cliente continua no WhatsApp dele. */}
+                do K1. O histórico fica; o cliente continua no WhatsApp dele. */}
             {(teamUsers ?? []).length > 0 && (
               <div className="flex items-center gap-2 px-4 py-2 border-b flex-wrap" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
                 <span className="text-xs flex-shrink-0" style={{ color: "var(--muted-foreground)" }}>Transferir para:</span>
@@ -417,7 +417,7 @@ export default function WhatsAppPage() {
                 <div key={msg.id} className={`flex ${msg.direction === "out" ? "justify-end" : "justify-start"}`}>
                   <div className="max-w-[85%] md:max-w-[70%] rounded-2xl px-3 md:px-4 py-2.5 break-words" style={{ background: msg.direction === "out" ? "var(--primary)" : "var(--card)", color: msg.direction === "out" ? "white" : "var(--foreground)" }}>
                     {msg.direction === "out" && msg.isAI && (
-                      <div className="flex items-center gap-1 mb-1 opacity-70 text-xs"><Bot size={10} /><span>Kayser One AI</span></div>
+                      <div className="flex items-center gap-1 mb-1 opacity-70 text-xs"><Bot size={10} /><span>K1 AI</span></div>
                     )}
                     {msg.hasMedia && (
                       <div className="mb-1">

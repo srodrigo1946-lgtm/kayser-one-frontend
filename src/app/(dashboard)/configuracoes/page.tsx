@@ -166,7 +166,7 @@ function MarcaCard() {
   return (
     <Card title="Marca da empresa">
       <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
-        Nome, cor e logo que aparecem no sistema, na tela de login e no app do celular. Em branco = Kayser One.
+        Nome, cor e logo que aparecem no sistema, na tela de login e no app do celular. Em branco = K1.
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="text-sm" style={{ color: "var(--foreground)" }}>
@@ -175,7 +175,7 @@ function MarcaCard() {
             value={nome}
             maxLength={60}
             onChange={(e) => setNome(e.target.value)}
-            placeholder="Kayser One"
+            placeholder="K1"
             className="mt-1 w-full px-3 py-2 rounded-xl border text-sm"
             style={{ background: "var(--background)", borderColor: "var(--border)", color: "var(--foreground)" }}
           />
@@ -220,7 +220,7 @@ function MarcaCard() {
             <Building2 size={18} color={corDoTexto(cor)} />
           )}
         </div>
-        <span className="font-bold text-sm text-white">{nome.trim() || "Kayser One"}</span>
+        <span className="font-bold text-sm text-white">{nome.trim() || "K1"}</span>
         <span className="ml-auto px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: cor, color: corDoTexto(cor) }}>
           Botão de exemplo
         </span>
@@ -231,7 +231,7 @@ function MarcaCard() {
           {update.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Salvar marca
         </button>
         <button onClick={() => salvar(true)} disabled={update.isPending} className="px-3 py-2 rounded-xl text-sm" style={{ color: "var(--muted-foreground)" }}>
-          Voltar pro padrão Kayser One
+          Voltar pro padrão K1
         </button>
         {msg && <span className="text-sm" style={{ color: "var(--muted-foreground)" }}>{msg}</span>}
       </div>
@@ -715,7 +715,7 @@ function MetaFormsPicker() {
     <div className="mt-6 pt-5 border-t" style={{ borderColor: "var(--border)" }}>
       <div className="text-sm font-semibold mb-1" style={{ color: "var(--foreground)" }}>Formulários que mandam lead</div>
       <p className="text-xs mb-3" style={{ color: "var(--muted-foreground)" }}>
-        Só os marcados caem no Kayser One (novos leads). Nenhum marcado = todos.
+        Só os marcados caem no K1 (novos leads). Nenhum marcado = todos.
       </p>
       <div className="flex gap-2 mb-2">
         <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "var(--secondary)" }}>

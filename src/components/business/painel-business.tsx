@@ -20,7 +20,7 @@ const VERMELHO = "#ef4444";
 const CINZA = "#71717a";
 
 /**
- * Painel do Business K1 (venda do Kayser One): evolução de clientes, receita, caixa e lucro
+ * Painel do Business K1 (venda do K1): evolução de clientes, receita, caixa e lucro
  * mês a mês, consolidado no ano. Caixa = o que o Mercado Pago confirmou (líquido de taxa).
  */
 export function PainelBusiness() {

@@ -68,7 +68,7 @@ const slug = (t: string) =>
   t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\b(ltda|me|eireli|s\/?a)\b/g, "").replace(/[^a-z0-9-]+/g, "").slice(0, 30);
 
 /**
- * Venda do Kayser One: criar a instalação de uma imobiliária com 1 clique (Railway + banco +
+ * Venda do K1: criar a instalação de uma imobiliária com 1 clique (Railway + banco +
  * subdomínio + e-mail de boas-vindas). Só o Diretor da Kayser, só na instalação matriz.
  */
 export default function ClientesSaasPage() {
@@ -99,7 +99,7 @@ export default function ClientesSaasPage() {
   }, [dados]);
 
   if (permitido === null || marca.matriz === undefined) return null;
-  if (!permitido || !marca.matriz) return <div className="p-6 text-sm">Esta tela é só da Kayser One.</div>;
+  if (!permitido || !marca.matriz) return <div className="p-6 text-sm">Esta tela é só da K1.</div>;
 
   const sub = slug(f.subdominio || f.empresa);
   const personalizado = f.plano === dados?.personalizado;
@@ -109,7 +109,7 @@ export default function ClientesSaasPage() {
 
   const criar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!confirm(`Criar o Kayser One da ${f.empresa} em ${sub}.kayserone.com.br, plano ${f.plano}${personalizado ? ` (${f.limiteUsuarios} usuários)` : ""}?\n\nIsso cria um servidor no Railway (custo mensal).`)) return;
+    if (!confirm(`Criar o K1 da ${f.empresa} em ${sub}.kayserone.com.br, plano ${f.plano}${personalizado ? ` (${f.limiteUsuarios} usuários)` : ""}?\n\nIsso cria um servidor no Railway (custo mensal).`)) return;
     setEnviando(true);
     setMsg("");
     try {
@@ -226,7 +226,7 @@ O link do Mercado Pago vai por e-mail para ${c.diretorEmail} (cópia para você)
 
   return (
     <div>
-      <Header title="Business K1" subtitle="Clientes, cobrança e resultado do Kayser One" />
+      <Header title="Business K1" subtitle="Clientes, cobrança e resultado do K1" />
       <div className="p-4 sm:p-6 space-y-6 max-w-5xl">
         {dados && !dados.configurado && (
           <div className="p-4 rounded-2xl text-sm" style={{ background: "#f59e0b1a", color: "#f59e0b", border: "1px solid #f59e0b55" }}>

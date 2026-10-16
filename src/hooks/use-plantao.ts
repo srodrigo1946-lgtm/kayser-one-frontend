@@ -100,7 +100,7 @@ export function pegarLocalizacao(): Promise<{ lat: number; lng: number; precisao
       reject(
         new Error(
           e.code === 1
-            ? "Permita a localização pro Kayser One (no aviso do navegador/celular) pra fazer o check-in."
+            ? "Permita a localização pro K1 (no aviso do navegador/celular) pra fazer o check-in."
             : e.code === 3
             ? "O GPS demorou pra responder. Ligue a Localização do celular (e o Wi-Fi ajuda), vá pra perto de uma janela e tente de novo."
             : "Não consegui pegar sua localização. Ligue a Localização do celular (o Wi-Fi ajuda) e tente de novo."

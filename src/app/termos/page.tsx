@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-// Página PÚBLICA (sem login): regras de uso do Kayser One para imobiliárias e usuários.
+// Página PÚBLICA (sem login): regras de uso do K1 para imobiliárias e usuários.
 export const metadata: Metadata = {
-  title: "Termos de Uso | Kayser One",
-  description: "Regras de uso da plataforma Kayser One.",
+  title: "Termos de Uso | K1",
+  description: "Regras de uso da plataforma K1.",
 };
 
 const ATUALIZADO = "3 de outubro de 2026";
@@ -25,13 +25,13 @@ export default function TermosPage() {
       <article className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-2 text-white">Termos de Uso</h1>
         <p className="mb-10 text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
-          Kayser One — CRM imobiliário · CNPJ {CNPJ} · Última atualização: {ATUALIZADO}
+          K1 — CRM imobiliário · CNPJ {CNPJ} · Última atualização: {ATUALIZADO}
         </p>
 
         <Secao titulo="1. Sobre estes termos">
           <p>
-            Estes Termos de Uso regulam o acesso e o uso da plataforma Kayser One, um sistema de gestão comercial (CRM)
-            para imobiliárias e corretores, oferecido pela empresa inscrita no CNPJ {CNPJ} (“Kayser One”). Ao acessar ou
+            Estes Termos de Uso regulam o acesso e o uso da plataforma K1, um sistema de gestão comercial (CRM)
+            para imobiliárias e corretores, oferecido pela empresa inscrita no CNPJ {CNPJ} (“K1”). Ao acessar ou
             usar a plataforma, você concorda com estes termos e com a{" "}
             <Link href="/privacidade" className="underline" style={{ color: "#facc15" }}>Política de Privacidade</Link>.
           </p>
@@ -39,7 +39,7 @@ export default function TermosPage() {
 
         <Secao titulo="2. Quem usa a plataforma">
           <ul className="list-disc pl-6 space-y-1">
-            <li><strong>Cliente:</strong> a imobiliária ou empresa que contrata o Kayser One.</li>
+            <li><strong>Cliente:</strong> a imobiliária ou empresa que contrata o K1.</li>
             <li><strong>Usuários:</strong> diretores, gestores e corretores cadastrados pelo Cliente.</li>
             <li>
               Cada usuário é responsável pelo sigilo do seu login e senha e por tudo o que for feito com o seu acesso.
@@ -74,7 +74,7 @@ export default function TermosPage() {
         <Secao titulo="5. Dados dos leads e responsabilidades (LGPD)">
           <p>
             O Cliente é o <strong>controlador</strong> dos dados pessoais dos seus leads e clientes: decide como e para que
-            eles são usados e responde pela base legal do tratamento. O Kayser One atua como <strong>operador</strong>,
+            eles são usados e responde pela base legal do tratamento. O K1 atua como <strong>operador</strong>,
             tratando esses dados apenas para prestar o serviço, conforme as instruções do Cliente e a{" "}
             <Link href="/privacidade" className="underline" style={{ color: "#facc15" }}>Política de Privacidade</Link>.
           </p>
@@ -119,7 +119,7 @@ export default function TermosPage() {
 
         <Secao titulo="9. Limitação de responsabilidade">
           <p>
-            O Kayser One é uma ferramenta de apoio à venda e não garante resultados comerciais. Não nos responsabilizamos
+            O K1 é uma ferramenta de apoio à venda e não garante resultados comerciais. Não nos responsabilizamos
             por decisões tomadas com base em informações cadastradas pelo Cliente, por bloqueios aplicados por terceiros
             (como o WhatsApp ou a Meta) em razão do uso feito pelo Cliente, nem por danos indiretos ou lucros cessantes.
             Quando houver responsabilidade, ela fica limitada ao valor pago pelo Cliente nos últimos 3 meses.
@@ -128,7 +128,7 @@ export default function TermosPage() {
 
         <Secao titulo="10. Propriedade intelectual">
           <p>
-            A plataforma, a marca Kayser One, o código, o design e os conteúdos pertencem ao Kayser One. O Cliente recebe
+            A plataforma, a marca K1, o código, o design e os conteúdos pertencem ao K1. O Cliente recebe
             uma licença de uso, pessoal e intransferível, enquanto durar a assinatura. Os dados inseridos pelo Cliente
             continuam sendo dele.
           </p>
@@ -137,7 +137,7 @@ export default function TermosPage() {
         <Secao titulo="11. Mudanças nestes termos">
           <p>
             Podemos atualizar estes termos. Mudanças importantes serão avisadas dentro da plataforma com antecedência.
-            Continuar usando o Kayser One depois da atualização significa concordar com a nova versão.
+            Continuar usando o K1 depois da atualização significa concordar com a nova versão.
           </p>
         </Secao>
 

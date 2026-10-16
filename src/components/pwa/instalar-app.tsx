@@ -55,7 +55,7 @@ export function InstalarApp() {
       <div className="flex items-center gap-3 pr-6">
         <img src="/icons/icon-192.png" alt="" className="h-12 w-12 rounded-xl" />
         <div className="text-sm">
-          <div className="font-bold text-yellow-400">Instale o app Kayser One</div>
+          <div className="font-bold text-yellow-400">Instale o app K1</div>
           {evento ? (
             <div className="text-neutral-400">Abre direto do celular, em tela cheia.</div>
           ) : (

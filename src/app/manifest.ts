@@ -4,10 +4,10 @@ import { apiDoHost } from "@/lib/api";
 
 /**
  * App instalável (PWA): ícone na tela inicial do celular, abre em tela cheia.
- * Marca própria: nome e logo vêm da imobiliária do subdomínio (padrão Kayser One).
+ * Marca própria: nome e logo vêm da imobiliária do subdomínio (padrão K1).
  */
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
-  let nome = "Kayser One";
+  let nome = "K1";
   let logo: string | null = null;
   try {
     // `x-kayser-host`: subdomínio original repassado pelo Cloudflare (o Vercel vê o endereço dele).

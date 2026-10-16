@@ -214,6 +214,7 @@ export default function LoginPage() {
                 />
                 <input
                   type="email"
+                  autoComplete="off"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu@email.com"
@@ -247,7 +248,7 @@ export default function LoginPage() {
                 <div className="mb-2 p-3 rounded-xl text-xs leading-relaxed border space-y-2" style={{ borderColor: "var(--border)", background: "var(--secondary)", color: "var(--muted-foreground)" }}>
                   <p>
                     Peça ao seu <strong>gestor</strong> ou ao <strong>Diretor</strong> para redefinir sua senha.
-                    Você entrará com a senha padrão <strong>123456789</strong> e criará uma nova no primeiro acesso.
+                    Você entrará com a senha que ele passar e criará uma nova no primeiro acesso.
                   </p>
                   <button type="button" onClick={() => setShowRecover((v) => !v)} className="font-medium" style={{ color: "var(--primary)" }}>
                     É o Diretor? Recuperar com o código de recuperação
@@ -273,6 +274,7 @@ export default function LoginPage() {
                 />
                 <input
                   type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
@@ -312,15 +314,6 @@ export default function LoginPage() {
               {loading ? "Entrando..." : "Entrar"}
             </button>
           </form>
-
-          <div
-            className="mt-6 p-4 rounded-xl text-sm"
-            style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}
-          >
-            <strong style={{ color: "var(--foreground)" }}>Primeiro acesso?</strong>
-            <br />
-            Use a senha padrão <code className="font-mono">123456789</code>. Você será solicitado a criar uma nova senha.
-          </div>
 
           <p className="mt-6 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
             Não tem conta?{" "}

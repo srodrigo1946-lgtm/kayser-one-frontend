@@ -59,7 +59,7 @@ export default function TrocarSenhaPage() {
             <Building2 size={22} color="white" />
           </div>
           <span className="text-xl font-bold" style={{ color: "var(--foreground)" }}>
-            Kayser One
+            K1
           </span>
         </div>
 

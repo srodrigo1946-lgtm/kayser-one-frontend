@@ -14,7 +14,7 @@ const initialConvo: AiChatMessage[] = [
   {
     role: "assistant",
     content:
-      "Olá! Sou a Kayser One AI. Estou aqui para ajudar na qualificação e atendimento dos seus leads. Como posso te ajudar hoje?",
+      "Olá! Sou a K1 AI. Estou aqui para ajudar na qualificação e atendimento dos seus leads. Como posso te ajudar hoje?",
   },
 ];
 
@@ -65,7 +65,7 @@ function IAPageDiretor() {
 
   return (
     <div className="flex flex-col h-screen">
-      <Header title="IA Agente" subtitle="Kayser One AI — Assistente Comercial Inteligente" />
+      <Header title="IA Agente" subtitle="K1 AI — Assistente Comercial Inteligente" />
 
       <div className="flex flex-1 overflow-hidden p-6 gap-6">
         {/* Chat */}
@@ -86,7 +86,7 @@ function IAPageDiretor() {
               </div>
               <div>
                 <div className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>
-                  Kayser One AI
+                  K1 AI
                 </div>
                 <div className="flex items-center gap-1.5 text-xs" style={{ color: "#22c55e" }}>
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />

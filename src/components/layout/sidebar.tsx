@@ -52,7 +52,7 @@ const navItems = [
   { href: "/feedback", label: "1-on-1 / Feedback", icon: MessagesSquare, roles: ["diretor", "superintendente", "gerente_geral", "gerente"] },
   { href: "/escala", label: "Escala de Atendimento", icon: CalendarClock },
   { href: "/empresas", label: "Empresas", icon: Building2, diretorOnly: true },
-  // Venda do Kayser One: criar instalação de imobiliária (só na Kayser — some em quem tem marca própria).
+  // Venda do K1: criar instalação de imobiliária (só na Kayser — some em quem tem marca própria).
   { href: "/clientes-saas", label: "Business K1", icon: Crown, diretorOnly: true },
   { href: "/ranking-analises", label: "Ranking Análises", icon: Trophy, roles: ["diretor", "superintendente", "gerente_geral"] },
   { href: "/suporte", label: "Suporte", icon: LifeBuoy, diretorOnly: true },
@@ -91,7 +91,7 @@ export function Sidebar() {
   // Marca própria: nome/logo da imobiliária. Fora da Kayser não aparece o Grupo Direcional.
   const marca = useMarca();
   const logo = logoDaMarca(marca);
-  const marcaPropria = marca.nome !== "Kayser One";
+  const marcaPropria = marca.nome !== "K1";
 
   // O botão hambúrguer do Header dispara este evento (mesmo padrão da busca ⌘K).
   useEffect(() => {
