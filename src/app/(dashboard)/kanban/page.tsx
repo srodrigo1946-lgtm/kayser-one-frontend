@@ -87,9 +87,9 @@ function LeadCard({
       draggable
       onDragStart={() => onDragStart(lead)}
       onClick={() => onOpen(lead)}
-      className="rounded-xl p-3 border cursor-pointer active:cursor-grabbing"
+      className="group rounded-xl p-3 border cursor-pointer active:cursor-grabbing"
       style={{ background: "var(--card)", borderColor: "var(--border)" }}
-      title="Ver dados do cliente"
+      title={lead.observacoes ? undefined : "Ver dados do cliente"}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
@@ -137,6 +137,14 @@ function LeadCard({
 
       {lead.empreendimento && (
         <div className="text-xs mb-2 truncate" style={{ color: "var(--muted-foreground)" }}>🏢 {lead.empreendimento}</div>
+      )}
+
+      {/* Observações: aviso fixo + texto completo ao passar o mouse (gestão dos cargos) */}
+      {lead.observacoes?.trim() && (
+        <div className="mb-2 text-xs px-2 py-1 rounded-lg break-words" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>
+          <span className="group-hover:hidden line-clamp-1">📝 {lead.observacoes}</span>
+          <span className="hidden group-hover:block whitespace-pre-wrap">📝 {lead.observacoes}</span>
+        </div>
       )}
 
       {desde && (
