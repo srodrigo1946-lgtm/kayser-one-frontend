@@ -334,6 +334,11 @@ export default function WhatsAppPage() {
                       );
                     })()
                   )}
+                  {selected.lead?.empreendimento && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full truncate max-w-[220px]" style={{ background: "var(--secondary)", color: "var(--foreground)", border: "1px solid var(--border)" }} title={`Empreendimento: ${selected.lead.empreendimento}`}>
+                      🏢 {selected.lead.empreendimento}
+                    </span>
+                  )}
                 </div>
                 <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>
                   Atendente: {selected.assignedTo?.name ?? "não atribuído"}
