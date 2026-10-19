@@ -8,6 +8,17 @@ import { api } from "@/lib/api";
  * CABEÇALHO e devolve um endereço local (blob:) pra usar em <img>/<audio>/<video>.
  * Antes o token ia na URL (?token=) e ficava gravado nos logs do servidor.
  */
+/**
+ * Arquivo que vem de fora (cliente, WhatsApp) pode ser HTML/SVG com script: aberto como
+ * blob: ele rodaria DENTRO do K1 com o login do usuário. Só tipos que não executam
+ * nada abrem; o resto vira download (auditoria 19/10).
+ */
+export function blobSeguro(b: Blob): Blob {
+  const t = (b.type || "").toLowerCase();
+  const ok = /^(image\/(png|jpe?g|gif|webp|bmp|heic|heif)|application\/pdf|audio\/|video\/)/.test(t);
+  return ok ? b : new Blob([b], { type: "application/octet-stream" });
+}
+
 export function useArquivoProtegido(caminho: string | null) {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
@@ -18,7 +29,7 @@ export function useArquivoProtegido(caminho: string | null) {
       .get(caminho, { responseType: "blob" })
       .then((r) => {
         if (!vivo) return;
-        criado = URL.createObjectURL(r.data);
+        criado = URL.createObjectURL(blobSeguro(r.data));
         setUrl(criado);
       })
       .catch(() => {});

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { blobSeguro } from "@/hooks/use-arquivo-protegido";
 
 export interface Pasta {
   id: string;
@@ -134,7 +135,7 @@ export function usePastaFiles(id: string | null) {
 // Baixa o arquivo autenticado (blob) e abre em nova aba (PDF/imagem renderizam inline).
 export async function openPastaFile(pastaId: string, docId: string) {
   const { data } = await api.get(`/pastas/${pastaId}/files/${docId}`, { responseType: "blob" });
-  const url = URL.createObjectURL(data as Blob);
+  const url = URL.createObjectURL(blobSeguro(data as Blob));
   window.open(url, "_blank");
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
