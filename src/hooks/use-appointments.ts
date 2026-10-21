@@ -24,13 +24,14 @@ export interface Appointment {
   user?: User | null;
 }
 
-export function useAppointments(from?: string, to?: string) {
+export function useAppointments(from?: string, to?: string, equipe = false) {
   return useQuery({
-    queryKey: ["appointments", { from, to }],
+    queryKey: ["appointments", { from, to, equipe }],
     queryFn: async () => {
       const params: Record<string, string> = {};
       if (from) params.from = from;
       if (to) params.to = to;
+      if (equipe) params.equipe = "1"; // gestor vê o time, Diretor todos
       const { data } = await api.get<Appointment[]>("/appointments", { params });
       return data;
     },

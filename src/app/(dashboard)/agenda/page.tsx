@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Plus, Trash2, Calendar as CalendarIcon, Down
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, getApiErrorMessage } from "@/lib/api";
+import { getStoredUser } from "@/lib/auth";
 import {
   useAppointments,
   useCreateAppointment,
@@ -43,7 +44,10 @@ export default function AgendaPage() {
   // Busca o ANO inteiro: o calendário usa o mês, e o resumo/gráfico usa o ano.
   const from = new Date(year, 0, 1).toISOString();
   const to = new Date(year, 11, 31, 23, 59, 59).toISOString();
-  const { data: appointments } = useAppointments(from, to);
+  // Corretor vê só a dele; gestor/Diretor podem trocar pra "Equipe" (ver os agendamentos do time).
+  const ehCorretor = getStoredUser()?.role === "corretor";
+  const [verEquipe, setVerEquipe] = useState(false);
+  const { data: appointments } = useAppointments(from, to, verEquipe && !ehCorretor);
   const create = useCreateAppointment();
   const remove = useDeleteAppointment();
   const [diaSel, setDiaSel] = useState<number | null>(null);
@@ -101,6 +105,23 @@ export default function AgendaPage() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold" style={{ color: "var(--foreground)" }}>{months[month]} {year}</h2>
             <div className="flex gap-2">
+              {!ehCorretor && (
+                <div className="flex rounded-xl border overflow-hidden text-xs" style={{ borderColor: "var(--border)" }}>
+                  {[
+                    [false, "Minha agenda"],
+                    [true, "Equipe"],
+                  ].map(([v, rot]) => (
+                    <button
+                      key={String(v)}
+                      onClick={() => setVerEquipe(v as boolean)}
+                      className="px-3 h-8"
+                      style={{ background: verEquipe === v ? "var(--primary)" : "transparent", color: verEquipe === v ? "white" : "var(--foreground)" }}
+                    >
+                      {rot as string}
+                    </button>
+                  ))}
+                </div>
+              )}
               <button onClick={() => irPara(new Date(year, month - 1, 1))} className="w-8 h-8 rounded-xl flex items-center justify-center border" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}><ChevronLeft size={16} /></button>
               <button onClick={() => irPara(new Date(year, month + 1, 1))} className="w-8 h-8 rounded-xl flex items-center justify-center border" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}><ChevronRight size={16} /></button>
             </div>
@@ -151,6 +172,7 @@ export default function AgendaPage() {
                             {dayEvents.slice(0, 8).map((e) => (
                               <div key={e.id} className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>
                                 <b style={{ color: typeColors[e.type] || "#3b82f6" }}>{hora(e.scheduledAt)}</b> {e.lead?.name || e.title}
+                                {verEquipe && e.user?.name ? ` · ${e.user.name.split(" ")[0]}` : ""}
                               </div>
                             ))}
                             {dayEvents.length > 8 && <div className="text-xs mt-1">+{dayEvents.length - 8} — clique no dia pra ver todos</div>}
@@ -267,6 +289,7 @@ export default function AgendaPage() {
                     <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>
                       {new Date(evt.scheduledAt).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                       {evt.lead?.name ? ` • ${evt.lead.name}` : ""}
+                      {evt.user?.name ? ` • 👤 ${evt.user.name}` : ""}
                     </div>
                   </div>
                   <button onClick={() => remove.mutate(evt.id)} style={{ color: "#ef4444" }} title="Remover"><Trash2 size={14} /></button>
