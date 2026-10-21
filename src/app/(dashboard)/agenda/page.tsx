@@ -3,7 +3,8 @@
 import { Header } from "@/components/layout/header";
 import { ChevronLeft, ChevronRight, Plus, Trash2, Calendar as CalendarIcon, Download } from "lucide-react";
 import { useState } from "react";
-import { getApiErrorMessage } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { api, getApiErrorMessage } from "@/lib/api";
 import {
   useAppointments,
   useCreateAppointment,
@@ -16,6 +17,16 @@ import {
 
 const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+const roleLabels: Record<string, string> = {
+  superintendente: "Superintendente",
+  gerente_geral: "Gerente Geral",
+  gerente: "Gerente",
+  corretor: "Corretor",
+  diretor: "Diretor",
+};
+
+type LinhaRanking = { id: string; nome: string; role: string; agendamentos: number; visitas: number };
 
 const typeColors: Record<string, string> = {
   visita: "#3b82f6",
@@ -36,6 +47,13 @@ export default function AgendaPage() {
   const create = useCreateAppointment();
   const remove = useDeleteAppointment();
   const [diaSel, setDiaSel] = useState<number | null>(null);
+  // Ranking igual ao Kanban (colunas Agendamento e Visita realizada); cada cargo vê o seu time.
+  const { data: ranking } = useQuery({
+    queryKey: ["appointments", "ranking"],
+    queryFn: async () => (await api.get<LinhaRanking[]>("/appointments/ranking")).data,
+  });
+  const totAg = (ranking ?? []).reduce((s, r) => s + r.agendamentos, 0);
+  const totVis = (ranking ?? []).reduce((s, r) => s + r.visitas, 0);
 
   const doAno = appointments ?? [];
   const porMes = months.map((_, m) => doAno.filter((e) => new Date(e.scheduledAt).getMonth() === m).length);
@@ -144,6 +162,44 @@ export default function AgendaPage() {
                 </div>
               );
             })}
+          </div>
+
+          {/* Ranking por cargo — mesmos números das colunas do Kanban */}
+          <div className="mt-6 pt-4 border-t" style={{ borderColor: "var(--border)" }}>
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <h3 className="font-semibold" style={{ color: "var(--foreground)" }}>🏆 Ranking — agendamentos e visitas realizadas</h3>
+              <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+                Kanban agora: 📅 {totAg} agendamentos · ✅ {totVis} visitas realizadas
+              </span>
+            </div>
+            {(ranking ?? []).length === 0 ? (
+              <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>Ninguém com lead em Agendamento ou Visita realizada.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-xs text-left" style={{ color: "var(--muted-foreground)" }}>
+                      <th className="py-1.5 pr-2">#</th>
+                      <th className="py-1.5 pr-2">Nome</th>
+                      <th className="py-1.5 pr-2">Cargo</th>
+                      <th className="py-1.5 pr-2 text-right">📅 Agendamentos</th>
+                      <th className="py-1.5 text-right">✅ Visitas realizadas</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(ranking ?? []).map((r, i) => (
+                      <tr key={r.id} className="border-t" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>
+                        <td className="py-1.5 pr-2 font-semibold">{["🥇", "🥈", "🥉"][i] ?? `${i + 1}º`}</td>
+                        <td className="py-1.5 pr-2">{r.nome}</td>
+                        <td className="py-1.5 pr-2 text-xs" style={{ color: "var(--muted-foreground)" }}>{roleLabels[r.role] ?? r.role}</td>
+                        <td className="py-1.5 pr-2 text-right font-semibold">{r.agendamentos}</td>
+                        <td className="py-1.5 text-right font-semibold" style={{ color: "#22c55e" }}>{r.visitas}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
 
