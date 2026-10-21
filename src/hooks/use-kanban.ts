@@ -31,6 +31,22 @@ export function useKanbanColumns() {
   });
 }
 
+/**
+ * Pergunta o dia do agendamento (Kanban e janela do lead). Devolve a data em ISO,
+ * ou null se cancelou/data inválida — aí o card NÃO muda de etapa.
+ */
+export function perguntarDataAgendamento(nome: string): string | null {
+  const amanha = new Date(Date.now() + 86_400_000);
+  const resp = window.prompt(`Qual é o dia do agendamento de ${nome}?\n(DD/MM/AAAA HH:MM)`, `${amanha.toLocaleDateString("pt-BR")} 10:00`);
+  const m = resp?.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/);
+  const quando = m ? new Date(+m[3], +m[2] - 1, +m[1], +(m[4] ?? 10), +(m[5] ?? 0)) : null;
+  if (!quando || isNaN(quando.getTime())) {
+    if (resp != null) alert("Data inválida. Use DD/MM/AAAA HH:MM — ex.: 25/10/2026 14:30");
+    return null;
+  }
+  return quando.toISOString();
+}
+
 export function useMoveCard() {
   const qc = useQueryClient();
   return useMutation({

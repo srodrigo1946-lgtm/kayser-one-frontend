@@ -7,7 +7,7 @@ import { getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 import { useLeadHistory, useUpdateLead, useDeleteLeadHistory } from "@/hooks/use-leads";
 import { useDistribuirLead, useAgendarLead } from "@/hooks/use-lead-queue";
-import { useKanbanColumns, useMoveCard } from "@/hooks/use-kanban";
+import { useKanbanColumns, useMoveCard, perguntarDataAgendamento } from "@/hooks/use-kanban";
 import { useProperties } from "@/hooks/use-properties";
 import { useUsers } from "@/hooks/use-users";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
@@ -54,8 +54,11 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
 
   const moverPara = async (status: string) => {
     if (!status || status === current.status) return;
+    // Agendamento: pergunta o dia (igual ao Kanban). Cancelou → não muda a etapa.
+    const dataAgendamento = status === "agendamento" ? perguntarDataAgendamento(current.name) : undefined;
+    if (dataAgendamento === null) return;
     try {
-      await mover.mutateAsync({ leadId: current.id, status, order: 0 });
+      await mover.mutateAsync({ leadId: current.id, status, order: 0, dataAgendamento });
       setCurrent((c) => ({ ...c, status: status as Lead["status"] }));
     } catch {
       /* silencioso — o board revalida sozinho */

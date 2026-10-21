@@ -8,6 +8,7 @@ import { MessageSquare, Plus, Trash2, Settings2, ChevronLeft, ChevronRight, Sear
 import {
   useKanbanBoard,
   useMoveCard,
+  perguntarDataAgendamento,
   useCreateColumn,
   useUpdateColumn,
   useDeleteColumn,
@@ -357,17 +358,12 @@ export default function KanbanPage() {
     if (dragging && dragging.status !== status) {
       if (status === "agendamento") {
         // Pergunta o dia do agendamento (Diretor e cargos sabem certinho; conta por mês/ano).
-        const amanha = new Date(Date.now() + 86_400_000);
-        const sugestao = `${amanha.toLocaleDateString("pt-BR")} 10:00`;
-        const resp = window.prompt(`Qual é o dia do agendamento de ${dragging.name}?\n(DD/MM/AAAA HH:MM)`, sugestao);
-        const m = resp?.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/);
-        const quando = m ? new Date(+m[3], +m[2] - 1, +m[1], +(m[4] ?? 10), +(m[5] ?? 0)) : null;
-        if (!quando || isNaN(quando.getTime())) {
-          if (resp != null) alert("Data inválida. Use DD/MM/AAAA HH:MM — ex.: 25/10/2026 14:30");
+        const dataAgendamento = perguntarDataAgendamento(dragging.name);
+        if (!dataAgendamento) {
           setDragging(null);
           return;
         }
-        moveCard.mutate({ leadId: dragging.id, status, order: 0, dataAgendamento: quando.toISOString() });
+        moveCard.mutate({ leadId: dragging.id, status, order: 0, dataAgendamento });
       } else {
         moveCard.mutate({ leadId: dragging.id, status, order: 0 });
       }
