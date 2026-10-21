@@ -38,18 +38,21 @@ export function useMoveCard() {
       leadId,
       status,
       order,
+      dataAgendamento,
     }: {
       leadId: string;
       status: string;
       order: number;
+      dataAgendamento?: string;
     }) => {
-      const { data } = await api.put(`/kanban/move/${leadId}`, { status, order });
+      const { data } = await api.put(`/kanban/move/${leadId}`, { status, order, dataAgendamento });
       return data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["kanban"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["leads"] });
+      qc.invalidateQueries({ queryKey: ["appointments"] });
     },
   });
 }

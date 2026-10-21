@@ -43,7 +43,8 @@ export interface Lead {
   origem?: string;
   campanha?: string;
   source?: string;
-  responsavel?: { id: string; name: string; manager?: { id: string; name: string } | null } | null;
+  responsavel?: { id: string; name: string; role?: string; manager?: { id: string; name: string } | null } | null;
+  dataAgendamento?: string | null; // dia do agendamento perguntado no Kanban
   responsavelId?: string;
   cidade?: string;
   renda?: number;

@@ -26,7 +26,7 @@ const roleLabels: Record<string, string> = {
   diretor: "Diretor",
 };
 
-type LinhaRanking = { id: string; nome: string; role: string; agendamentos: number; visitas: number };
+type LinhaRanking = { id: string; nome: string; role: string; agendamentos: number; visitas: number; agMes: number; agAno: number };
 
 const typeColors: Record<string, string> = {
   visita: "#3b82f6",
@@ -182,7 +182,9 @@ export default function AgendaPage() {
                       <th className="py-1.5 pr-2">#</th>
                       <th className="py-1.5 pr-2">Nome</th>
                       <th className="py-1.5 pr-2">Cargo</th>
-                      <th className="py-1.5 pr-2 text-right">📅 Agendamentos</th>
+                      <th className="py-1.5 pr-2 text-right">📅 Agendamento (Kanban)</th>
+                      <th className="py-1.5 pr-2 text-right">Agendados no mês</th>
+                      <th className="py-1.5 pr-2 text-right">No ano</th>
                       <th className="py-1.5 text-right">✅ Visitas realizadas</th>
                     </tr>
                   </thead>
@@ -193,6 +195,8 @@ export default function AgendaPage() {
                         <td className="py-1.5 pr-2">{r.nome}</td>
                         <td className="py-1.5 pr-2 text-xs" style={{ color: "var(--muted-foreground)" }}>{roleLabels[r.role] ?? r.role}</td>
                         <td className="py-1.5 pr-2 text-right font-semibold">{r.agendamentos}</td>
+                        <td className="py-1.5 pr-2 text-right">{r.agMes}</td>
+                        <td className="py-1.5 pr-2 text-right">{r.agAno}</td>
                         <td className="py-1.5 text-right font-semibold" style={{ color: "#22c55e" }}>{r.visitas}</td>
                       </tr>
                     ))}

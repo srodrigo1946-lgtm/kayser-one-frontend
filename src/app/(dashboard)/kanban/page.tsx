@@ -21,6 +21,14 @@ import { useAlerts } from "@/hooks/use-alerts";
 import { LeadDetailDrawer } from "@/components/leads/lead-detail-drawer";
 
 // Dias sem contato que acendem o alerta, por etapa (regra do Rodrigo, 13/10/2026).
+const CARGO: Record<string, string> = {
+  diretor: "Diretor",
+  superintendente: "Superintendente",
+  gerente_geral: "Gerente Geral",
+  gerente: "Gerente",
+  corretor: "Corretor",
+};
+
 const limiteSemContato = (status: string) =>
   ["agendamento", "visita_agendada"].includes(status) ? 7 : ["visita_realizada", "simulacao", "subida_pasta", "aprovacao", "reprovacao"].includes(status) ? 15 : 3;
 
@@ -135,6 +143,13 @@ function LeadCard({
         </div>
       )}
 
+      {lead.status === "agendamento" && lead.dataAgendamento && (
+        <div className="mb-2 text-xs px-2 py-1 rounded-lg font-semibold" style={{ background: "#10b98122", color: "#10b981" }} title="Dia do agendamento">
+          📅 Agendado: {new Date(lead.dataAgendamento).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" })} às{" "}
+          {new Date(lead.dataAgendamento).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+        </div>
+      )}
+
       {lead.empreendimento && (
         <div className="text-xs mb-2 truncate" style={{ color: "var(--muted-foreground)" }}>🏢 {lead.empreendimento}</div>
       )}
@@ -177,7 +192,8 @@ function LeadCard({
 
       {lead.responsavel?.name && (
         <div className="mt-2 pt-2 border-t text-xs" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
-          👤 {lead.responsavel.name.split(" ")[0]}
+          👤 {lead.responsavel.name}
+          {lead.responsavel.role && <span className="opacity-70"> · {CARGO[lead.responsavel.role] ?? lead.responsavel.role}</span>}
         </div>
       )}
     </div>
@@ -339,7 +355,22 @@ export default function KanbanPage() {
 
   const handleDrop = (status: string) => {
     if (dragging && dragging.status !== status) {
-      moveCard.mutate({ leadId: dragging.id, status, order: 0 });
+      if (status === "agendamento") {
+        // Pergunta o dia do agendamento (Diretor e cargos sabem certinho; conta por mês/ano).
+        const amanha = new Date(Date.now() + 86_400_000);
+        const sugestao = `${amanha.toLocaleDateString("pt-BR")} 10:00`;
+        const resp = window.prompt(`Qual é o dia do agendamento de ${dragging.name}?\n(DD/MM/AAAA HH:MM)`, sugestao);
+        const m = resp?.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/);
+        const quando = m ? new Date(+m[3], +m[2] - 1, +m[1], +(m[4] ?? 10), +(m[5] ?? 0)) : null;
+        if (!quando || isNaN(quando.getTime())) {
+          if (resp != null) alert("Data inválida. Use DD/MM/AAAA HH:MM — ex.: 25/10/2026 14:30");
+          setDragging(null);
+          return;
+        }
+        moveCard.mutate({ leadId: dragging.id, status, order: 0, dataAgendamento: quando.toISOString() });
+      } else {
+        moveCard.mutate({ leadId: dragging.id, status, order: 0 });
+      }
     }
     setDragging(null);
   };
