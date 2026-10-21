@@ -91,10 +91,12 @@ export default function FilaLeadsPage() {
   const turnoAtivo = (grade ?? []).find(
     (t) => t.diaSemana === dia && t.horaInicio <= hhmm && hhmm < t.horaFim
   );
-  // Só corretor recebe lead (gerente pra cima não entra), igual à regra do backend.
-  const plantaoAgora = (turnoAtivo?.atendenteIds ?? [])
-    .map((id) => byId.get(id))
-    .filter((u: any) => u && u.role === "corretor" && !u.empresaId) as any[];
+  // Quem RECEBE agora = a ordem da fila do servidor (check-in feito, plantão livre).
+  // A escala antiga só serve de reserva — mostrar ela fazia parecer que tiraram corretor (21/10).
+  const plantaoAgora = (ordem?.turnoAtivo
+    ? ordem.ordem.map((o) => byId.get(o.userId) ?? { id: o.userId, name: o.nome, role: "corretor" })
+    : (turnoAtivo?.atendenteIds ?? []).map((id) => byId.get(id))
+  ).filter((u: any) => u && u.role === "corretor" && !u.empresaId) as any[];
 
   const salvar = async () => {
     setSaved(false);
