@@ -13,8 +13,10 @@ import {
   useLeads,
   useCreateLead,
   useDeleteLead,
+  useTransferirLeads,
   exportLeads,
 } from "@/hooks/use-leads";
+import { useUsers } from "@/hooks/use-users";
 import type { Lead } from "@/types";
 import { LeadDetailDrawer } from "@/components/leads/lead-detail-drawer";
 import { ImportModal } from "@/components/leads/import-modal";
@@ -116,7 +118,47 @@ export default function LeadsPage() {
     if (q) setSearch(q);
   }, []);
 
-  const { data, isLoading, isError } = useLeads({ search, status: filterStatus });
+  const [filterResp, setFilterResp] = useState<string>("all");
+  const { data, isLoading, isError } = useLeads({ search, status: filterStatus, responsavelId: filterResp });
+  // Transferência em massa: Diretor e gestores (o servidor limita o gestor ao time). Corretor não vê.
+  const podeTransferir = !!getStoredUser() && getStoredUser()?.role !== "corretor";
+  const { data: equipe } = useUsers();
+  const pessoas = (equipe ?? []).filter((u) => u.active !== false && u.approved !== false);
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [destino, setDestino] = useState("");
+  const transferir = useTransferirLeads();
+  // Mudou o filtro/busca → limpa a seleção (não transfere lead que sumiu da tela).
+  useEffect(() => {
+    setSel(new Set());
+  }, [search, filterStatus, filterResp]);
+  const marcar = (id: string) =>
+    setSel((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  const marcarTodosDoFiltro = async () => {
+    const params: Record<string, unknown> = { page: 1, limit: 500 };
+    if (filterStatus !== "all") params.status = filterStatus;
+    if (search) params.search = search;
+    if (filterResp !== "all") params.responsavelId = filterResp;
+    const { data: r } = await api.get<{ data: Lead[] }>("/leads", { params });
+    setSel(new Set(r.data.map((l) => l.id)));
+  };
+  const fazerTransferencia = async () => {
+    const quem = pessoas.find((u) => u.id === destino);
+    if (!quem || !sel.size) return;
+    if (!window.confirm(`Transferir ${sel.size} lead(s) para ${quem.name}?`)) return;
+    try {
+      const r = await transferir.mutateAsync({ leadIds: [...sel], responsavelId: destino });
+      setFeedback(`✅ ${r.transferidos} lead(s) transferido(s) para ${quem.name}.`);
+      setSel(new Set());
+      setDestino("");
+    } catch (err) {
+      setFeedback(getApiErrorMessage(err, "Falha ao transferir."));
+    }
+  };
   const createLead = useCreateLead();
   const { data: settingsTimes } = useSettings();
   const origensTimes = settingsTimes?.leadOrigens?.length
@@ -237,6 +279,20 @@ export default function LeadsPage() {
             ))}
           </select>
 
+          {podeTransferir && (
+            <select
+              value={filterResp}
+              onChange={(e) => setFilterResp(e.target.value)}
+              className="px-3 py-2.5 rounded-xl border text-sm outline-none max-w-[14rem]"
+              style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+            >
+              <option value="all">Todos os responsáveis</option>
+              {pessoas.map((u) => (
+                <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+            </select>
+          )}
+
           <div className="flex gap-2">
             <input
               ref={fileInputRef}
@@ -302,6 +358,43 @@ export default function LeadsPage() {
           </div>
         )}
 
+        {/* Barra da transferência em massa (aparece com lead marcado) */}
+        {podeTransferir && sel.size > 0 && (
+          <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl border" style={{ background: "var(--card)", borderColor: "var(--primary)" }}>
+            <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+              {sel.size} selecionado(s)
+            </span>
+            {total > leads.length && (
+              <button onClick={marcarTodosDoFiltro} className="text-xs underline" style={{ color: "var(--primary)" }}>
+                Selecionar todos os {Math.min(total, 500)} do filtro
+              </button>
+            )}
+            <span className="text-sm" style={{ color: "var(--muted-foreground)" }}>→ Transferir para:</span>
+            <select
+              value={destino}
+              onChange={(e) => setDestino(e.target.value)}
+              className="px-3 py-2 rounded-lg border text-sm outline-none"
+              style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+            >
+              <option value="">Escolha…</option>
+              {pessoas.map((u) => (
+                <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={fazerTransferencia}
+              disabled={!destino || transferir.isPending}
+              className="px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+              style={{ background: "var(--primary)", color: "white" }}
+            >
+              {transferir.isPending ? "Transferindo…" : "Transferir"}
+            </button>
+            <button onClick={() => setSel(new Set())} className="text-xs underline ml-auto" style={{ color: "var(--muted-foreground)" }}>
+              Limpar seleção
+            </button>
+          </div>
+        )}
+
         {/* Table */}
         <div
           className="rounded-2xl border overflow-hidden"
@@ -311,6 +404,16 @@ export default function LeadsPage() {
             <table className="w-full">
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                  {podeTransferir && (
+                    <th className="pl-4 py-3 w-8">
+                      <input
+                        type="checkbox"
+                        title="Marcar todos desta página"
+                        checked={leads.length > 0 && leads.every((l) => sel.has(l.id))}
+                        onChange={(e) => setSel(e.target.checked ? new Set(leads.map((l) => l.id)) : new Set())}
+                      />
+                    </th>
+                  )}
                   {["Nome", "Contato", "Origem", "Empreendimento", "Responsável", "Score", "Status", "Cadastro", "Ações"].map((h) => (
                     <th
                       key={h}
@@ -325,6 +428,11 @@ export default function LeadsPage() {
               <tbody>
                 {leads.map((lead) => (
                   <tr key={lead.id} className="border-b transition-colors hover:opacity-90" style={{ borderColor: "var(--border)" }}>
+                    {podeTransferir && (
+                      <td className="pl-4 py-3 w-8">
+                        <input type="checkbox" checked={sel.has(lead.id)} onChange={() => marcar(lead.id)} />
+                      </td>
+                    )}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div

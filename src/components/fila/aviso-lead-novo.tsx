@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 
-type Meu = { id: string; leadId: string; nome: string; empreendimento: string | null; dueAt: string | null; transferido?: boolean; anuncio?: boolean };
+type Meu = { id: string; leadId: string; nome: string; empreendimento: string | null; dueAt: string | null; transferido?: boolean; anuncio?: boolean; qtd?: number };
 const CHAVE = "kayser-leads-avisados";
 
 function lerVistos(): string[] {
@@ -105,8 +105,10 @@ export function AvisoLeadNovo() {
     const vistos = lerVistos();
     const novo = data.find((m) => !vistos.includes(m.id));
     if (!novo) return;
-    gravarVistos([...vistos, novo.id]);
-    setLead(novo);
+    // Transferência em massa: junta todos os transferidos novos num aviso só (23/10).
+    const juntos = novo.transferido ? data.filter((m) => m.transferido && !vistos.includes(m.id)) : [novo];
+    gravarVistos([...vistos, ...juntos.map((m) => m.id)]);
+    setLead({ ...novo, qtd: juntos.length });
     try {
       navigator.vibrate?.([200, 100, 200, 100, 400]);
     } catch {
@@ -122,7 +124,9 @@ export function AvisoLeadNovo() {
       <Fogos />
       <div className="relative mx-4 max-w-md w-full rounded-3xl p-6 text-center" style={{ background: "linear-gradient(160deg,#1f2937,#0b0f19)", border: "2px solid #facc15", boxShadow: "0 0 60px #facc1566" }}>
         <div className="text-6xl mb-2">🎉</div>
-        <div className="text-2xl font-extrabold mb-1" style={{ color: "#facc15" }}>Chegou lead pra você!</div>
+        <div className="text-2xl font-extrabold mb-1" style={{ color: "#facc15" }}>
+          {(lead.qtd ?? 1) > 1 ? `Chegaram ${lead.qtd} leads pra você!` : "Chegou lead pra você!"}
+        </div>
         {/* Selo "#BORA VENDER" no lugar do nome do empreendimento (pedido do Rodrigo 06/10). */}
         <div
           className="inline-block mt-2 px-3 py-1 rounded-md leading-none"
@@ -142,12 +146,14 @@ export function AvisoLeadNovo() {
         {min != null ? (
           <div className="text-sm mt-3" style={{ color: "#fca5a5" }}>⏱️ Você tem {min} min pra fazer o primeiro contato.</div>
         ) : lead.anuncio ? null : (
-          <div className="text-sm mt-3" style={{ color: "#fde68a" }}>📨 Seu gestor mandou esse lead pra você. Faça o primeiro contato!</div>
+          <div className="text-sm mt-3" style={{ color: "#fde68a" }}>
+            {(lead.qtd ?? 1) > 1 ? "📨 Seu gestor transferiu esses leads pra você. Estão no seu Kanban!" : "📨 Seu gestor mandou esse lead pra você. Faça o primeiro contato!"}
+          </div>
         )}
         <button
           onClick={() => {
             setLead(null);
-            router.push(`/whatsapp?lead=${lead.leadId}`);
+            router.push((lead.qtd ?? 1) > 1 ? "/kanban" : `/whatsapp?lead=${lead.leadId}`);
           }}
           className="mt-5 w-full py-3 rounded-2xl text-base font-bold"
           style={{ background: "#facc15", color: "#0a0a0a" }}

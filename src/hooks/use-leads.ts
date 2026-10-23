@@ -14,18 +14,34 @@ export interface LeadsResponse {
 export interface LeadsFilter {
   status?: string;
   search?: string;
+  responsavelId?: string;
   page?: number;
   limit?: number;
 }
 
+/** Transferência em massa (Diretor: qualquer um; gestor: dentro do time). */
+export function useTransferirLeads() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (p: { leadIds: string[]; responsavelId: string }) =>
+      (await api.post<{ transferidos: number }>("/leads/transferir", p)).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["leads"] });
+      qc.invalidateQueries({ queryKey: ["kanban"] });
+      qc.invalidateQueries({ queryKey: ["conversations"] });
+    },
+  });
+}
+
 export function useLeads(filter: LeadsFilter = {}) {
-  const { status, search, page = 1, limit = 50 } = filter;
+  const { status, search, responsavelId, page = 1, limit = 50 } = filter;
   return useQuery({
-    queryKey: ["leads", { status, search, page, limit }],
+    queryKey: ["leads", { status, search, responsavelId, page, limit }],
     queryFn: async () => {
       const params: Record<string, unknown> = { page, limit };
       if (status && status !== "all") params.status = status;
       if (search) params.search = search;
+      if (responsavelId && responsavelId !== "all") params.responsavelId = responsavelId;
       const { data } = await api.get<LeadsResponse>("/leads", { params });
       return data;
     },
