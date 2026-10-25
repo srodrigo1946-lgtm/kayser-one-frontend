@@ -144,7 +144,8 @@ export default function LeadsPage() {
     const params: Record<string, unknown> = { page: 1, limit: Math.min(500, Math.max(1, n)) };
     if (filterStatus !== "all") params.status = filterStatus;
     if (search) params.search = search;
-    if (filterResp !== "all") params.responsavelId = filterResp;
+    if (filterResp.startsWith("equipe:")) params.equipeDe = filterResp.slice(7);
+    else if (filterResp !== "all") params.responsavelId = filterResp;
     const { data: r } = await api.get<{ data: Lead[] }>("/leads", { params });
     setSel(new Set(r.data.map((l) => l.id)));
   };
@@ -289,9 +290,19 @@ export default function LeadsPage() {
               style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
             >
               <option value="all">Todos os responsáveis</option>
-              {pessoas.map((u) => (
-                <option key={u.id} value={u.id}>{u.name}</option>
-              ))}
+              {/* Equipe do gestor = ele + corretores abaixo (os leads do gerente ficam com o time dele). */}
+              <optgroup label="Equipe inteira do gestor">
+                {pessoas
+                  .filter((u) => u.role !== "corretor")
+                  .map((u) => (
+                    <option key={`eq-${u.id}`} value={`equipe:${u.id}`}>👥 Equipe de {u.name}</option>
+                  ))}
+              </optgroup>
+              <optgroup label="Só a pessoa">
+                {pessoas.map((u) => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+                ))}
+              </optgroup>
             </select>
           )}
 

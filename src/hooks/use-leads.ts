@@ -41,7 +41,8 @@ export function useLeads(filter: LeadsFilter = {}) {
       const params: Record<string, unknown> = { page, limit };
       if (status && status !== "all") params.status = status;
       if (search) params.search = search;
-      if (responsavelId && responsavelId !== "all") params.responsavelId = responsavelId;
+      if (responsavelId?.startsWith("equipe:")) params.equipeDe = responsavelId.slice(7); // gestor + time dele
+      else if (responsavelId && responsavelId !== "all") params.responsavelId = responsavelId;
       const { data } = await api.get<LeadsResponse>("/leads", { params });
       return data;
     },
