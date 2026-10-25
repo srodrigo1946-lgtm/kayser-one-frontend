@@ -138,8 +138,10 @@ export default function LeadsPage() {
       else n.add(id);
       return n;
     });
-  const marcarTodosDoFiltro = async () => {
-    const params: Record<string, unknown> = { page: 1, limit: 500 };
+  const [qtd, setQtd] = useState("");
+  // Digita a quantidade → marca os N primeiros do filtro atual (até 500).
+  const marcarTodosDoFiltro = async (n = 500) => {
+    const params: Record<string, unknown> = { page: 1, limit: Math.min(500, Math.max(1, n)) };
     if (filterStatus !== "all") params.status = filterStatus;
     if (search) params.search = search;
     if (filterResp !== "all") params.responsavelId = filterResp;
@@ -358,6 +360,32 @@ export default function LeadsPage() {
           </div>
         )}
 
+        {/* Transferir por quantidade: marca os N primeiros do filtro atual */}
+        {podeTransferir && (
+          <div className="flex flex-wrap items-center gap-2 text-sm" style={{ color: "var(--muted-foreground)" }}>
+            <span>Transferir por quantidade: marcar os</span>
+            <input
+              type="number"
+              min={1}
+              max={500}
+              value={qtd}
+              onChange={(e) => setQtd(e.target.value)}
+              placeholder="ex.: 50"
+              className="w-24 px-2 py-1.5 rounded-lg border text-sm outline-none"
+              style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+            />
+            <span>primeiros {filterStatus !== "all" || filterResp !== "all" || search ? "do filtro" : "da lista"}</span>
+            <button
+              onClick={() => Number(qtd) > 0 && marcarTodosDoFiltro(Number(qtd))}
+              disabled={!(Number(qtd) > 0)}
+              className="px-3 py-1.5 rounded-lg border text-sm font-medium disabled:opacity-50"
+              style={{ borderColor: "var(--border)", color: "var(--foreground)", background: "var(--card)" }}
+            >
+              Marcar
+            </button>
+          </div>
+        )}
+
         {/* Barra da transferência em massa (aparece com lead marcado) */}
         {podeTransferir && sel.size > 0 && (
           <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl border" style={{ background: "var(--card)", borderColor: "var(--primary)" }}>
@@ -365,7 +393,7 @@ export default function LeadsPage() {
               {sel.size} selecionado(s)
             </span>
             {total > leads.length && (
-              <button onClick={marcarTodosDoFiltro} className="text-xs underline" style={{ color: "var(--primary)" }}>
+              <button onClick={() => marcarTodosDoFiltro()} className="text-xs underline" style={{ color: "var(--primary)" }}>
                 Selecionar todos os {Math.min(total, 500)} do filtro
               </button>
             )}
