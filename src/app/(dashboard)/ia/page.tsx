@@ -515,7 +515,7 @@ function ReengajamentoPanel() {
       ) : (
         <>
           <p className="text-[11px] mb-2" style={{ color: p.ativo ? "#22c55e" : "#f97316" }}>
-            {p.ativo ? `Ligado · ${p.porHora}/h das 9h às 21h` : "Desligado"}
+            {p.ativo ? `Ligado · ${p.porHora}/h das 9h às 22h` : "Desligado"}
           </p>
           <div className="grid grid-cols-3 gap-1.5">
             {caixa("enviadas", p.enviadosHoje, p.enviadosTotal, "#3b82f6")}
@@ -560,8 +560,8 @@ function AutomationsPanel() {
     { label: "Resposta imediata (IA)", key: "aiAutoReply", active: !!s?.aiAutoReply },
     { label: `Follow-up ${s?.followupDays ?? 3} dias`, key: "followupEnabled", active: !!s?.followupEnabled },
     { label: "IA responde em grupos", key: "aiReplyGroups", active: !!s?.aiReplyGroups },
-    // Reengajar "Cliente sem interesse": 25/h, 9h–21h, 1 mensagem por cliente.
-    { label: "Reengajar 'sem interesse' (25/h · 9h–21h)", key: "reengajarAtivo", active: (s as any)?.reengajarAtivo !== false },
+    // Reengajar "Cliente sem interesse": 25/h, 9h–22h, 1 mensagem por cliente.
+    { label: "Reengajar 'sem interesse' (25/h · 9h–22h)", key: "reengajarAtivo", active: (s as any)?.reengajarAtivo !== false },
   ];
   return (
     <div className="rounded-2xl border p-4" style={{ background: "var(--card)", borderColor: "var(--border)" }}>

@@ -129,12 +129,13 @@ export function useDeleteLeadHistory() {
 export function useImportLeads() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ file, time, status, lotes }: { file: File; time?: string; status?: string; lotes?: string }) => {
+    mutationFn: async ({ file, time, status, lotes, filaEquipe }: { file: File; time?: string; status?: string; lotes?: string; filaEquipe?: boolean }) => {
       const form = new FormData();
       form.append("file", file);
       if (time) form.append("time", time);
       if (status) form.append("status", status);
       if (lotes) form.append("lotes", lotes);
+      if (filaEquipe) form.append("filaEquipe", "1"); // Fila da Equipe: o K1 chama e o "sim" vai pros corretores do gestor
       const { data } = await api.post<{ imported: number; duplicates: number; semTelefone?: number; total: number; porLote?: number[]; restante?: number }>(
         "/leads/import/excel",
         form,

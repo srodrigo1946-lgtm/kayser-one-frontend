@@ -34,6 +34,9 @@ export function ImportModal({ file, onClose, onDone }: { file: File; onClose: ()
   const [status, setStatus] = useState("");
   const [lotes, setLotes] = useState<Lote[]>([]);
   const [erro, setErro] = useState("");
+  // Fila da Equipe: só gestor abaixo do Diretor (a do Diretor é a fila central, com check-in).
+  const podeFilaEquipe = isGestor && !isDiretor;
+  const [filaEquipe, setFilaEquipe] = useState(false);
 
   const setLote = (i: number, k: keyof Lote, v: string) => setLotes((ls) => ls.map((l, j) => (j === i ? { ...l, [k]: v } : l)));
   const totalLotes = lotes.reduce((a, l) => a + (Number(l.quantidade) || 0), 0);
@@ -50,6 +53,7 @@ export function ImportModal({ file, onClose, onDone }: { file: File; onClose: ()
         file,
         time: time || undefined,
         status: status || undefined,
+        filaEquipe: podeFilaEquipe && filaEquipe,
         lotes: validos.length
           ? JSON.stringify(
               validos.map((l) => ({
@@ -109,6 +113,19 @@ export function ImportModal({ file, onClose, onDone }: { file: File; onClose: ()
             </select>
           </label>
         </div>
+
+        {podeFilaEquipe && (
+          <label className="mt-4 flex items-start gap-2 p-3 rounded-xl border cursor-pointer" style={{ borderColor: filaEquipe ? "#22c55e" : "var(--border)", background: filaEquipe ? "#22c55e14" : "transparent" }}>
+            <input type="checkbox" className="mt-0.5" checked={filaEquipe} onChange={(e) => setFilaEquipe(e.target.checked)} />
+            <span className="text-sm" style={{ color: "var(--foreground)" }}>
+              <b>Mandar para a fila da minha equipe</b>
+              <span className="block text-xs" style={{ color: "var(--muted-foreground)" }}>
+                O K1 chama cada cliente pelo WhatsApp (9h às 22h, sem check-in). Quem responder com interesse vai em rodízio para os
+                corretores que você marcar em Fila de Leads. Começa quando o Diretor ligar a sua fila.
+              </span>
+            </span>
+          </label>
+        )}
 
         <div className="mt-5 flex items-center justify-between">
           <div>

@@ -9,6 +9,7 @@ import { useEscala } from "@/hooks/use-escala";
 import { getStoredUser } from "@/lib/auth";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { Mail } from "lucide-react";
+import { FilaEquipe } from "@/components/fila/fila-equipe";
 
 const roleLabels: Record<string, string> = {
   diretor: "Diretor",
@@ -128,6 +129,8 @@ export default function FilaLeadsPage() {
           Veja a ordem do rodízio de plantão (só leitura).
         </p>
       )}
+
+      <FilaEquipe />
 
       {/* Configuração — só o Diretor mexe */}
       {isDiretor && (
