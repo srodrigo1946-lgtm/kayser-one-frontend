@@ -191,11 +191,8 @@ export function PainelPlantao() {
             <>📋 <b>Plantão por escala</b> — só quem está na escala do turno entra.</>
           )}
         </div>
-        {p.modoLivre || p.plantaoLivreDesde ? (
-          <button onClick={() => mudarModo(null)} className="text-xs px-3 py-1.5 rounded-lg font-semibold" style={{ background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)" }}>
-            ↩️ Voltar ao plantão antigo (escala)
-          </button>
-        ) : (
+        {/* Só check-in agora (Rodrigo 25/10): sem volta pra grade de nomes da escala. */}
+        {p.modoLivre || p.plantaoLivreDesde ? null : (
           <>
             <button onClick={() => mudarModo(diaSP(1))} className="text-xs px-3 py-1.5 rounded-lg font-semibold" style={{ background: "#22c55e", color: "white" }}>
               🔓 Liberar todos a partir de amanhã
