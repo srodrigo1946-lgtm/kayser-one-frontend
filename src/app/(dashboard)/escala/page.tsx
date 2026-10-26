@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/header";
 import { getStoredUser } from "@/lib/auth";
 import { PainelPlantao } from "@/components/plantao/painel-plantao";
 import { BloqueiosPlantao } from "@/components/plantao/bloqueios-plantao";
+import { RankingCheckin } from "@/components/plantao/ranking-checkin";
 import { useEscala, useSetHorario, type EscalaTurno } from "@/hooks/use-escala";
 
 const DIAS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
@@ -65,6 +66,7 @@ export default function EscalaPage() {
             ))}
           </div>
         </div>
+        {isDiretor && <RankingCheckin />}
         {isDiretor && <PainelPlantao />}
         {role && role !== "corretor" && <BloqueiosPlantao />}
       </div>
