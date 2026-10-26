@@ -1,7 +1,29 @@
 "use client";
 
+import { useRef } from "react";
 import { Users, TrendingUp, Eye, ShoppingBag, Clock, AlertCircle, Bot } from "lucide-react";
 import type { DashboardMetrics } from "@/types";
+
+/**
+ * Inclinação 3D que segue o mouse (só quando a pessoa passa o mouse; respeita
+ * "reduzir movimento" do aparelho). Devolve a ref e os handlers pro elemento.
+ */
+export function useInclina(max = 7) {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduz = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  const onMouseMove = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el || reduz()) return;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    el.style.transform = `perspective(700px) rotateX(${(-y * max).toFixed(2)}deg) rotateY(${(x * max).toFixed(2)}deg) translateY(-2px)`;
+  };
+  const onMouseLeave = () => {
+    if (ref.current) ref.current.style.transform = "";
+  };
+  return { ref, onMouseMove, onMouseLeave };
+}
 
 interface StatCardProps {
   title: string;
@@ -14,13 +36,17 @@ interface StatCardProps {
 }
 
 function StatCard({ title, value, subtitle, icon, trend, color, danger }: StatCardProps) {
+  const inclina = useInclina();
   return (
     <div
-      className="rounded-2xl p-5 border relative overflow-hidden"
+      {...inclina}
+      className="rounded-2xl p-5 border relative overflow-hidden transition-transform duration-200 ease-out will-change-transform"
       style={{
         // sheen no topo (dá o brilho 3D do vidro) sobre a cor do card
         background: "linear-gradient(157deg, rgba(255,255,255,0.08), rgba(255,255,255,0) 42%), var(--card)",
         borderColor: "var(--border)",
+        // espessura: borda de baixo na cor do card (peça com volume) + sombra no chão
+        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.07), 0 5px 0 -1px ${color}66, 0 18px 28px -14px rgba(0,0,0,0.7)`,
       }}
     >
       {/* brilho colorido no canto — profundidade */}

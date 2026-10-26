@@ -6,6 +6,7 @@ import { getStoredUser } from "@/lib/auth";
 import { Bot, MessageCircle } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { StatsCards } from "@/components/dashboard/stats-cards";
+import { Podio3D } from "@/components/dashboard/podio-3d";
 import { SalesChart, ConversionChart } from "@/components/dashboard/sales-chart";
 import {
   useDashboardMetrics,
@@ -212,13 +213,14 @@ export default function DashboardPage() {
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold" style={{ color: "var(--foreground)" }}>
-              🏆 Ranking de Corretores
+              🏆 Ranking de corretores do mês
             </h3>
             <a href="/ranking" className="text-sm font-medium" style={{ color: "var(--primary)" }}>
               Ver pódio →
             </a>
           </div>
-          <div className="space-y-3">
+          <Podio3D ranking={ranking ?? []} />
+          <div className="space-y-3 mt-4">
             {(ranking ?? []).map((c, i) => {
               const vendas = Number(c.vendas) || 0;
               const leads = Number(c.leads) || 0;
