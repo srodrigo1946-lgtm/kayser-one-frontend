@@ -4,7 +4,7 @@
  * Pódio 3D dos 3 primeiros do ranking (visual K1, 26/10): blocos de ouro, prata e bronze
  * com frente, topo e lateral (projeção oblíqua em CSS), o 1º no meio e mais alto.
  */
-type Linha = { responsavelId?: string; nome?: string; vendas?: number | string; leads?: number | string };
+import type { RankingItem } from "@/hooks/use-dashboard";
 
 const PROF = 18; // profundidade do bloco (px)
 const DEGRAUS = [
@@ -14,12 +14,12 @@ const DEGRAUS = [
 ];
 
 // Primeira letra do primeiro e do último nome ("Anita de Alvarenga Silva" → "AS").
-const iniciais = (n?: string) => {
+const iniciais = (n?: string | null) => {
   const p = (n || "?").trim().split(/\s+/);
   return ((p[0]?.[0] ?? "") + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
 };
 
-export function Podio3D({ ranking }: { ranking: Linha[] }) {
+export function Podio3D({ ranking }: { ranking: RankingItem[] }) {
   const top = [ranking[1], ranking[0], ranking[2]]; // 2º, 1º, 3º
   if (!ranking.length) return null;
   return (
