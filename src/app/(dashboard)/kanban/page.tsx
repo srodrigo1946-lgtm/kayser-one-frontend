@@ -335,6 +335,9 @@ export default function KanbanPage() {
   const [editMode, setEditMode] = useState(false);
   const [detailLead, setDetailLead] = useState<Lead | null>(null);
   const [busca, setBusca] = useState("");
+  // Quantos cards cada coluna desenha (o board tem ~8 mil leads; desenhar todos trava a tela).
+  const POR_VEZ = 40;
+  const [limite, setLimite] = useState<Record<string, number>>({});
 
   // Filtra os cards por nome OU telefone (só dígitos). Vazio = mostra todos.
   const filtra = (leads: Lead[]): Lead[] => {
@@ -504,7 +507,10 @@ export default function KanbanPage() {
 
       <div className="flex-1 overflow-x-auto p-6">
         <div className="flex gap-4 h-full" style={{ minWidth: "max-content" }}>
-          {cols.map((col, index) => (
+          {cols.map((col, index) => {
+            const lista = filtra(col.leads);
+            const max = limite[col.id] ?? POR_VEZ;
+            return (
             <div
               key={col.id}
               onDragOver={(e) => e.preventDefault()}
@@ -540,24 +546,34 @@ export default function KanbanPage() {
                     <span>{col.emoji}</span>
                     <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>{col.title}</span>
                     <span className="text-xs min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center font-bold" style={{ background: col.color, color: "white", boxShadow: `0 4px 10px -3px ${col.color}aa` }}>
-                      {filtra(col.leads).length}
+                      {lista.length}
                     </span>
                   </div>
                 )}
               </div>
 
               <div className="flex-1 p-2 space-y-2 overflow-y-auto">
-                {filtra(col.leads).map((lead) => (
+                {lista.slice(0, max).map((lead) => (
                   <LeadCard key={lead.id} lead={lead} dueAt={col.id === "novo_lead" ? dueByLead.get(lead.id) : undefined} onDragStart={setDragging} onOpen={setDetailLead} podeExcluir={isDiretor} onExcluir={confirmarExcluir} onWhatsapp={abrirWhatsapp} respondeu={respostaByLead.get(lead.id)} visita={visitaByLead.get(lead.id)} cor={col.color} />
                 ))}
-                {filtra(col.leads).length === 0 && (
+                {lista.length > max && (
+                  <button
+                    onClick={() => setLimite((l) => ({ ...l, [col.id]: max + POR_VEZ }))}
+                    className="w-full text-xs font-semibold py-2 rounded-xl border"
+                    style={{ borderColor: `${col.color}66`, color: col.color, background: `${col.color}12` }}
+                  >
+                    Mostrar mais {Math.min(POR_VEZ, lista.length - max)} (faltam {lista.length - max})
+                  </button>
+                )}
+                {lista.length === 0 && (
                   <div className="text-xs text-center py-8 rounded-xl border-2 border-dashed" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
                     Arraste leads aqui
                   </div>
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
 
           {editMode && isDiretor && (
             <button
