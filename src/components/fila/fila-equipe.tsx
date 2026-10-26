@@ -62,9 +62,9 @@ function MinhaFila() {
     queryFn: async () => (await api.get<Painel>("/fila-equipe/minha")).data,
   });
   if (!p) return null;
-  const marcar = async (id: string) => {
-    const atuais = p.corretores.filter((c) => c.noRodizio).map((c) => c.id);
-    const novos = atuais.includes(id) ? atuais.filter((x) => x !== id) : [...atuais, id];
+  const noRodizio = p.corretores.filter((c) => c.noRodizio);
+  const foraDoRodizio = p.corretores.filter((c) => !c.noRodizio);
+  const salvar = async (novos: string[]) => {
     try {
       const { data } = await api.put<Painel>("/fila-equipe/minha/corretores", { memberIds: novos });
       qc.setQueryData(["fila-equipe", "minha"], data);
@@ -87,23 +87,45 @@ function MinhaFila() {
         (sem precisar de check-in) e quem responder com interesse vai em rodízio para os corretores marcados abaixo.
       </p>
       <Numeros p={p} />
-      <div>
-        <div className="text-sm font-medium mb-2" style={{ color: "var(--foreground)" }}>Corretores no rodízio</div>
+      <div className="space-y-2">
+        <div className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+          No rodízio ({noRodizio.length})
+        </div>
+        {noRodizio.length === 0 ? (
+          <p className="text-xs px-3 py-2 rounded-lg" style={{ background: "#f59e0b1a", color: "#d97706" }}>
+            Nenhum corretor no rodízio: quem responder “sim” fica com você. Coloque pelo menos um corretor abaixo.
+          </p>
+        ) : (
+          noRodizio.map((c, i) => (
+            <div key={c.id} className="flex items-center gap-2 px-3 py-2 rounded-lg border text-sm" style={{ borderColor: "#22c55e55", background: "#22c55e0d", color: "var(--foreground)" }}>
+              <span className="text-xs w-6" style={{ color: "var(--muted-foreground)" }}>{i + 1}º</span>
+              <span className="flex-1">{c.name}</span>
+              <button
+                onClick={() => salvar(noRodizio.filter((x) => x.id !== c.id).map((x) => x.id))}
+                className="text-xs px-2.5 py-1 rounded-lg border"
+                style={{ borderColor: "#ef444466", color: "#ef4444" }}
+              >
+                Remover
+              </button>
+            </div>
+          ))
+        )}
         {p.corretores.length === 0 ? (
           <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Nenhum corretor ativo na sua equipe.</p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {p.corretores.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => marcar(c.id)}
-                className="text-xs px-3 py-1.5 rounded-lg border"
-                style={{ borderColor: c.noRodizio ? "#22c55e" : "var(--border)", background: c.noRodizio ? "#22c55e1a" : "transparent", color: "var(--foreground)" }}
-              >
-                {c.noRodizio ? "✅" : "⬜"} {c.name}
-              </button>
+        ) : foraDoRodizio.length > 0 ? (
+          <select
+            value=""
+            onChange={(e) => e.target.value && salvar([...noRodizio.map((x) => x.id), e.target.value])}
+            className="w-full px-3 py-2 rounded-lg border text-sm outline-none"
+            style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}
+          >
+            <option value="">+ Colocar corretor no rodízio…</option>
+            {foraDoRodizio.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
             ))}
-          </div>
+          </select>
+        ) : (
+          <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Todos os corretores da sua equipe já estão no rodízio.</p>
         )}
       </div>
       {p.ultimas.length > 0 && (
