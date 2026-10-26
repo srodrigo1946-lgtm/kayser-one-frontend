@@ -20,6 +20,7 @@ import { getStoredUser } from "@/lib/auth";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { useAlerts } from "@/hooks/use-alerts";
 import { LeadDetailDrawer } from "@/components/leads/lead-detail-drawer";
+import { useInclina } from "@/components/dashboard/stats-cards";
 
 // Dias sem contato que acendem o alerta, por etapa (regra do Rodrigo, 13/10/2026).
 const CARGO: Record<string, string> = {
@@ -66,8 +67,11 @@ function LeadCard({
   onWhatsapp,
   respondeu,
   visita,
+  cor,
 }: {
   lead: Lead;
+  /** Cor da coluna — dá a espessura do card (visual 3D do Dashboard). */
+  cor: string;
   dueAt?: string;
   /** Texto que o cliente respondeu e ainda está sem resposta do corretor. */
   respondeu?: string;
@@ -90,19 +94,29 @@ function LeadCard({
   const fechado = lead.status === "venda_ganha" || lead.status === "venda_perdida";
   const diasSemContato = lead.lastContactAt ? Math.floor((Date.now() - new Date(lead.lastContactAt).getTime()) / 86400000) : 0;
   const alertaContato = !fechado && diasSemContato >= limiteSemContato(lead.status);
+  const inclina = useInclina(5);
 
   return (
     <div
+      {...inclina}
       draggable
-      onDragStart={() => onDragStart(lead)}
+      onDragStart={() => { inclina.onMouseLeave(); onDragStart(lead); }}
       onClick={() => onOpen(lead)}
-      className="group rounded-xl p-3 border cursor-pointer active:cursor-grabbing"
-      style={{ background: "var(--card)", borderColor: "var(--border)" }}
+      className="group rounded-xl p-3 border cursor-pointer active:cursor-grabbing transition-transform duration-200 ease-out will-change-transform"
+      style={{
+        // mesmo visual 3D dos cartões do Dashboard: brilho no topo + espessura na cor da coluna
+        background: "linear-gradient(157deg, rgba(255,255,255,0.07), rgba(255,255,255,0) 42%), var(--card)",
+        borderColor: "var(--border)",
+        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.07), 0 4px 0 -1px ${cor}66, 0 12px 20px -12px rgba(0,0,0,0.7)`,
+      }}
       title={lead.observacoes ? undefined : "Ver dados do cliente"}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: "var(--primary)", color: "white" }}>
+          <div
+            className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+            style={{ background: `linear-gradient(135deg, ${cor}, ${cor}b0)`, color: "white", boxShadow: `0 6px 14px -6px ${cor}aa, inset 0 1px 0 rgba(255,255,255,0.35)` }}
+          >
             {lead.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
           </div>
           <div className="text-sm font-medium leading-none" style={{ color: "var(--foreground)" }}>
@@ -496,7 +510,15 @@ export default function KanbanPage() {
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => handleDrop(col.id)}
               className="flex flex-col rounded-2xl border"
-              style={{ background: "var(--secondary)", borderColor: "var(--border)", width: "260px", minHeight: "500px" }}
+              style={{
+                // coluna com faixa colorida no topo e leve brilho da cor da etapa
+                background: `linear-gradient(180deg, ${col.color}14, transparent 140px), var(--secondary)`,
+                borderColor: "var(--border)",
+                borderTop: `3px solid ${col.color}`,
+                boxShadow: "0 18px 28px -18px rgba(0,0,0,0.7)",
+                width: "260px",
+                minHeight: "500px",
+              }}
             >
               <div className="p-3">
                 {editMode && isDiretor ? (
@@ -517,7 +539,7 @@ export default function KanbanPage() {
                   <div className="flex items-center gap-2">
                     <span>{col.emoji}</span>
                     <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>{col.title}</span>
-                    <span className="text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold" style={{ background: col.color, color: "white" }}>
+                    <span className="text-xs min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center font-bold" style={{ background: col.color, color: "white", boxShadow: `0 4px 10px -3px ${col.color}aa` }}>
                       {filtra(col.leads).length}
                     </span>
                   </div>
@@ -526,7 +548,7 @@ export default function KanbanPage() {
 
               <div className="flex-1 p-2 space-y-2 overflow-y-auto">
                 {filtra(col.leads).map((lead) => (
-                  <LeadCard key={lead.id} lead={lead} dueAt={col.id === "novo_lead" ? dueByLead.get(lead.id) : undefined} onDragStart={setDragging} onOpen={setDetailLead} podeExcluir={isDiretor} onExcluir={confirmarExcluir} onWhatsapp={abrirWhatsapp} respondeu={respostaByLead.get(lead.id)} visita={visitaByLead.get(lead.id)} />
+                  <LeadCard key={lead.id} lead={lead} dueAt={col.id === "novo_lead" ? dueByLead.get(lead.id) : undefined} onDragStart={setDragging} onOpen={setDetailLead} podeExcluir={isDiretor} onExcluir={confirmarExcluir} onWhatsapp={abrirWhatsapp} respondeu={respostaByLead.get(lead.id)} visita={visitaByLead.get(lead.id)} cor={col.color} />
                 ))}
                 {filtra(col.leads).length === 0 && (
                   <div className="text-xs text-center py-8 rounded-xl border-2 border-dashed" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
