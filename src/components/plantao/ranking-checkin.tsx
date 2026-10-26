@@ -6,9 +6,10 @@ import { api } from "@/lib/api";
 type Ranking = {
   mes: string;
   ano: string;
-  linhas: { userId: string; nome: string; mes: number; ano: number }[];
+  linhas: { userId: string; nome: string; mes: number; ano: number; manha: number; tarde: number; noite: number }[];
   porMes: number[];
   corretores: { hoje: number; mes: number; ano: number };
+  turnosHoje: { manha: number; tarde: number; noite: number };
 };
 
 const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -43,10 +44,18 @@ export function RankingCheckin() {
             </div>
           </div>
           <div>
-            <div className="text-xs mb-1.5" style={{ color: "var(--muted-foreground)" }}>Check-ins por mês ({r.ano})</div>
+            <div className="text-xs mb-1.5" style={{ color: "var(--muted-foreground)" }}>Hoje por turno</div>
+            <div className="grid grid-cols-3 gap-2">
+              {caixa(r.turnosHoje.manha, "☀️ manhã")}
+              {caixa(r.turnosHoje.tarde, "🌤️ tarde")}
+              {caixa(r.turnosHoje.noite, "🌙 noite")}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs mb-1.5" style={{ color: "var(--muted-foreground)" }}>Dias com check-in por mês ({r.ano}) — 1 por corretor por dia</div>
             <div className="flex items-end gap-1 h-28">
               {r.porMes.map((n, m) => (
-                <div key={m} title={`${MESES[m]}: ${n} check-in(s)`} className="flex-1 flex flex-col items-center justify-end h-full gap-1">
+                <div key={m} title={`${MESES[m]}: ${n} dia(s) de check-in (somando os corretores)`} className="flex-1 flex flex-col items-center justify-end h-full gap-1">
                   <span className="text-[10px]" style={{ color: "var(--muted-foreground)" }}>{n || ""}</span>
                   <div className="w-full rounded-t-md" style={{ height: `${(n / max) * 100}%`, minHeight: n ? 4 : 1, background: m === mesAtual ? "var(--primary)" : "#3b82f6aa" }} />
                   <span className="text-[10px]" style={{ color: m === mesAtual ? "var(--foreground)" : "var(--muted-foreground)" }}>{MESES[m]}</span>
@@ -64,8 +73,11 @@ export function RankingCheckin() {
                 <tr className="text-xs text-left" style={{ color: "var(--muted-foreground)" }}>
                   <th className="py-1.5 pr-2">#</th>
                   <th className="py-1.5 pr-2">Corretor</th>
-                  <th className="py-1.5 pr-2 text-right">{MESES[mesAtual]}</th>
-                  <th className="py-1.5 text-right">Ano</th>
+                  <th className="py-1.5 pr-2 text-right" title="Dias com check-in no mês">Dias {MESES[mesAtual]}</th>
+                  <th className="py-1.5 pr-2 text-right" title="Dias com check-in no ano">Dias ano</th>
+                  <th className="py-1.5 pr-1 text-right" title={`Check-ins de manhã em ${MESES[mesAtual]}`}>☀️</th>
+                  <th className="py-1.5 pr-1 text-right" title={`Check-ins de tarde em ${MESES[mesAtual]}`}>🌤️</th>
+                  <th className="py-1.5 text-right" title={`Check-ins à noite em ${MESES[mesAtual]}`}>🌙</th>
                 </tr>
               </thead>
               <tbody>
@@ -74,7 +86,10 @@ export function RankingCheckin() {
                     <td className="py-1.5 pr-2 font-semibold">{["🥇", "🥈", "🥉"][i] ?? `${i + 1}º`}</td>
                     <td className="py-1.5 pr-2">{l.nome}</td>
                     <td className="py-1.5 pr-2 text-right font-semibold">{l.mes}</td>
-                    <td className="py-1.5 text-right">{l.ano}</td>
+                    <td className="py-1.5 pr-2 text-right">{l.ano}</td>
+                    <td className="py-1.5 pr-1 text-right" style={{ color: "var(--muted-foreground)" }}>{l.manha}</td>
+                    <td className="py-1.5 pr-1 text-right" style={{ color: "var(--muted-foreground)" }}>{l.tarde}</td>
+                    <td className="py-1.5 text-right" style={{ color: "var(--muted-foreground)" }}>{l.noite}</td>
                   </tr>
                 ))}
               </tbody>
