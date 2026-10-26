@@ -5,6 +5,7 @@
  * com frente, topo e lateral (projeção oblíqua em CSS), o 1º no meio e mais alto.
  */
 import type { RankingItem } from "@/hooks/use-dashboard";
+import { avatarUrl } from "@/hooks/use-profile";
 
 const PROF = 18; // profundidade do bloco (px)
 const DEGRAUS = [
@@ -30,16 +31,21 @@ export function Podio3D({ ranking }: { ranking: RankingItem[] }) {
         const vendas = Number(c.vendas) || 0;
         return (
           <div key={d.lugar} className="flex flex-col items-center w-24 sm:w-28">
-            {/* Quem está no degrau */}
+            {/* Quem está no degrau: foto (ou iniciais) com anel na cor do degrau */}
             <div
-              className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm mb-1.5"
+              className={`${d.lugar === 1 ? "w-16 h-16" : "w-14 h-14"} rounded-full p-[3px] mb-1.5`}
               style={{
                 background: `linear-gradient(135deg, ${d.frente[0]}, ${d.frente[1]})`,
-                color: d.texto,
-                boxShadow: d.lugar === 1 ? "0 0 0 3px #f2c23055, 0 8px 22px -6px #f2c230aa" : "0 6px 14px -6px rgba(0,0,0,.6)",
+                boxShadow: d.lugar === 1 ? "0 0 0 3px #f2c23040, 0 10px 24px -6px #f2c230aa" : "0 6px 14px -6px rgba(0,0,0,.6)",
               }}
             >
-              {iniciais(c.nome)}
+              {c.hasAvatar && c.responsavelId ? (
+                <img src={avatarUrl(c.responsavelId)} alt={c.nome ?? ""} className="w-full h-full rounded-full object-cover" />
+              ) : (
+                <div className="w-full h-full rounded-full flex items-center justify-center font-bold text-sm" style={{ background: "var(--card)", color: d.frente[0] }}>
+                  {iniciais(c.nome)}
+                </div>
+              )}
             </div>
             <div className="text-xs font-semibold text-center leading-tight line-clamp-2 mb-0.5" style={{ color: "var(--foreground)" }}>
               {c.nome || "Sem responsável"}
