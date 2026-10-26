@@ -102,7 +102,7 @@ function LeadCard({
       draggable
       onDragStart={() => { inclina.onMouseLeave(); onDragStart(lead); }}
       onClick={() => onOpen(lead)}
-      className="group rounded-xl p-3 border cursor-pointer active:cursor-grabbing transition-transform duration-200 ease-out will-change-transform"
+      className="group rounded-xl p-3 border cursor-pointer active:cursor-grabbing transition-transform duration-200 ease-out"
       style={{
         // mesmo visual 3D dos cartões do Dashboard: brilho no topo + espessura na cor da coluna
         background: "linear-gradient(157deg, rgba(255,255,255,0.07), rgba(255,255,255,0) 42%), var(--card)",
