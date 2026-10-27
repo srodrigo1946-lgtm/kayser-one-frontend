@@ -488,6 +488,14 @@ type PainelReengajar = {
 function ReengajamentoPanel() {
   const [p, setP] = useState<PainelReengajar | null>(null);
   const [erro, setErro] = useState("");
+  // Diretor liga/desliga o reengajamento aqui mesmo (mesma chave de Automações Ativas).
+  const isDiretor = getStoredUser()?.role === "diretor";
+  const updateSettings = useUpdateSettings();
+  const alternar = () => {
+    if (!p) return;
+    if (p.ativo && !window.confirm("Desligar a IA do reengajamento? Ela para de chamar os clientes 'sem interesse' até você ligar de novo.")) return;
+    updateSettings.mutate({ reengajarAtivo: !p.ativo } as any, { onSuccess: () => setP({ ...p, ativo: !p.ativo }) });
+  };
   useEffect(() => {
     const carregar = () =>
       api.get("/reengajamento/painel").then((r) => { setP(r.data); setErro(""); }).catch((e) => setErro(getApiErrorMessage(e)));
@@ -507,6 +515,16 @@ function ReengajamentoPanel() {
       <div className="flex items-center gap-2 mb-1">
         <RefreshCw size={16} style={{ color: "#22c55e" }} />
         <h3 className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>Reengajamento — hoje</h3>
+        {isDiretor && p && (
+          <button
+            onClick={alternar}
+            disabled={updateSettings.isPending}
+            className="ml-auto text-xs font-semibold px-3 py-1 rounded-lg disabled:opacity-60"
+            style={p.ativo ? { background: "#ef444418", color: "#ef4444", border: "1px solid #ef444455" } : { background: "#22c55e", color: "white" }}
+          >
+            {p.ativo ? "⏸ Desligar IA" : "▶ Ligar IA"}
+          </button>
+        )}
       </div>
       {erro ? (
         <p className="text-xs" style={{ color: "#f97316" }}>{erro}</p>
