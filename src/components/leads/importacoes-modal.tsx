@@ -41,6 +41,21 @@ export function ImportacoesModal({ onClose, onDone }: { onClose: () => void; onD
     }
   };
 
+  // Esqueceu de marcar "Mandar para a fila da minha equipe" ao subir: manda agora.
+  const [mandando, setMandando] = useState<string | null>(null);
+  const mandarParaFila = async (imp: Importacao) => {
+    if (!window.confirm(`Mandar a planilha "${imp.nome}" para a Fila da Equipe de ${imp.userName?.trim() || "quem subiu"}? O K1 vai chamar cada cliente pelo WhatsApp (9h–22h) e quem disser "sim" vai pros corretores do rodízio.`)) return;
+    setMandando(imp.id);
+    try {
+      const { data } = await api.post<{ naFila: number }>(`/leads/import/${imp.id}/fila-equipe`);
+      onDone(`📣 Planilha "${imp.nome}": ${data.naFila} lead(s) na Fila da Equipe.`);
+    } catch (err) {
+      setErro(getApiErrorMessage(err, "Falha ao mandar para a fila."));
+    } finally {
+      setMandando(null);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,.6)" }} onClick={onClose}>
       <div
@@ -74,6 +89,15 @@ export function ImportacoesModal({ onClose, onDone }: { onClose: () => void; onD
                   {imp.restantes} de {imp.total} lead(s) ainda no sistema
                 </div>
               </div>
+              <button
+                onClick={() => mandarParaFila(imp)}
+                disabled={!!mandando || imp.restantes === 0}
+                className="px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5 disabled:opacity-50 flex-shrink-0"
+                style={{ background: "rgba(34,197,94,.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,.35)" }}
+                title="Mandar para a Fila da Equipe de quem subiu"
+              >
+                {mandando === imp.id ? <Loader2 size={15} className="animate-spin" /> : "📣"} Fila da equipe
+              </button>
               <button
                 onClick={() => apagar(imp)}
                 disabled={!!apagando || imp.restantes === 0}
