@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Users } from "lucide-react";
 import { api, getApiErrorMessage } from "@/lib/api";
@@ -14,7 +15,51 @@ type Painel = {
   aguardando: number; faltam: number;
   ultimas: { nome: string | null; tipo: string; texto: string | null; createdAt: string }[];
 };
-type Linha = { gestorId: string; name: string; role: string; ativo: boolean; faltam: number; enviados: number; sim: number };
+type Linha = { gestorId: string; name: string; role: string; ativo: boolean; faltam: number; enviados: number; sim: number; nao?: number };
+type Resposta = { nome: string | null; phone?: string | null; tipo: string; texto: string | null; createdAt: string };
+
+/** Respostas separadas em duas abas: ✅ Sim e ❌ Não (cada fila mostra só as dela). */
+export function RespostasSimNao({ ultimas, simLabel }: { ultimas: Resposta[]; simLabel: string }) {
+  const [aba, setAba] = useState<"sim" | "nao">("sim");
+  const sim = ultimas.filter((u) => u.tipo === "sim");
+  const nao = ultimas.filter((u) => u.tipo !== "sim");
+  const lista = aba === "sim" ? sim : nao;
+  const botao = (k: "sim" | "nao", rotulo: string, n: number, cor: string) => (
+    <button
+      onClick={() => setAba(k)}
+      className="flex-1 text-[11px] font-semibold py-1 rounded-lg"
+      style={aba === k ? { background: `${cor}22`, color: cor, border: `1px solid ${cor}66` } : { background: "var(--secondary)", color: "var(--muted-foreground)", border: "1px solid transparent" }}
+    >
+      {rotulo} ({n})
+    </button>
+  );
+  return (
+    <div className="mt-2">
+      <div className="flex gap-1.5 mb-1.5">
+        {botao("sim", "✅ Sim", sim.length, "#22c55e")}
+        {botao("nao", "❌ Não", nao.length, "#ef4444")}
+      </div>
+      {lista.length === 0 ? (
+        <p className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>{aba === "sim" ? "Ninguém disse sim ainda." : "Ninguém disse não ainda."}</p>
+      ) : (
+        <div className="space-y-1.5 max-h-72 overflow-y-auto">
+          {lista.map((u, i) => (
+            <div key={i} className="text-[11px] rounded-lg p-1.5" style={{ background: "var(--secondary)" }}>
+              <div className="flex justify-between gap-1">
+                <b style={{ color: u.tipo === "sim" ? "#22c55e" : "#ef4444" }}>{u.tipo === "sim" ? `✅ ${simLabel}` : "❌ Não → removido"}</b>
+                <span style={{ color: "var(--muted-foreground)" }}>
+                  {new Date(u.createdAt.endsWith("Z") ? u.createdAt : `${u.createdAt}Z`).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </div>
+              <div style={{ color: "var(--foreground)" }}>{u.nome || u.phone || "Cliente"}</div>
+              {u.texto && <div className="italic" style={{ color: "var(--muted-foreground)" }}>“{u.texto}”</div>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const card = { background: "var(--card)", borderColor: "var(--border)" };
 const CARGO: Record<string, string> = { superintendente: "Superintendente", gerente_geral: "Gerente Geral", gerente: "Gerente" };
@@ -167,8 +212,18 @@ function useFilasDoDiretor() {
 }
 
 /** Quadro da IA (Diretor): liga/desliga a IA de cada gestor, com os números de cada um. */
+function RespostasDoGestor({ gestorId }: { gestorId: string }) {
+  const { data } = useQuery({
+    queryKey: ["fila-equipe", "painel", gestorId],
+    queryFn: async () => (await api.get<Painel>(`/fila-equipe/minha?gestorId=${gestorId}`)).data,
+  });
+  if (!data) return <p className="text-[11px] mt-2" style={{ color: "var(--muted-foreground)" }}>Carregando…</p>;
+  return <RespostasSimNao ultimas={data.ultimas} simLabel="Sim → corretor da equipe" />;
+}
+
 export function IaPorGestor() {
   const { filas, ligar } = useFilasDoDiretor();
+  const [aberto, setAberto] = useState<string | null>(null);
   return (
     <div className="rounded-2xl border p-4" style={card}>
       <div className="font-semibold text-sm flex items-center gap-2 mb-1" style={{ color: "var(--foreground)" }}>
@@ -179,22 +234,26 @@ export function IaPorGestor() {
       </p>
       <div className="space-y-1.5">
         {(filas ?? []).map((f) => (
-          <div key={f.gestorId} className="flex items-center gap-2 p-2 rounded-xl" style={{ background: "var(--secondary)" }}>
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-medium truncate" style={{ color: "var(--foreground)" }}>
-                {f.name} <span style={{ color: "var(--muted-foreground)" }}>· {CARGO[f.role] ?? f.role}</span>
-              </div>
-              <div className="text-[10px]" style={{ color: "var(--muted-foreground)" }}>
-                faltam {f.faltam} · chamados {f.enviados} · <span style={{ color: "#22c55e" }}>sim {f.sim}</span>
-              </div>
+          <div key={f.gestorId} className="p-2 rounded-xl" style={{ background: "var(--secondary)" }}>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setAberto(aberto === f.gestorId ? null : f.gestorId)} className="flex-1 min-w-0 text-left" title="Ver quem disse sim e não">
+                <div className="text-xs font-medium truncate" style={{ color: "var(--foreground)" }}>
+                  {aberto === f.gestorId ? "▾" : "▸"} {f.name} <span style={{ color: "var(--muted-foreground)" }}>· {CARGO[f.role] ?? f.role}</span>
+                </div>
+                <div className="text-[10px]" style={{ color: "var(--muted-foreground)" }}>
+                  faltam {f.faltam} · chamados {f.enviados} · <span style={{ color: "#22c55e" }}>sim {f.sim}</span> ·{" "}
+                  <span style={{ color: "#ef4444" }}>não {f.nao ?? 0}</span>
+                </div>
+              </button>
+              <button
+                onClick={() => ligar(f)}
+                className="text-[11px] px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
+                style={f.ativo ? { background: "#ef444418", color: "#ef4444", border: "1px solid #ef444455" } : { background: "#22c55e", color: "white" }}
+              >
+                {f.ativo ? "⏸ Desligar" : "▶ Ligar"}
+              </button>
             </div>
-            <button
-              onClick={() => ligar(f)}
-              className="text-[11px] px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
-              style={f.ativo ? { background: "#ef444418", color: "#ef4444", border: "1px solid #ef444455" } : { background: "#22c55e", color: "white" }}
-            >
-              {f.ativo ? "⏸ Desligar" : "▶ Ligar"}
-            </button>
+            {aberto === f.gestorId && <RespostasDoGestor gestorId={f.gestorId} />}
           </div>
         ))}
         {(filas ?? []).length === 0 && (

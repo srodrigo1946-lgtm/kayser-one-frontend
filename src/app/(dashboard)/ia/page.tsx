@@ -9,7 +9,7 @@ import { useKnowledge, useUploadKnowledge, useDeleteKnowledge } from "@/hooks/us
 import { useProperties } from "@/hooks/use-properties";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
-import { IaPorGestor } from "@/components/fila/fila-equipe";
+import { IaPorGestor, RespostasSimNao } from "@/components/fila/fila-equipe";
 
 // Página só do Diretor: quem não é Diretor (mesmo digitando /ia) vê o aviso.
 export default function IAPage() {
@@ -337,7 +337,7 @@ type PainelReengajar = {
   enviadosHoje: number; simHoje: number; naoHoje: number;
   enviadosTotal: number; simTotal: number; naoTotal: number;
   aguardando: number; faltam: number;
-  ultimas: { nome: string | null; phone: string | null; tipo: "sim" | "nao"; texto: string | null; createdAt: string; gestor?: string | null }[];
+  ultimas: { nome: string | null; phone: string | null; tipo: "sim" | "nao"; texto: string | null; createdAt: string }[];
 };
 function ReengajamentoPanel() {
   const [p, setP] = useState<PainelReengajar | null>(null);
@@ -398,28 +398,8 @@ function ReengajamentoPanel() {
             <span>⏳ Aguardando resposta: <b style={{ color: "var(--foreground)" }}>{p.aguardando}</b></span>
             <span>Faltam: <b style={{ color: "var(--foreground)" }}>{p.faltam}</b></span>
           </div>
-          <div className="mt-3 text-[11px] font-semibold" style={{ color: "var(--foreground)" }}>Últimas respostas</div>
-          {p.ultimas.length === 0 ? (
-            <p className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>Ninguém respondeu ainda.</p>
-          ) : (
-            <div className="mt-1 space-y-1.5 max-h-72 overflow-y-auto">
-              {p.ultimas.map((u, i) => (
-                <div key={i} className="text-[11px] rounded-lg p-1.5" style={{ background: "var(--secondary)" }}>
-                  <div className="flex justify-between gap-1">
-                    <b style={{ color: u.tipo === "sim" ? "#22c55e" : "#ef4444" }}>{u.tipo === "sim" ? "✅ Sim → fila" : "❌ Não → removido"}</b>
-                    <span style={{ color: "var(--muted-foreground)" }}>
-                      {new Date(u.createdAt.endsWith("Z") ? u.createdAt : `${u.createdAt}Z`).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                  </div>
-                  <div style={{ color: "var(--foreground)" }}>{u.nome || u.phone || "Cliente"}</div>
-                  <div className="text-[10px]" style={{ color: u.gestor ? "#a855f7" : "#f59e0b" }}>
-                    {u.gestor ? `👥 Fila de ${u.gestor.trim()}` : "⭐ Fila do Diretor"}
-                  </div>
-                  {u.texto && <div className="italic" style={{ color: "var(--muted-foreground)" }}>“{u.texto}”</div>}
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="mt-3 text-[11px] font-semibold" style={{ color: "var(--foreground)" }}>Respostas da sua fila</div>
+          <RespostasSimNao ultimas={p.ultimas} simLabel="Sim → fila central" />
         </>
       )}
     </div>
