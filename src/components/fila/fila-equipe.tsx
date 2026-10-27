@@ -212,6 +212,44 @@ function useFilasDoDiretor() {
 }
 
 /** Quadro da IA (Diretor): liga/desliga a IA de cada gestor, com os números de cada um. */
+/** Relatório Excel do período (Diretor): resumo por fila + todas as respostas com data. */
+export function RelatorioIa() {
+  const hoje = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  const [de, setDe] = useState(hoje.slice(0, 8) + "01");
+  const [ate, setAte] = useState(hoje);
+  const [baixando, setBaixando] = useState(false);
+  const baixar = async () => {
+    setBaixando(true);
+    try {
+      const r = await api.get("/reengajamento/relatorio", { params: { de, ate }, responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([r.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `relatorio-ia-${de}-a-${ate}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(getApiErrorMessage(err, "Não consegui gerar o relatório."));
+    } finally {
+      setBaixando(false);
+    }
+  };
+  const campo = { background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)", colorScheme: "dark" } as const;
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap text-[11px]" style={{ color: "var(--muted-foreground)" }}>
+      📊 Relatório de
+      <input type="date" value={de} onChange={(e) => setDe(e.target.value)} className="px-1.5 py-1 rounded-lg border outline-none" style={campo} />
+      até
+      <input type="date" value={ate} onChange={(e) => setAte(e.target.value)} className="px-1.5 py-1 rounded-lg border outline-none" style={campo} />
+      <button onClick={baixar} disabled={baixando || !de || !ate} className="px-2.5 py-1 rounded-lg font-semibold disabled:opacity-60" style={{ background: "var(--primary)", color: "#0a0a0a" }}>
+        {baixando ? "Gerando…" : "⬇ Baixar Excel"}
+      </button>
+    </div>
+  );
+}
+
 function RespostasDoGestor({ gestorId }: { gestorId: string }) {
   const { data } = useQuery({
     queryKey: ["fila-equipe", "painel", gestorId],
@@ -232,6 +270,7 @@ export function IaPorGestor() {
       <p className="text-[11px] mb-2" style={{ color: "var(--muted-foreground)" }}>
         Cada gestor tem a IA chamando a planilha dele. Ligue ou desligue um por um.
       </p>
+      <div className="mb-2"><RelatorioIa /></div>
       <div className="space-y-1.5">
         {(filas ?? []).map((f) => (
           <div key={f.gestorId} className="p-2 rounded-xl" style={{ background: "var(--secondary)" }}>
@@ -275,6 +314,7 @@ function FilasDoDiretor() {
         Leads que cada gestor subiu na planilha. O K1 chama pelo número central, dentro das 25 mensagens por hora, e quem
         responde “sim” vai para os corretores da equipe. Só você liga e desliga.
       </p>
+      <RelatorioIa />
       {(filas ?? []).length === 0 ? (
         <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Nenhum gestor ativo.</p>
       ) : (
@@ -286,6 +326,7 @@ function FilasDoDiretor() {
                 <th className="py-1.5 pr-2 text-right">Faltam chamar</th>
                 <th className="py-1.5 pr-2 text-right">Chamados</th>
                 <th className="py-1.5 pr-2 text-right">Sim</th>
+                <th className="py-1.5 pr-2 text-right">Não</th>
                 <th className="py-1.5 text-right">Fila</th>
               </tr>
             </thead>
@@ -298,6 +339,7 @@ function FilasDoDiretor() {
                   <td className="py-1.5 pr-2 text-right">{f.faltam}</td>
                   <td className="py-1.5 pr-2 text-right">{f.enviados}</td>
                   <td className="py-1.5 pr-2 text-right" style={{ color: "#22c55e" }}>{f.sim}</td>
+                  <td className="py-1.5 pr-2 text-right" style={{ color: "#ef4444" }}>{f.nao ?? 0}</td>
                   <td className="py-1.5 text-right">
                     <button
                       onClick={() => ligar(f)}
