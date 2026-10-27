@@ -2,22 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/layout/header";
-import { Bot, Send, Upload, FileText, Settings, Zap, RefreshCw, Loader2, Check, Trash2, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
-import { useAiChat, useMyAi, useUpdateMyAi, type AiChatMessage } from "@/hooks/use-ai";
+import { Bot, Upload, FileText, Settings, Zap, RefreshCw, Loader2, Check, Trash2, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
+import { useMyAi, useUpdateMyAi } from "@/hooks/use-ai";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import { useKnowledge, useUploadKnowledge, useDeleteKnowledge } from "@/hooks/use-knowledge";
 import { useProperties } from "@/hooks/use-properties";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 import { IaPorGestor } from "@/components/fila/fila-equipe";
-
-const initialConvo: AiChatMessage[] = [
-  {
-    role: "assistant",
-    content:
-      "Olá! Sou a K1 AI. Estou aqui para ajudar na qualificação e atendimento dos seus leads. Como posso te ajudar hoje?",
-  },
-];
 
 // Página só do Diretor: quem não é Diretor (mesmo digitando /ia) vê o aviso.
 export default function IAPage() {
@@ -37,166 +29,26 @@ export default function IAPage() {
   return <IAPageDiretor />;
 }
 
+// Chat da K1 AI removido a pedido do Rodrigo (27/10) — a tela fica só com os quadros.
 function IAPageDiretor() {
-  const [messages, setMessages] = useState<AiChatMessage[]>(initialConvo);
-  const [input, setInput] = useState("");
-  const aiChat = useAiChat();
-  const loading = aiChat.isPending;
-
-  const send = async () => {
-    if (!input.trim() || loading) return;
-    const userMsg: AiChatMessage = { role: "user", content: input.trim() };
-    const history = [...messages, userMsg];
-    setInput("");
-    setMessages(history);
-    try {
-      // Envia apenas as mensagens user/assistant (sem a saudação inicial fixa)
-      const payload = history.filter((_, i) => i > 0);
-      const res = await aiChat.mutateAsync(payload);
-      setMessages((m) => [...m, { role: "assistant", content: res.content || "(sem resposta)" }]);
-    } catch (err) {
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", content: `⚠️ ${getApiErrorMessage(err, "Não foi possível falar com a IA. Verifique a API Key em Configurações.")}` },
-      ]);
-    }
-  };
-
-  const clear = () => setMessages(initialConvo);
-
   return (
     <div className="flex flex-col h-screen">
       <Header title="IA Agente" subtitle="K1 AI — Assistente Comercial Inteligente" />
 
-      <div className="flex flex-1 overflow-hidden p-6 gap-6">
-        {/* Chat */}
-        <div
-          className="flex-1 flex flex-col rounded-2xl border overflow-hidden"
-          style={{ background: "var(--card)", borderColor: "var(--border)" }}
-        >
-          <div
-            className="p-4 border-b flex items-center justify-between"
-            style={{ borderColor: "var(--border)" }}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center"
-                style={{ background: "var(--primary)", color: "white" }}
-              >
-                <Bot size={18} />
-              </div>
-              <div>
-                <div className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>
-                  K1 AI
-                </div>
-                <div className="flex items-center gap-1.5 text-xs" style={{ color: "#22c55e" }}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
-                  Ativa e operando
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={clear}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border"
-                style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}
-              >
-                <RefreshCw size={12} />
-                Limpar
-              </button>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`flex gap-3 max-w-[80%] ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                  {msg.role === "assistant" && (
-                    <div
-                      className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-                      style={{ background: "var(--primary)", color: "white" }}
-                    >
-                      <Bot size={14} />
-                    </div>
-                  )}
-                  <div
-                    className="rounded-2xl px-4 py-3 text-sm leading-relaxed"
-                    style={{
-                      background: msg.role === "user" ? "var(--primary)" : "var(--secondary)",
-                      color: msg.role === "user" ? "white" : "var(--foreground)",
-                      borderBottomRightRadius: msg.role === "user" ? "4px" : "16px",
-                      borderBottomLeftRadius: msg.role === "assistant" ? "4px" : "16px",
-                      whiteSpace: "pre-line",
-                    }}
-                  >
-                    {msg.content}
-                  </div>
-                </div>
-              </div>
-            ))}
-            {loading && (
-              <div className="flex justify-start">
-                <div className="flex gap-3">
-                  <div
-                    className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: "var(--primary)", color: "white" }}
-                  >
-                    <Bot size={14} />
-                  </div>
-                  <div
-                    className="rounded-2xl px-4 py-3 flex items-center gap-1.5"
-                    style={{ background: "var(--secondary)" }}
-                  >
-                    {[0, 1, 2].map((i) => (
-                      <div
-                        key={i}
-                        className="w-2 h-2 rounded-full animate-bounce"
-                        style={{ background: "var(--muted-foreground)", animationDelay: `${i * 0.15}s` }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="p-3 border-t flex items-center gap-2" style={{ borderColor: "var(--border)" }}>
-            <input
-              placeholder="Pergunte sobre seus leads, métricas, automações..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
-              className="flex-1 px-4 py-2.5 rounded-xl border text-sm outline-none"
-              style={{
-                background: "var(--secondary)",
-                borderColor: "var(--border)",
-                color: "var(--foreground)",
-              }}
-            />
-            <button
-              onClick={send}
-              disabled={loading || !input.trim()}
-              className="w-9 h-9 rounded-xl flex items-center justify-center disabled:opacity-50"
-              style={{ background: "var(--primary)", color: "white" }}
-            >
-              <Send size={16} />
-            </button>
-          </div>
-        </div>
-
-        {/* Right Panel */}
-        <div className="w-72 flex flex-col gap-4 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 items-start">
           <MyAiCard />
           <KnowledgePanel />
           <AudioPanel />
           <AutomationsPanel />
           <ReengajamentoPanel />
-          {getStoredUser()?.role === "diretor" && <IaPorGestor />}
+          <IaPorGestor />
         </div>
       </div>
     </div>
   );
 }
+
 
 const inputStyle = { background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" } as const;
 const PROVIDERS = [
@@ -485,7 +337,7 @@ type PainelReengajar = {
   enviadosHoje: number; simHoje: number; naoHoje: number;
   enviadosTotal: number; simTotal: number; naoTotal: number;
   aguardando: number; faltam: number;
-  ultimas: { nome: string | null; phone: string | null; tipo: "sim" | "nao"; texto: string | null; createdAt: string }[];
+  ultimas: { nome: string | null; phone: string | null; tipo: "sim" | "nao"; texto: string | null; createdAt: string; gestor?: string | null }[];
 };
 function ReengajamentoPanel() {
   const [p, setP] = useState<PainelReengajar | null>(null);
@@ -560,6 +412,9 @@ function ReengajamentoPanel() {
                     </span>
                   </div>
                   <div style={{ color: "var(--foreground)" }}>{u.nome || u.phone || "Cliente"}</div>
+                  <div className="text-[10px]" style={{ color: u.gestor ? "#a855f7" : "#f59e0b" }}>
+                    {u.gestor ? `👥 Fila de ${u.gestor.trim()}` : "⭐ Fila do Diretor"}
+                  </div>
                   {u.texto && <div className="italic" style={{ color: "var(--muted-foreground)" }}>“{u.texto}”</div>}
                 </div>
               ))}
