@@ -9,6 +9,7 @@ import { useKnowledge, useUploadKnowledge, useDeleteKnowledge } from "@/hooks/us
 import { useProperties } from "@/hooks/use-properties";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
+import { IaPorGestor } from "@/components/fila/fila-equipe";
 
 const initialConvo: AiChatMessage[] = [
   {
@@ -190,6 +191,7 @@ function IAPageDiretor() {
           <AudioPanel />
           <AutomationsPanel />
           <ReengajamentoPanel />
+          {getStoredUser()?.role === "diretor" && <IaPorGestor />}
         </div>
       </div>
     </div>

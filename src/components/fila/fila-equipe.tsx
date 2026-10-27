@@ -143,7 +143,8 @@ function MinhaFila() {
   );
 }
 
-function FilasDoDiretor() {
+/** Filas de todos os gestores + liga/desliga (só Diretor). Usado aqui e no quadro da IA. */
+function useFilasDoDiretor() {
   const qc = useQueryClient();
   const { data: filas } = useQuery({
     queryKey: ["fila-equipe", "todas"],
@@ -151,7 +152,10 @@ function FilasDoDiretor() {
     queryFn: async () => (await api.get<Linha[]>("/fila-equipe")).data,
   });
   const ligar = async (f: Linha) => {
-    if (!f.ativo && !window.confirm(`Ligar a fila de ${f.name}? O K1 começa a chamar os ${f.faltam} cliente(s) da planilha dele pelo número central.`)) return;
+    const msg = f.ativo
+      ? `Desligar a IA da equipe de ${f.name}? Ela para de chamar os clientes da planilha dele até você ligar de novo.`
+      : `Ligar a fila de ${f.name}? O K1 começa a chamar os ${f.faltam} cliente(s) da planilha dele pelo número central.`;
+    if (!window.confirm(msg)) return;
     try {
       await api.put(`/fila-equipe/${f.gestorId}/ativo`, { ativo: !f.ativo });
       qc.invalidateQueries({ queryKey: ["fila-equipe"] });
@@ -159,6 +163,50 @@ function FilasDoDiretor() {
       alert(getApiErrorMessage(err, "Falha ao mudar a fila."));
     }
   };
+  return { filas, ligar };
+}
+
+/** Quadro da IA (Diretor): liga/desliga a IA de cada gestor, com os números de cada um. */
+export function IaPorGestor() {
+  const { filas, ligar } = useFilasDoDiretor();
+  return (
+    <div className="rounded-2xl border p-4" style={card}>
+      <div className="font-semibold text-sm flex items-center gap-2 mb-1" style={{ color: "var(--foreground)" }}>
+        <Users size={16} /> IA por gestor
+      </div>
+      <p className="text-[11px] mb-2" style={{ color: "var(--muted-foreground)" }}>
+        Cada gestor tem a IA chamando a planilha dele. Ligue ou desligue um por um.
+      </p>
+      <div className="space-y-1.5">
+        {(filas ?? []).map((f) => (
+          <div key={f.gestorId} className="flex items-center gap-2 p-2 rounded-xl" style={{ background: "var(--secondary)" }}>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-medium truncate" style={{ color: "var(--foreground)" }}>
+                {f.name} <span style={{ color: "var(--muted-foreground)" }}>· {CARGO[f.role] ?? f.role}</span>
+              </div>
+              <div className="text-[10px]" style={{ color: "var(--muted-foreground)" }}>
+                faltam {f.faltam} · chamados {f.enviados} · <span style={{ color: "#22c55e" }}>sim {f.sim}</span>
+              </div>
+            </div>
+            <button
+              onClick={() => ligar(f)}
+              className="text-[11px] px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
+              style={f.ativo ? { background: "#ef444418", color: "#ef4444", border: "1px solid #ef444455" } : { background: "#22c55e", color: "white" }}
+            >
+              {f.ativo ? "⏸ Desligar" : "▶ Ligar"}
+            </button>
+          </div>
+        ))}
+        {(filas ?? []).length === 0 && (
+          <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Nenhum gestor ativo.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FilasDoDiretor() {
+  const { filas, ligar } = useFilasDoDiretor();
   return (
     <div className="rounded-2xl border p-4 space-y-3" style={card}>
       <div className="font-semibold flex items-center gap-2" style={{ color: "var(--foreground)" }}>
