@@ -31,30 +31,60 @@ function Midia({ msg }: { msg: { id: string; mediaType?: string | null; content?
 
 // Cartão do anúncio (igual ao WhatsApp): imagem, título, texto e link do anúncio que trouxe o cliente.
 // Sem os dados do anúncio (o Meta às vezes não manda), mostra a plataforma e a campanha do lead.
-function CartaoAnuncio({ preview, plataforma, campanha }: { preview?: string | null; plataforma?: string; campanha?: string }) {
+const COR_REDE: Record<string, string> = { facebook: "#1877F2", instagram: "#E1306C", tiktok: "#25F4EE" };
+function CartaoAnuncio({
+  preview,
+  plataforma,
+  campanha,
+  empreendimento,
+  fotoEmpreendimento,
+}: {
+  preview?: string | null;
+  plataforma?: string;
+  campanha?: string;
+  empreendimento?: string;
+  fotoEmpreendimento?: string | null;
+}) {
   let c: { titulo?: string; texto?: string; imagem?: string; link?: string; video?: boolean; plataforma?: string } = {};
   try {
     c = preview ? JSON.parse(preview) : {};
   } catch {}
-  const rede = c.plataforma || plataforma || "anúncio";
-  const titulo = c.titulo || campanha;
+  const rede = (c.plataforma || plataforma || "anúncio").toLowerCase();
+  const cor = COR_REDE[rede] ?? "#f59e0b";
+  const nomeRede = rede === "anúncio" ? "Anúncio" : rede[0].toUpperCase() + rede.slice(1);
+  // Sem imagem do anúncio: usa a foto do empreendimento do cadastro.
+  const imagem = c.imagem || fotoEmpreendimento || null;
+  const titulo = c.titulo || campanha || empreendimento;
+  const texto = c.texto || (empreendimento && empreendimento !== titulo ? `🏢 ${empreendimento}` : undefined);
+  const link = c.link;
   return (
-    <div className="mb-2 rounded-xl overflow-hidden border" style={{ borderColor: "rgba(255,255,255,.12)", background: "rgba(0,0,0,.25)" }}>
-      {c.imagem && (
-        <a href={c.link || c.imagem} target="_blank" rel="noreferrer" className="block relative">
+    <div className="mb-2 rounded-xl overflow-hidden w-[260px] max-w-full" style={{ background: "rgba(0,0,0,.28)", borderLeft: `4px solid ${cor}` }}>
+      {imagem && (
+        <a href={link || imagem} target="_blank" rel="noreferrer" className="block relative">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={c.imagem} alt="anúncio" className="w-full max-h-48 object-cover" />
-          {c.video && <span className="absolute inset-0 flex items-center justify-center text-3xl">▶️</span>}
+          <img src={imagem} alt={titulo || "anúncio"} className="w-full h-36 object-cover" />
+          {c.video && (
+            <span className="absolute inset-0 flex items-center justify-center">
+              <span className="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl" style={{ background: "rgba(0,0,0,.55)" }}>▶</span>
+            </span>
+          )}
+          <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: cor }}>
+            📣 {nomeRede}
+          </span>
         </a>
       )}
-      <div className="px-3 py-2">
-        <div className="text-[10px] font-semibold uppercase opacity-70">📣 Veio do anúncio · {rede}</div>
-        {titulo && <div className="text-sm font-semibold leading-snug">{titulo}</div>}
-        {c.texto && <div className="text-xs opacity-80 line-clamp-2">{c.texto}</div>}
-        {c.link && (
-          <a href={c.link} target="_blank" rel="noreferrer" className="text-xs underline opacity-80 break-all">
-            🔗 {c.link.replace(/^https?:\/\//, "").slice(0, 40)}
+      <div className="px-3 py-2 space-y-0.5">
+        {!imagem && (
+          <div className="text-[10px] font-bold" style={{ color: cor }}>📣 Veio do anúncio · {nomeRede}</div>
+        )}
+        {titulo && <div className="text-sm font-bold leading-snug">{titulo}</div>}
+        {texto && <div className="text-xs opacity-80 line-clamp-2">{texto}</div>}
+        {link ? (
+          <a href={link} target="_blank" rel="noreferrer" className="text-[11px] opacity-70 underline break-all block">
+            🔗 {link.replace(/^https?:\/\//, "").slice(0, 36)}
           </a>
+        ) : (
+          imagem && <div className="text-[11px] opacity-60">Cliente chegou pelo anúncio</div>
         )}
       </div>
     </div>
@@ -83,6 +113,7 @@ import {
 } from "@/hooks/use-conversations";
 import { useUsers } from "@/hooks/use-users";
 import { useKanbanBoard } from "@/hooks/use-kanban";
+import { useProperties } from "@/hooks/use-properties";
 import { DocRequestPanel } from "@/components/documents/doc-request-panel";
 
 function initials(name?: string) {
@@ -136,6 +167,14 @@ export default function WhatsAppPage() {
   const { data: teamUsers } = useUsers();
   const { data: board } = useKanbanBoard();
   const [message, setMessage] = useState("");
+  // Foto do empreendimento (cadastro de Imóveis) pro cartão do anúncio.
+  const { data: imoveis } = useProperties();
+  const fotoDoEmpreendimento = (nome?: string | null) => {
+    if (!nome) return null;
+    const n = nome.toLowerCase();
+    const p = (imoveis ?? []).find((i) => i.name.toLowerCase() === n) ?? (imoveis ?? []).find((i) => n.includes(i.name.toLowerCase()) || i.name.toLowerCase().includes(n));
+    return p?.photos?.[0] || (p?.imageUrl && /\.(jpe?g|png|webp|gif)(\?|$)|^data:image/i.test(p.imageUrl) ? p.imageUrl : null);
+  };
 
   // Etiquetas = colunas reais do Kanban. A key da coluna é o próprio status do lead,
   // então escolher a etiqueta move o card direto para a coluna correspondente.
@@ -505,7 +544,13 @@ export default function WhatsAppPage() {
                     {/* Anúncio: cartão na mensagem que veio dele (ou na 1ª do cliente, se a conversa veio de anúncio). */}
                     {msg.direction === "in" &&
                       (msg.adPreview || (selected?.fromAd && idx === todas.findIndex((m) => m.direction === "in") && !todas.some((m) => m.adPreview))) && (
-                        <CartaoAnuncio preview={msg.adPreview} plataforma={plataforma(selected?.lead?.origem)?.label} campanha={selected?.lead?.campanha} />
+                        <CartaoAnuncio
+                          preview={msg.adPreview}
+                          plataforma={plataforma(selected?.lead?.origem)?.label}
+                          campanha={selected?.lead?.campanha}
+                          empreendimento={selected?.lead?.empreendimento}
+                          fotoEmpreendimento={fotoDoEmpreendimento(selected?.lead?.empreendimento)}
+                        />
                       )}
                     {msg.hasMedia && (
                       <div className="mb-1">
