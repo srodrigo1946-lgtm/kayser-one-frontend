@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Header } from "@/components/layout/header";
-import { Search, Send, Bot, QrCode, Loader2, Smile, Paperclip, RefreshCw, ArrowLeft } from "lucide-react";
+import { Search, Send, Bot, QrCode, Loader2, Smile, Paperclip, RefreshCw, ArrowLeft, Mic, Trash2 } from "lucide-react";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,6 +26,38 @@ function Midia({ msg }: { msg: { id: string; mediaType?: string | null; content?
     <a href={url} target="_blank" rel="noreferrer" className="text-sm underline break-all">
       {msg.content}
     </a>
+  );
+}
+
+// Cartão do anúncio (igual ao WhatsApp): imagem, título, texto e link do anúncio que trouxe o cliente.
+// Sem os dados do anúncio (o Meta às vezes não manda), mostra a plataforma e a campanha do lead.
+function CartaoAnuncio({ preview, plataforma, campanha }: { preview?: string | null; plataforma?: string; campanha?: string }) {
+  let c: { titulo?: string; texto?: string; imagem?: string; link?: string; video?: boolean; plataforma?: string } = {};
+  try {
+    c = preview ? JSON.parse(preview) : {};
+  } catch {}
+  const rede = c.plataforma || plataforma || "anúncio";
+  const titulo = c.titulo || campanha;
+  return (
+    <div className="mb-2 rounded-xl overflow-hidden border" style={{ borderColor: "rgba(255,255,255,.12)", background: "rgba(0,0,0,.25)" }}>
+      {c.imagem && (
+        <a href={c.link || c.imagem} target="_blank" rel="noreferrer" className="block relative">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={c.imagem} alt="anúncio" className="w-full max-h-48 object-cover" />
+          {c.video && <span className="absolute inset-0 flex items-center justify-center text-3xl">▶️</span>}
+        </a>
+      )}
+      <div className="px-3 py-2">
+        <div className="text-[10px] font-semibold uppercase opacity-70">📣 Veio do anúncio · {rede}</div>
+        {titulo && <div className="text-sm font-semibold leading-snug">{titulo}</div>}
+        {c.texto && <div className="text-xs opacity-80 line-clamp-2">{c.texto}</div>}
+        {c.link && (
+          <a href={c.link} target="_blank" rel="noreferrer" className="text-xs underline opacity-80 break-all">
+            🔗 {c.link.replace(/^https?:\/\//, "").slice(0, 40)}
+          </a>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -187,6 +219,52 @@ export default function WhatsAppPage() {
       setMessage(texto); // devolve o texto se falhar
       alert(getApiErrorMessage(err, "Falha ao enviar."));
     }
+  };
+
+  // Áudio (igual ao WhatsApp): grava no microfone e manda como mensagem de voz.
+  const [gravando, setGravando] = useState(false);
+  const [segundos, setSegundos] = useState(0);
+  const gravador = useRef<{ rec: MediaRecorder; partes: Blob[]; timer: ReturnType<typeof setInterval>; enviar: boolean } | null>(null);
+  const comecarGravacao = async () => {
+    if (!selected?.remoteJid) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const tipo = ["audio/ogg;codecs=opus", "audio/webm;codecs=opus", "audio/webm"].find((t) => MediaRecorder.isTypeSupported(t)) || "";
+      const rec = new MediaRecorder(stream, tipo ? { mimeType: tipo } : undefined);
+      const g = { rec, partes: [] as Blob[], timer: setInterval(() => setSegundos((s) => s + 1), 1000), enviar: false };
+      gravador.current = g;
+      rec.ondataavailable = (e) => e.data.size && g.partes.push(e.data);
+      rec.onstop = async () => {
+        clearInterval(g.timer);
+        stream.getTracks().forEach((t) => t.stop());
+        setGravando(false);
+        setSegundos(0);
+        if (!g.enviar || !g.partes.length) return;
+        const blob = new Blob(g.partes, { type: rec.mimeType || "audio/webm" });
+        const base64 = await new Promise<string>((ok, erro) => {
+          const r = new FileReader();
+          r.onload = () => ok(String(r.result));
+          r.onerror = () => erro(r.error);
+          r.readAsDataURL(blob);
+        });
+        try {
+          await sendMedia.mutateAsync({ to: selected.remoteJid!, base64, mimetype: blob.type, fileName: "audio.ogg" });
+        } catch (err) {
+          alert(getApiErrorMessage(err, "Falha ao enviar o áudio."));
+        }
+      };
+      rec.start();
+      setSegundos(0);
+      setGravando(true);
+    } catch {
+      alert("Não consegui usar o microfone. Libere o microfone para o K1 no navegador.");
+    }
+  };
+  const pararGravacao = (enviar: boolean) => {
+    if (!gravador.current) return;
+    gravador.current.enviar = enviar;
+    gravador.current.rec.stop();
+    gravador.current = null;
   };
 
   // Anexo: imagem, PDF ou Excel. Vira base64 e sobe pelo endpoint de mídia.
@@ -418,12 +496,17 @@ export default function WhatsAppPage() {
             />
 
             <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3" style={{ background: "var(--background)" }}>
-              {(thread?.messages ?? []).map((msg) => (
+              {(thread?.messages ?? []).map((msg, idx, todas) => (
                 <div key={msg.id} className={`flex ${msg.direction === "out" ? "justify-end" : "justify-start"}`}>
                   <div className="max-w-[85%] md:max-w-[70%] rounded-2xl px-3 md:px-4 py-2.5 break-words" style={{ background: msg.direction === "out" ? "var(--primary)" : "var(--card)", color: msg.direction === "out" ? "white" : "var(--foreground)" }}>
                     {msg.direction === "out" && msg.isAI && (
                       <div className="flex items-center gap-1 mb-1 opacity-70 text-xs"><Bot size={10} /><span>K1 AI</span></div>
                     )}
+                    {/* Anúncio: cartão na mensagem que veio dele (ou na 1ª do cliente, se a conversa veio de anúncio). */}
+                    {msg.direction === "in" &&
+                      (msg.adPreview || (selected?.fromAd && idx === todas.findIndex((m) => m.direction === "in") && !todas.some((m) => m.adPreview))) && (
+                        <CartaoAnuncio preview={msg.adPreview} plataforma={plataforma(selected?.lead?.origem)?.label} campanha={selected?.lead?.campanha} />
+                      )}
                     {msg.hasMedia && (
                       <div className="mb-1">
                         <Midia msg={msg} />
@@ -498,10 +581,33 @@ export default function WhatsAppPage() {
                 {sendMedia.isPending ? <Loader2 size={18} className="animate-spin" /> : <Paperclip size={18} />}
               </button>
 
-              <input placeholder="Digite uma mensagem..." value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSend()} className="flex-1 min-w-0 px-3 py-2 rounded-xl border text-base md:text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
-              <button onClick={handleSend} disabled={send.isPending} className="w-10 h-10 md:w-9 md:h-9 rounded-xl flex items-center justify-center flex-shrink-0 disabled:opacity-50" style={{ background: "var(--primary)", color: "white" }}>
-                <Send size={16} />
-              </button>
+              {gravando ? (
+                <>
+                  <div className="flex-1 min-w-0 px-3 py-2 rounded-xl border text-sm flex items-center gap-2" style={{ background: "var(--secondary)", borderColor: "#ef444466", color: "var(--foreground)" }}>
+                    <span className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "#ef4444" }} />
+                    Gravando… {String(Math.floor(segundos / 60))}:{String(segundos % 60).padStart(2, "0")}
+                  </div>
+                  <button onClick={() => pararGravacao(false)} title="Cancelar áudio" className="w-10 h-10 md:w-9 md:h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "var(--secondary)", color: "#ef4444" }}>
+                    <Trash2 size={16} />
+                  </button>
+                  <button onClick={() => pararGravacao(true)} title="Enviar áudio" className="w-10 h-10 md:w-9 md:h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "var(--primary)", color: "white" }}>
+                    <Send size={16} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <input placeholder="Digite uma mensagem..." value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSend()} className="flex-1 min-w-0 px-3 py-2 rounded-xl border text-base md:text-sm outline-none" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />
+                  {message.trim() ? (
+                    <button onClick={handleSend} disabled={send.isPending} className="w-10 h-10 md:w-9 md:h-9 rounded-xl flex items-center justify-center flex-shrink-0 disabled:opacity-50" style={{ background: "var(--primary)", color: "white" }}>
+                      <Send size={16} />
+                    </button>
+                  ) : (
+                    <button onClick={comecarGravacao} disabled={sendMedia.isPending} title="Gravar áudio" className="w-10 h-10 md:w-9 md:h-9 rounded-xl flex items-center justify-center flex-shrink-0 disabled:opacity-50" style={{ background: "var(--primary)", color: "white" }}>
+                      {sendMedia.isPending ? <Loader2 size={16} className="animate-spin" /> : <Mic size={16} />}
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           </div>
         ) : (

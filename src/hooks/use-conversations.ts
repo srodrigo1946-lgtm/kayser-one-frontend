@@ -30,6 +30,8 @@ export interface ChatMessageItem {
   mediaType?: string | null;
   mediaMime?: string | null;
   hasMedia?: boolean;
+  /** Cartão do anúncio que trouxe o cliente (JSON: titulo, texto, imagem, link, video, plataforma). */
+  adPreview?: string | null;
   createdAt: string;
 }
 
