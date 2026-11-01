@@ -336,7 +336,7 @@ type PainelReengajar = {
   ativo: boolean; porHora: number;
   enviadosHoje: number; simHoje: number; naoHoje: number;
   enviadosTotal: number; simTotal: number; naoTotal: number;
-  aguardando: number; faltam: number;
+  aguardando: number; faltam: number; faltamSegunda?: number;
   ultimas: { nome: string | null; phone: string | null; tipo: "sim" | "nao"; texto: string | null; createdAt: string }[];
 };
 function ReengajamentoPanel() {
@@ -396,7 +396,7 @@ function ReengajamentoPanel() {
           </div>
           <div className="flex justify-between text-[11px] mt-2" style={{ color: "var(--muted-foreground)" }}>
             <span>⏳ Aguardando resposta: <b style={{ color: "var(--foreground)" }}>{p.aguardando}</b></span>
-            <span>Faltam: <b style={{ color: "var(--foreground)" }}>{p.faltam}</b></span>
+            <span>Faltam: <b style={{ color: "var(--foreground)" }}>{p.faltam}</b> · 2ª chamada: <b style={{ color: "var(--foreground)" }}>{p.faltamSegunda ?? 0}</b></span>
           </div>
           <div className="mt-3 text-[11px] font-semibold" style={{ color: "var(--foreground)" }}>Respostas da sua fila</div>
           <RespostasSimNao ultimas={p.ultimas} simLabel="Sim → fila central" />
