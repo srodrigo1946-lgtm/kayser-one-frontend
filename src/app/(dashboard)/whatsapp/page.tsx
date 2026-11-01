@@ -464,6 +464,10 @@ export default function WhatsAppPage() {
                     const ger = a?.managerId ? (teamUsers ?? []).find((u) => u.id === a.managerId)?.name : null;
                     return ger ? <span> · Gerente de vendas: <strong style={{ color: "var(--foreground)" }}>{ger.split(" ").slice(0, 2).join(" ")}</strong></span> : null;
                   })()}
+                  {/* Data de entrada do lead: só o Diretor vê. */}
+                  {isDiretor && selected.lead?.createdAt && (
+                    <span> · Entrada do lead: <strong style={{ color: "var(--foreground)" }}>{new Date(selected.lead.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</strong></span>
+                  )}
                 </div>
               </div>
               {podeNaoLead && (
