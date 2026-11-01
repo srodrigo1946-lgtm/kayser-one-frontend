@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Users } from "lucide-react";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
+import { useCreateUser, useUsers } from "@/hooks/use-users";
 
 type Painel = {
   gestorId: string;
@@ -250,6 +251,90 @@ export function RelatorioIa() {
   );
 }
 
+/** "+ Adicionar gerente" (Diretor): cadastra uma pessoa nova ou promove um corretor. A fila nasce desligada. */
+function AdicionarGerente() {
+  const qc = useQueryClient();
+  const { data: usuarios } = useUsers();
+  const criar = useCreateUser();
+  const [aberto, setAberto] = useState(false);
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [corretorId, setCorretorId] = useState("");
+  const [aviso, setAviso] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  const corretores = (usuarios ?? []).filter((u: any) => u.role === "corretor" && u.active !== false && !u.empresaId);
+  const pronto = (msg: string) => {
+    setAviso(msg);
+    setNome("");
+    setEmail("");
+    setCorretorId("");
+    qc.invalidateQueries({ queryKey: ["fila-equipe"] });
+    qc.invalidateQueries({ queryKey: ["users"] });
+  };
+  const cadastrar = async () => {
+    if (!nome.trim() || !email.trim()) return setAviso("Preencha nome e e-mail.");
+    setSalvando(true);
+    try {
+      await criar.mutateAsync({ name: nome.trim(), email: email.trim(), role: "gerente" as any });
+      pronto(`✅ ${nome.trim()} cadastrado(a) como gerente, com a senha padrão (troca no 1º acesso). A fila começa desligada.`);
+    } catch (err) {
+      setAviso(getApiErrorMessage(err, "Não consegui cadastrar."));
+    } finally {
+      setSalvando(false);
+    }
+  };
+  const promover = async () => {
+    const c = corretores.find((u: any) => u.id === corretorId);
+    if (!c || !window.confirm(`${c.name} vai deixar de ser corretor e virar GERENTE. Confirmar?`)) return;
+    setSalvando(true);
+    try {
+      await api.post(`/users/${c.id}/tornar-gestor`, { cargo: "gerente" });
+      pronto(`✅ ${c.name} agora é gerente. A fila começa desligada. Coloque o time dele em Configurações → Equipe.`);
+    } catch (err) {
+      setAviso(getApiErrorMessage(err, "Não consegui mudar o cargo."));
+    } finally {
+      setSalvando(false);
+    }
+  };
+  const campo = { background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" };
+  return (
+    <div className="mb-2">
+      <button
+        onClick={() => { setAberto((v) => !v); setAviso(""); }}
+        className="text-[11px] px-2.5 py-1 rounded-lg font-semibold"
+        style={{ background: "var(--primary)", color: "#0a0a0a" }}
+      >
+        {aberto ? "Fechar" : "+ Adicionar gerente"}
+      </button>
+      {aberto && (
+        <div className="mt-2 p-2.5 rounded-xl border space-y-3 text-[11px]" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>
+          <div className="space-y-1.5">
+            <div className="font-semibold">Cadastrar pessoa nova</div>
+            <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome" className="w-full px-2 py-1.5 rounded-lg border outline-none" style={campo} />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="E-mail" className="w-full px-2 py-1.5 rounded-lg border outline-none" style={campo} />
+            <button onClick={cadastrar} disabled={salvando} className="px-2.5 py-1 rounded-lg font-semibold disabled:opacity-60" style={{ background: "#22c55e", color: "white" }}>
+              Cadastrar gerente
+            </button>
+          </div>
+          <div className="space-y-1.5 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
+            <div className="font-semibold">Ou promover um corretor</div>
+            <select value={corretorId} onChange={(e) => setCorretorId(e.target.value)} className="w-full px-2 py-1.5 rounded-lg border outline-none" style={campo}>
+              <option value="">Escolha o corretor…</option>
+              {corretores.map((u: any) => (
+                <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+            </select>
+            <button onClick={promover} disabled={salvando || !corretorId} className="px-2.5 py-1 rounded-lg font-semibold disabled:opacity-60" style={{ background: "#22c55e", color: "white" }}>
+              Tornar gerente
+            </button>
+          </div>
+        </div>
+      )}
+      {aviso && <p className="text-[11px] mt-1.5" style={{ color: "var(--foreground)" }}>{aviso}</p>}
+    </div>
+  );
+}
+
 function RespostasDoGestor({ gestorId }: { gestorId: string }) {
   const { data } = useQuery({
     queryKey: ["fila-equipe", "painel", gestorId],
@@ -271,6 +356,7 @@ export function IaPorGestor() {
         Cada gestor tem a IA chamando a planilha dele. Ligue ou desligue um por um.
       </p>
       <div className="mb-2"><RelatorioIa /></div>
+      <AdicionarGerente />
       <div className="space-y-1.5">
         {(filas ?? []).map((f) => (
           <div key={f.gestorId} className="p-2 rounded-xl" style={{ background: "var(--secondary)" }}>
