@@ -3,7 +3,7 @@
 import { Fragment, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, getApiErrorMessage } from "@/lib/api";
 
 type Dia = { data: string; per: "manha" | "tarde" | "noite"; turno: string | null; stand: string | null; hora: string; saiu: boolean };
 const NOME_TURNO = { manha: "Manhã", tarde: "Tarde", noite: "Noite" } as const;
@@ -103,7 +103,7 @@ function DiasDoCorretor({ userId, nome, ano, mesInicial }: { userId: string; nom
 type Ranking = {
   mes: string;
   ano: string;
-  linhas: { userId: string; nome: string; mes: number; ano: number; manha: number; tarde: number; noite: number }[];
+  linhas: { userId: string; nome: string; mes: number; ano: number; manha: number; tarde: number; noite: number; manhaAno: number; tardeAno: number; noiteAno: number }[];
   porMes: number[];
   corretores: { hoje: number; mes: number; ano: number };
   turnosHoje: { manha: number; tarde: number; noite: number };
@@ -119,16 +119,47 @@ const COR = { manha: "#f59e0b", tarde: "#3b82f6", noite: "#8b5cf6" };
  */
 export function RankingCheckin() {
   const [aberto, setAberto] = useState<string | null>(null); // corretor com o calendário aberto
+  const [mesEscolhido, setMesEscolhido] = useState<string | null>(null); // AAAA-MM (vazio = mês atual)
+  const [visao, setVisao] = useState<"mes" | "ano">("mes");
+  const [baixando, setBaixando] = useState<string | null>(null);
   const { data: r } = useQuery({
-    queryKey: ["plantao", "ranking"],
+    queryKey: ["plantao", "ranking", mesEscolhido],
     refetchInterval: 120_000,
-    queryFn: async () => (await api.get<Ranking>("/plantao/ranking")).data,
+    placeholderData: (anterior) => anterior,
+    queryFn: async () => (await api.get<Ranking>("/plantao/ranking", { params: mesEscolhido ? { mes: mesEscolhido } : {} })).data,
   });
   if (!r) return null;
   const m = Number(r.mes.slice(5, 7)) - 1;
   const max = Math.max(1, ...r.porMes);
-  const maxTurnos = Math.max(1, ...r.linhas.map((l) => l.manha + l.tarde + l.noite));
   const muted = { color: "var(--muted-foreground)" };
+  // Visão "Ano todo": o consolidado do ano manda na ordem e nos turnos.
+  const noAno = visao === "ano";
+  const turnosDe = (l: Ranking["linhas"][number]) => (noAno ? { manha: l.manhaAno, tarde: l.tardeAno, noite: l.noiteAno } : { manha: l.manha, tarde: l.tarde, noite: l.noite });
+  const linhas = noAno ? [...r.linhas].sort((a, b) => b.ano - a.ano || a.nome.localeCompare(b.nome)) : r.linhas;
+  const maxTurnos = Math.max(1, ...linhas.map((l) => { const t = turnosDe(l); return t.manha + t.tarde + t.noite; }));
+  const andarMes = (d: number) => {
+    const x = new Date(Number(r.ano), m + d * (noAno ? 12 : 1), 1); // no "Ano todo" as setas andam de ano em ano
+    setMesEscolhido(`${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}`);
+  };
+  const baixar = async (periodo: string) => {
+    setBaixando(periodo);
+    try {
+      const res = await api.get("/plantao/ranking/relatorio", { params: { periodo }, responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `relatorio-checkin-${periodo}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(getApiErrorMessage(err, "Não consegui gerar o relatório."));
+    } finally {
+      setBaixando(null);
+    }
+  };
+  const botaoSeta = { borderColor: "var(--border)", color: "var(--foreground)" };
 
   const cartao = (titulo: string, n: number, rodape?: React.ReactNode) => (
     <div className="rounded-xl p-3" style={{ background: "var(--secondary)" }}>
@@ -144,6 +175,41 @@ export function RankingCheckin() {
       <div className="mb-3">
         <div className="font-semibold" style={{ color: "var(--foreground)" }}>🏆 Ranking de check-in no plantão</div>
         <div className="text-xs" style={muted}>Cada dia com check-in conta 1 dia de plantão, mesmo que o corretor tenha feito manhã, tarde e noite. Clique no corretor para ver os dias.</div>
+      </div>
+
+      {/* Período: mês a mês ou o ano todo, e os relatórios em Excel */}
+      <div className="flex items-center gap-2 flex-wrap mb-4">
+        <div className="flex rounded-lg border overflow-hidden text-xs" style={{ borderColor: "var(--border)" }}>
+          {(["mes", "ano"] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => setVisao(v)}
+              className="px-3 py-1.5 font-semibold"
+              style={visao === v ? { background: "var(--primary)", color: "#0a0a0a" } : { color: "var(--muted-foreground)" }}
+            >
+              {v === "mes" ? "Por mês" : "Ano todo"}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1">
+          <button aria-label="Mês anterior" onClick={() => andarMes(-1)} className="w-7 h-7 rounded-lg border flex items-center justify-center" style={botaoSeta}>
+            <ChevronLeft size={14} />
+          </button>
+          <span className="text-xs w-28 text-center capitalize font-semibold" style={{ color: "var(--foreground)" }}>
+            {noAno ? r.ano : `${MESES_LONGOS[m]} ${r.ano}`}
+          </span>
+          <button aria-label="Próximo mês" onClick={() => andarMes(1)} className="w-7 h-7 rounded-lg border flex items-center justify-center" style={botaoSeta}>
+            <ChevronRight size={14} />
+          </button>
+        </div>
+        <div className="flex items-center gap-2 ml-auto flex-wrap">
+          <button onClick={() => baixar(r.mes)} disabled={!!baixando} className="text-xs px-3 py-1.5 rounded-lg font-semibold disabled:opacity-60" style={{ background: "var(--primary)", color: "#0a0a0a" }}>
+            {baixando === r.mes ? "Gerando…" : `⬇ Relatório de ${MESES_LONGOS[m]}`}
+          </button>
+          <button onClick={() => baixar(r.ano)} disabled={!!baixando} className="text-xs px-3 py-1.5 rounded-lg font-semibold border disabled:opacity-60" style={botaoSeta}>
+            {baixando === r.ano ? "Gerando…" : `⬇ Relatório de ${r.ano}`}
+          </button>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-5 gap-4">
@@ -163,7 +229,12 @@ export function RankingCheckin() {
             <div className="text-xs mb-1.5" style={muted}>Dias de plantão por mês em {r.ano} (somando os corretores)</div>
             <div className="flex items-end gap-1 h-24">
               {r.porMes.map((n, i) => (
-                <div key={i} title={`${MESES_LONGOS[i]}: ${n} dia(s) de plantão`} className="flex-1 flex flex-col items-center justify-end h-full gap-1">
+                <div
+                  key={i}
+                  title={`${MESES_LONGOS[i]}: ${n} dia(s) de plantão. Clique para ver o mês`}
+                  onClick={() => { setMesEscolhido(`${r.ano}-${String(i + 1).padStart(2, "0")}`); setVisao("mes"); }}
+                  className="flex-1 flex flex-col items-center justify-end h-full gap-1 cursor-pointer"
+                >
                   <span className="text-[10px]" style={muted}>{n || ""}</span>
                   <div className="w-full rounded-t-md" style={{ height: `${(n / max) * 100}%`, minHeight: n ? 4 : 1, background: i === m ? "var(--primary)" : "#3b82f6aa" }} />
                   <span className="text-[10px]" style={{ color: i === m ? "var(--foreground)" : "var(--muted-foreground)" }}>{MESES[i]}</span>
@@ -175,12 +246,12 @@ export function RankingCheckin() {
 
         <div className="lg:col-span-3">
           <div className="flex items-center justify-end gap-3 text-[11px] mb-1" style={muted}>
-            <span>Turnos em {MESES_LONGOS[m]}:</span>
+            <span>Turnos em {noAno ? r.ano : MESES_LONGOS[m]}:</span>
             <span>{ponto(COR.manha)}manhã</span>
             <span>{ponto(COR.tarde)}tarde</span>
             <span>{ponto(COR.noite)}noite</span>
           </div>
-          {r.linhas.length === 0 ? (
+          {linhas.length === 0 ? (
             <p className="text-sm" style={muted}>Nenhum check-in neste ano.</p>
           ) : (
             <div className="max-h-[36rem] overflow-y-auto">
@@ -195,8 +266,9 @@ export function RankingCheckin() {
                   </tr>
                 </thead>
                 <tbody>
-                  {r.linhas.map((l, i) => {
-                    const total = l.manha + l.tarde + l.noite;
+                  {linhas.map((l, i) => {
+                    const t = turnosDe(l);
+                    const total = t.manha + t.tarde + t.noite;
                     const abre = aberto === l.userId;
                     return (
                       <Fragment key={l.userId}>
@@ -219,20 +291,20 @@ export function RankingCheckin() {
                             {l.nome} <span className="text-[10px]" style={muted}>{abre ? "▲" : "▼"}</span>
                           </button>
                         </td>
-                        <td className="py-2 pr-3 text-right text-base font-bold">{l.mes}</td>
+                        <td className={`py-2 pr-3 text-right ${noAno ? "" : "text-base font-bold"}`} style={noAno ? muted : undefined}>{l.mes}</td>
                         <td className="py-2 pr-3">
                           <div className="flex items-center gap-2">
                             <div className="flex h-2.5 rounded-full overflow-hidden" style={{ width: `${(total / maxTurnos) * 100}%`, minWidth: total ? 6 : 0, background: "var(--secondary)" }}>
                               {(["manha", "tarde", "noite"] as const).map((k) =>
-                                l[k] ? <div key={k} style={{ width: `${(l[k] / total) * 100}%`, background: COR[k] }} title={`${k === "manha" ? "Manhã" : k === "tarde" ? "Tarde" : "Noite"}: ${l[k]}`} /> : null
+                                t[k] ? <div key={k} style={{ width: `${(t[k] / total) * 100}%`, background: COR[k] }} title={`${k === "manha" ? "Manhã" : k === "tarde" ? "Tarde" : "Noite"}: ${t[k]}`} /> : null
                               )}
                             </div>
                             <span className="text-[11px] whitespace-nowrap" style={muted}>
-                              {l.manha} · {l.tarde} · {l.noite}
+                              {t.manha} · {t.tarde} · {t.noite}
                             </span>
                           </div>
                         </td>
-                        <td className="py-2 text-right" style={muted}>{l.ano}</td>
+                        <td className={`py-2 text-right ${noAno ? "text-base font-bold" : ""}`} style={noAno ? undefined : muted}>{l.ano}</td>
                       </tr>
                       {abre && (
                         <tr style={{ background: "var(--secondary)" }}>
