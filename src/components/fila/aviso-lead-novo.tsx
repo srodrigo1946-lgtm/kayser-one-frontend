@@ -8,6 +8,7 @@ import { getStoredUser } from "@/lib/auth";
 
 type Meu = { id: string; leadId: string; nome: string; empreendimento: string | null; dueAt: string | null; transferido?: boolean; anuncio?: boolean; qtd?: number };
 const CHAVE = "kayser-leads-avisados";
+const CHAVE_T = "kayser-transf-visto-ate";
 
 function lerVistos(): string[] {
   try {
@@ -103,12 +104,27 @@ export function AvisoLeadNovo() {
   useEffect(() => {
     if (!data?.length || lead) return;
     const vistos = lerVistos();
-    const novo = data.find((m) => !vistos.includes(m.id));
+    // Transferidos: guarda só a hora da última transferência vista (id = t-<lead>-<ms>).
+    // Assim 250 de uma vez viram UM aviso e não voltam a avisar (antes a lista de 200 estourava).
+    const em = (m: Meu) => Number(m.id.split("-").pop()) || 0;
+    let ate = 0;
+    try {
+      ate = Number(localStorage.getItem(CHAVE_T) || 0);
+    } catch {
+      /* sem storage */
+    }
+    const transfNovos = data.filter((m) => m.transferido && em(m) > ate);
+    const novo = data.find((m) => !m.transferido && !vistos.includes(m.id)) ?? transfNovos[0];
     if (!novo) return;
-    // Transferência em massa: junta todos os transferidos novos num aviso só (23/10).
-    const juntos = novo.transferido ? data.filter((m) => m.transferido && !vistos.includes(m.id)) : [novo];
-    gravarVistos([...vistos, ...juntos.map((m) => m.id)]);
-    setLead({ ...novo, qtd: juntos.length });
+    if (novo.transferido) {
+      try {
+        localStorage.setItem(CHAVE_T, String(Math.max(...transfNovos.map(em))));
+      } catch {
+        /* sem storage */
+      }
+    } else gravarVistos([...vistos, novo.id]);
+    const qtd = novo.transferido ? transfNovos.length : 1;
+    setLead({ ...novo, qtd });
     try {
       navigator.vibrate?.([200, 100, 200, 100, 400]);
     } catch {
