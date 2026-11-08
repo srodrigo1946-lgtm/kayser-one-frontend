@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getStoredUser } from "@/lib/auth";
-import { Bot, MessageCircle } from "lucide-react";
+import { Bot, ChevronDown, MessageCircle } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { Podio3D } from "@/components/dashboard/podio-3d";
@@ -48,6 +48,7 @@ export default function DashboardPage() {
   // (0 = ano todo). O usuário troca pra "Ano todo" ou outro mês quando quiser.
   const [periodYear, setPeriodYear] = useState(currentYear);
   const [periodMonth, setPeriodMonth] = useState(new Date().getMonth() + 1);
+  const [fuAberto, setFuAberto] = useState(false);
 
   const { data: metrics } = useDashboardMetrics();
   const { data: ranking } = useRanking();
@@ -153,17 +154,28 @@ export default function DashboardPage() {
           className="rounded-2xl border p-5"
           style={{ background: "var(--card)", borderColor: "var(--border)" }}
         >
-          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+          {/* Gaveta: fechada por padrão, abre no clique (Rodrigo 08/11) */}
+          <button
+            type="button"
+            onClick={() => setFuAberto((v) => !v)}
+            aria-expanded={fuAberto}
+            className="w-full flex items-center justify-between gap-3 text-left"
+          >
             <div>
               <h3 className="font-semibold flex items-center gap-2" style={{ color: "var(--foreground)" }}>
                 <Bot size={18} style={{ color: "#a855f7" }} /> Follow-ups automáticos da IA
               </h3>
               <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
-                {followups?.total ?? 0} em {periodo} · clique para abrir a conversa
+                {followups?.total ?? 0} em {periodo} · {fuAberto ? "clique para abrir a conversa" : "clique para ver a lista"}
               </p>
             </div>
-          </div>
-          <div className="space-y-1">
+            <span className="flex items-center gap-1 text-sm font-medium" style={{ color: "var(--primary)" }}>
+              {fuAberto ? "Fechar" : "Abrir"}
+              <ChevronDown size={18} style={{ transform: fuAberto ? "rotate(180deg)" : "none" }} />
+            </span>
+          </button>
+          {fuAberto && (
+          <div className="space-y-1 mt-4">
             {(followups?.items ?? []).map((f) => (
               <button
                 key={f.id}
@@ -197,6 +209,7 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-3 gap-4">
