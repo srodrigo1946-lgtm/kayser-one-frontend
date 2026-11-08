@@ -49,6 +49,7 @@ export default function DashboardPage() {
   const [periodYear, setPeriodYear] = useState(currentYear);
   const [periodMonth, setPeriodMonth] = useState(new Date().getMonth() + 1);
   const [fuAberto, setFuAberto] = useState(false);
+  const [rkAberto, setRkAberto] = useState(false);
 
   const { data: metrics } = useDashboardMetrics();
   const { data: ranking } = useRanking();
@@ -233,6 +234,22 @@ export default function DashboardPage() {
             </a>
           </div>
           <Podio3D ranking={ranking ?? []} />
+          {/* Gaveta da lista completa: fechada por padrão, o pódio continua à vista (Rodrigo 08/11) */}
+          <button
+            type="button"
+            onClick={() => setRkAberto((v) => !v)}
+            aria-expanded={rkAberto}
+            className="w-full flex items-center justify-between gap-3 mt-4 text-left"
+          >
+            <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+              Lista completa · {(ranking ?? []).length} corretores
+            </span>
+            <span className="flex items-center gap-1 text-sm font-medium" style={{ color: "var(--primary)" }}>
+              {rkAberto ? "Fechar" : "Abrir"}
+              <ChevronDown size={18} style={{ transform: rkAberto ? "rotate(180deg)" : "none" }} />
+            </span>
+          </button>
+          {rkAberto && (
           <div className="space-y-3 mt-4">
             {(ranking ?? []).map((c, i) => {
               const vendas = Number(c.vendas) || 0;
@@ -282,6 +299,7 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+          )}
         </div>
       </div>
     </div>
