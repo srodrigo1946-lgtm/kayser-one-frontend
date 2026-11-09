@@ -1,0 +1,113 @@
+"use client";
+
+import { useEffect } from "react";
+import { X, MessageCircle } from "lucide-react";
+import { useCardLista } from "@/hooks/use-dashboard";
+
+const STATUS: Record<string, string> = {
+  novo_lead: "Novo lead",
+  primeiro_contato: "Primeiro contato",
+  em_atendimento: "Em atendimento",
+  agendamento: "Agendamento",
+  visita_realizada: "Visita realizada",
+  documentacao: "Documentação",
+  subida_pasta: "Subida de pasta",
+  aprovacao: "Aprovação",
+  reprovacao: "Reprovação",
+  venda_ganha: "Venda ganha",
+  venda_perdida: "Sem interesse",
+};
+
+function dataCurta(iso: string | null) {
+  if (!iso) return "nunca";
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+}
+
+/**
+ * Gaveta lateral que abre ao clicar num card do painel: mostra os leads que o
+ * número conta. Clicar no lead abre a conversa dele.
+ */
+export function ListaCard({
+  tipo,
+  titulo,
+  year,
+  month,
+  onFechar,
+  onAbrirLead,
+}: {
+  tipo: string;
+  titulo: string;
+  year: number;
+  month?: number;
+  onFechar: () => void;
+  onAbrirLead: (l: { leadId: string; phone: string }) => void;
+}) {
+  const { data, isLoading, isError } = useCardLista(tipo, year, month);
+
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && onFechar();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onFechar]);
+
+  const itens = data?.items ?? [];
+  const mostraContato = tipo === "semContato";
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label={titulo}>
+      <button aria-label="Fechar" className="absolute inset-0 bg-black/50" onClick={onFechar} />
+      <div
+        className="relative w-full max-w-md h-full flex flex-col border-l"
+        style={{ background: "var(--background)", borderColor: "var(--border)" }}
+      >
+        <div className="flex items-start justify-between gap-3 p-5 border-b" style={{ borderColor: "var(--border)" }}>
+          <div>
+            <h3 className="font-semibold" style={{ color: "var(--foreground)" }}>{titulo}</h3>
+            <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
+              {isLoading
+                ? "Carregando…"
+                : `${data?.total ?? 0} lead(s)${(data?.total ?? 0) > itens.length ? ` · mostrando ${itens.length}` : ""} · clique para abrir a conversa`}
+            </p>
+          </div>
+          <button onClick={onFechar} aria-label="Fechar" className="p-1 rounded-lg" style={{ color: "var(--muted-foreground)" }}>
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-3 space-y-1">
+          {isError && (
+            <div className="py-8 text-center text-sm" style={{ color: "var(--danger)" }}>
+              Não consegui carregar a lista. Feche e abra de novo.
+            </div>
+          )}
+          {!isLoading && !isError && itens.length === 0 && (
+            <div className="py-8 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
+              Nenhum lead aqui.
+            </div>
+          )}
+          {itens.map((l) => (
+            <button
+              key={l.id}
+              onClick={() => onAbrirLead({ leadId: l.id, phone: l.phone })}
+              className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left hover:opacity-90"
+              style={{ background: "var(--secondary)" }}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
+                  {l.nome || "Lead sem nome"}
+                </div>
+                <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>
+                  {STATUS[l.status] ?? l.status} · {l.responsavel ?? "sem responsável"}
+                </div>
+              </div>
+              <span className="text-xs whitespace-nowrap" style={{ color: "var(--muted-foreground)" }}>
+                {mostraContato ? `contato ${dataCurta(l.lastContactAt)}` : dataCurta(l.createdAt)}
+              </span>
+              <MessageCircle size={16} style={{ color: "#25d366" }} />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

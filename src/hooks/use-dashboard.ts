@@ -13,6 +13,34 @@ export interface DashboardMetricsResponse {
   conversao: number;
   semAtendimento: number;
   semContato: number;
+  leadsOntem?: number;
+  tendenciaHoje?: number | null;
+  tempoMedioMin?: number | null;
+  tempoMedioLeads?: number;
+}
+
+export interface CardListaItem {
+  id: string;
+  nome: string | null;
+  phone: string;
+  status: string;
+  responsavel: string | null;
+  createdAt: string;
+  lastContactAt: string | null;
+}
+
+// Leads por trás de um card do painel (mesmo filtro da contagem).
+export function useCardLista(tipo: string | null, year: number, month?: number) {
+  return useQuery({
+    queryKey: ["dashboard", "lista", tipo, year, month ?? 0],
+    enabled: !!tipo,
+    queryFn: async () => {
+      const { data } = await api.get<{ total: number; items: CardListaItem[] }>("/dashboard/lista", {
+        params: { tipo, year, ...(month ? { month } : {}) },
+      });
+      return data;
+    },
+  });
 }
 
 export interface RankingItem {

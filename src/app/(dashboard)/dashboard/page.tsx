@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getStoredUser } from "@/lib/auth";
 import { Bot, ChevronDown, MessageCircle } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { Podio3D } from "@/components/dashboard/podio-3d";
+import { ListaCard } from "@/components/dashboard/lista-card";
 import { SalesChart, ConversionChart } from "@/components/dashboard/sales-chart";
 import {
   useDashboardMetrics,
@@ -29,6 +30,15 @@ const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ];
+
+// Minutos → "35 min" / "2,5 h" / "3 dias"; sem dado → "—".
+function formatarTempo(min?: number | null) {
+  if (min == null) return "—";
+  if (min < 60) return `${min} min`;
+  const h = min / 60;
+  if (h < 48) return `${h.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} h`;
+  return `${Math.round(h / 24)} dias`;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -89,6 +99,18 @@ export default function DashboardPage() {
     return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
   };
 
+  // Clique num card: abre a gaveta lateral com a lista; Follow-ups abre a gaveta de baixo.
+  const [cardAberto, setCardAberto] = useState<{ tipo: string; titulo: string } | null>(null);
+  const followupsRef = useRef<HTMLDivElement>(null);
+  const abrirCard = (tipo: string, titulo: string) => {
+    if (tipo === "followups") {
+      setFuAberto(true);
+      followupsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    setCardAberto({ tipo, titulo });
+  };
+
   // Funil segue as colunas do Kanban (contagem real de leads por etapa)
   const funnel = (board ?? []).map((col) => ({
     label: col.title,
@@ -141,6 +163,9 @@ export default function DashboardPage() {
         </div>
 
         <StatsCards
+          tendenciaHoje={metrics?.tendenciaHoje}
+          tempoMedio={formatarTempo(metrics?.tempoMedioMin)}
+          onAbrir={abrirCard}
           metrics={statsMetrics}
           followupsTotal={followups?.total}
           followupsPeriodo={periodo}
@@ -150,9 +175,21 @@ export default function DashboardPage() {
           vendasPeriodo={vendasPeriodo}
         />
 
+        {cardAberto && (
+          <ListaCard
+            tipo={cardAberto.tipo}
+            titulo={cardAberto.titulo}
+            year={periodYear}
+            month={periodMonth || undefined}
+            onFechar={() => setCardAberto(null)}
+            onAbrirLead={abrirConversa}
+          />
+        )}
+
         {/* Follow-ups automáticos da IA — clique para abrir a conversa */}
         <div
-          className="rounded-2xl border p-5"
+          ref={followupsRef}
+          className="rounded-2xl border p-5 scroll-mt-24"
           style={{ background: "var(--card)", borderColor: "var(--border)" }}
         >
           {/* Gaveta: fechada por padrão, abre no clique (Rodrigo 08/11) */}

@@ -33,14 +33,21 @@ interface StatCardProps {
   trend?: number;
   color: string;
   danger?: boolean;
+  onClick?: () => void;
 }
 
-function StatCard({ title, value, subtitle, icon, trend, color, danger }: StatCardProps) {
+function StatCard({ title, value, subtitle, icon, trend, color, danger, onClick }: StatCardProps) {
   const inclina = useInclina();
   return (
     <div
       {...inclina}
-      className="rounded-2xl p-5 border relative overflow-hidden transition-transform duration-200 ease-out will-change-transform"
+      // Card clicável: abre a lista que ele conta (09/11)
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      title={onClick ? "Clique para ver a lista" : undefined}
+      onClick={onClick}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } : undefined}
+      className={`rounded-2xl p-5 border relative overflow-hidden transition-transform duration-200 ease-out will-change-transform${onClick ? " cursor-pointer" : ""}`}
       style={{
         // sheen no topo (dá o brilho 3D do vidro) sobre a cor do card
         background: "linear-gradient(157deg, rgba(255,255,255,0.08), rgba(255,255,255,0) 42%), var(--card)",
@@ -104,7 +111,16 @@ export function StatsCards({
   leadsPeriodo,
   visitasPeriodo,
   vendasPeriodo,
+  tendenciaHoje,
+  tempoMedio,
+  onAbrir,
 }: {
+  // Tendência real (hoje x ontem até a mesma hora); null = não mostra.
+  tendenciaHoje?: number | null;
+  // Tempo médio já formatado ("35 min", "2,5 h") ou "—" sem dados.
+  tempoMedio?: string;
+  // Clique num card: tipo da lista (hoje, periodo, visitas, vendas, semAtendimento, semContato, followups).
+  onAbrir?: (tipo: string, titulo: string) => void;
   metrics: DashboardMetrics;
   followupsTotal?: number;
   followupsPeriodo?: string;
@@ -122,8 +138,9 @@ export function StatsCards({
         value={metrics.leadsHoje}
         subtitle={`${metrics.leadsSemana} esta semana`}
         icon={<Users size={20} />}
-        trend={12}
+        trend={tendenciaHoje ?? undefined}
         color="#3b82f6"
+        onClick={onAbrir && (() => onAbrir("hoje", "Leads de hoje"))}
       />
       <StatCard
         title={`Leads · ${rotulo}`}
@@ -131,6 +148,7 @@ export function StatsCards({
         subtitle="Total do período"
         icon={<TrendingUp size={20} />}
         color="#8b5cf6"
+        onClick={onAbrir && (() => onAbrir("periodo", `Leads · ${rotulo}`))}
       />
       <StatCard
         title={`Visitas · ${rotulo}`}
@@ -138,6 +156,7 @@ export function StatsCards({
         subtitle="Realizadas no período"
         icon={<Eye size={20} />}
         color="#10b981"
+        onClick={onAbrir && (() => onAbrir("visitas", `Visitas · ${rotulo}`))}
       />
       <StatCard
         title={`Vendas · ${rotulo}`}
@@ -145,11 +164,12 @@ export function StatsCards({
         subtitle="Fechadas no período"
         icon={<ShoppingBag size={20} />}
         color="#f59e0b"
+        onClick={onAbrir && (() => onAbrir("vendas", `Vendas · ${rotulo}`))}
       />
       <StatCard
         title="Tempo Médio"
-        value={`${metrics.tempoMedioAtendimento}h`}
-        subtitle="Para primeiro contato"
+        value={tempoMedio ?? "—"}
+        subtitle="Até a 1ª resposta da equipe · mês"
         icon={<Clock size={20} />}
         color="#06b6d4"
       />
@@ -160,6 +180,7 @@ export function StatsCards({
         icon={<AlertCircle size={20} />}
         color="#ef4444"
         danger
+        onClick={onAbrir && (() => onAbrir("semAtendimento", "Sem atendimento"))}
       />
       <StatCard
         title="Sem Contato"
@@ -168,6 +189,7 @@ export function StatsCards({
         icon={<AlertCircle size={20} />}
         color="#f97316"
         danger
+        onClick={onAbrir && (() => onAbrir("semContato", "Sem contato há mais de 3 dias"))}
       />
       <StatCard
         title="Follow-ups IA"
@@ -175,6 +197,7 @@ export function StatsCards({
         subtitle={followupsPeriodo ? `IA · ${followupsPeriodo}` : "IA enviou"}
         icon={<Bot size={20} />}
         color="#a855f7"
+        onClick={onAbrir && (() => onAbrir("followups", "Follow-ups da IA"))}
       />
     </div>
   );
