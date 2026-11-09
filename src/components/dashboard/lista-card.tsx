@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, MessageCircle } from "lucide-react";
 import { useCardLista } from "@/hooks/use-dashboard";
 
@@ -53,7 +54,9 @@ export function ListaCard({
   const itens = data?.items ?? [];
   const mostraContato = tipo === "semContato";
 
-  return (
+  // Portal no <body>: o layout tem blur/transform nos pais, que prendem o "fixed" dentro deles.
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label={titulo}>
       <button aria-label="Fechar" className="absolute inset-0 bg-black/50" onClick={onFechar} />
       <div
@@ -108,6 +111,7 @@ export function ListaCard({
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
