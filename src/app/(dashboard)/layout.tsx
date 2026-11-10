@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { CommandPalette } from "@/components/command-palette";
 import { CheckinPlantao } from "@/components/plantao/checkin-plantao";
 import { AvisoLeadNovo } from "@/components/fila/aviso-lead-novo";
+import { AvisoResposta } from "@/components/fila/aviso-resposta";
 import { isAuthenticated, getStoredUser } from "@/lib/auth";
 import { useNewLeadAlert } from "@/hooks/use-new-lead-alert";
 
@@ -47,6 +48,7 @@ export default function DashboardLayout({
         {/* Check-in do plantão por GPS (aparece só pra quem está na escala do turno). */}
         <CheckinPlantao />
         <AvisoLeadNovo />
+        <AvisoResposta />
         {children}
       </main>
       <CommandPalette />
