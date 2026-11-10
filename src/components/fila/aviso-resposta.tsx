@@ -22,6 +22,8 @@ export function AvisoResposta() {
   const { data } = useQuery({
     queryKey: ["conversas-respostas"],
     refetchInterval: 15_000,
+    // Continua checando com a aba minimizada/atrás — é aí que a notificação do sistema mais serve.
+    refetchIntervalInBackground: true,
     queryFn: async () => (await api.get<Resp[]>("/conversations/respostas")).data,
   });
 
