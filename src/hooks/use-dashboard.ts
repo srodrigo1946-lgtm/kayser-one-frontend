@@ -27,6 +27,29 @@ export interface CardListaItem {
   responsavel: string | null;
   createdAt: string;
   lastContactAt: string | null;
+  // Só na lista do 1-on-1 (/dashboard/clientes): última mensagem da conversa.
+  ultimaMsg?: string | null;
+  ultimaDirecao?: "in" | "out" | null;
+  ultimaEm?: string | null;
+}
+
+// Clientes do time pro 1-on-1: por etapa (status) ou esperando resposta.
+export function useClientesTime(ids: string[], opts: { year?: number; month?: number; status?: string; esperando?: boolean } | null) {
+  const idsKey = ids.join(",");
+  return useQuery({
+    queryKey: ["dashboard", "clientes", idsKey, opts],
+    enabled: !!opts && ids.length > 0,
+    refetchInterval: opts?.esperando ? 60_000 : false,
+    queryFn: async () => {
+      const { data } = await api.get<{ total: number; items: CardListaItem[] }>("/dashboard/clientes", {
+        params: {
+          ids: idsKey,
+          ...(opts?.esperando ? { esperando: 1 } : { year: opts?.year, ...(opts?.month ? { month: opts.month } : {}), ...(opts?.status ? { status: opts.status } : {}) }),
+        },
+      });
+      return data;
+    },
+  });
 }
 
 // Leads por trás de um card do painel (mesmo filtro da contagem).

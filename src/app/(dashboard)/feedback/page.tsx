@@ -6,7 +6,9 @@ import { Users, User as UserIcon, Trash2, MessageSquarePlus } from "lucide-react
 import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
 import { useUsers } from "@/hooks/use-users";
-import { useBreakdown, useFunil } from "@/hooks/use-dashboard";
+import { useRouter } from "next/navigation";
+import { useBreakdown, useFunil, useClientesTime } from "@/hooks/use-dashboard";
+import { ListaCard } from "@/components/dashboard/lista-card";
 import { useKanbanBoard } from "@/hooks/use-kanban";
 import { useFeedback, useAddNote, useDeleteNote } from "@/hooks/use-feedback";
 
@@ -82,6 +84,27 @@ export default function FeedbackPage() {
     color: c.color,
     count: countByStatus.get(c.id) ?? 0,
   }));
+
+  // Gaveta com os clientes (etapa do funil, membro do time ou esperando resposta) — 10/11.
+  const router = useRouter();
+  const [gaveta, setGaveta] = useState<{ titulo: string; tipo: string; ids: string[]; status?: string } | null>(null);
+  const fonte = useClientesTime(
+    gaveta?.ids ?? [],
+    gaveta ? (gaveta.tipo === "esperando" ? { esperando: true } : { year, month: month || undefined, status: gaveta.status }) : null
+  );
+  const esperando = useClientesTime(alvoIds, alvoIds.length ? { esperando: true } : null);
+  const listaEsperando = esperando.data?.items ?? [];
+  const abrirConversa = (f: { leadId: string; phone: string }) => {
+    const p = new URLSearchParams();
+    if (f.leadId) p.set("lead", f.leadId);
+    if (f.phone) p.set("phone", f.phone);
+    router.push(`/whatsapp?${p.toString()}`);
+  };
+  const desde = (iso?: string | null) => {
+    if (!iso) return "";
+    const min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+    return min < 60 ? `${min} min` : min < 1440 ? `${Math.round(min / 60)} h` : `${Math.round(min / 1440)} d`;
+  };
 
   const { data: notas = [] } = useFeedback(modo, alvoId || null);
   const addNote = useAddNote();
@@ -162,6 +185,40 @@ export default function FeedbackPage() {
               <Metric titulo="VGV" valor={brl(nums?.vgv ?? 0)} cor="#22c55e" />
             </div>
 
+            {/* Clientes esperando resposta (mandaram mensagem há +30 min e ninguém respondeu) */}
+            <div className="rounded-2xl border p-5" style={{ background: "var(--card)", borderColor: listaEsperando.length ? "#f8717166" : "var(--border)" }}>
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <div className="font-semibold" style={{ color: "var(--foreground)" }}>Clientes esperando resposta</div>
+                {(esperando.data?.total ?? 0) > 5 && (
+                  <button onClick={() => setGaveta({ titulo: "Clientes esperando resposta", tipo: "esperando", ids: alvoIds })} className="text-xs underline" style={{ color: "var(--muted-foreground)" }}>
+                    Ver todos ({esperando.data?.total})
+                  </button>
+                )}
+              </div>
+              <div className="text-xs mb-3" style={{ color: "var(--muted-foreground)" }}>
+                Mandaram mensagem há mais de 30 min e ninguém respondeu · clique para abrir a conversa
+              </div>
+              {esperando.isLoading ? (
+                <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>Carregando…</div>
+              ) : listaEsperando.length === 0 ? (
+                <div className="text-sm" style={{ color: "#4ade80" }}>Ninguém esperando. Time em dia.</div>
+              ) : (
+                <div className="space-y-1">
+                  {listaEsperando.slice(0, 5).map((l) => (
+                    <button key={l.id} onClick={() => abrirConversa({ leadId: l.id, phone: l.phone })} className="w-full flex items-center gap-3 p-2.5 rounded-xl text-left hover:opacity-90" style={{ background: "var(--secondary)" }}>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
+                          {l.nome || "Lead sem nome"} <span className="text-xs font-normal" style={{ color: "var(--muted-foreground)" }}>· {l.responsavel ?? "sem responsável"}</span>
+                        </div>
+                        {l.ultimaMsg && <div className="text-xs truncate" style={{ color: "#facc15" }}>{l.ultimaMsg}</div>}
+                      </div>
+                      <span className="text-xs whitespace-nowrap" style={{ color: "#f87171" }}>há {desde(l.ultimaEm)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Funil por etapa (com %) */}
             <div className="rounded-2xl border p-5" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
               <div className="font-semibold mb-1" style={{ color: "var(--foreground)" }}>Funil por etapa</div>
@@ -170,7 +227,13 @@ export default function FeedbackPage() {
                 {etapas.map((e: any) => {
                   const pct = totalFunil > 0 ? (e.count / totalFunil) * 100 : 0;
                   return (
-                    <div key={e.key} className="flex items-center gap-3">
+                    <button
+                      key={e.key}
+                      disabled={e.count === 0}
+                      onClick={() => setGaveta({ titulo: `${e.label} · ${e.count} cliente(s)`, tipo: "etapa", ids: alvoIds, status: e.key })}
+                      title={e.count ? "Clique para ver os clientes" : undefined}
+                      className="w-full flex items-center gap-3 text-left rounded-lg hover:opacity-80 disabled:cursor-default disabled:hover:opacity-100"
+                    >
                       <div className="w-40 text-sm flex items-center gap-1.5 flex-shrink-0" style={{ color: "var(--foreground)" }}>
                         <span>{e.emoji}</span><span className="truncate">{e.label}</span>
                       </div>
@@ -180,7 +243,7 @@ export default function FeedbackPage() {
                       <div className="w-24 text-right text-sm tabular-nums flex-shrink-0" style={{ color: "var(--muted-foreground)" }}>
                         {e.count} · {pct.toFixed(0)}%
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
                 {etapas.length === 0 && <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>Sem etapas configuradas no Kanban.</div>}
@@ -197,10 +260,16 @@ export default function FeedbackPage() {
                     const b: any = bkById.get(id) ?? { leads: 0, vendas: 0 };
                     const cv = b.leads > 0 ? (b.vendas / b.leads) * 100 : 0;
                     return (
-                      <div key={id} className="flex items-center justify-between text-sm py-1.5 border-b" style={{ borderColor: "var(--border)" }}>
+                      <button
+                        key={id}
+                        onClick={() => setGaveta({ titulo: `Clientes de ${u?.name ?? "—"}`, tipo: "membro", ids: [id] })}
+                        title="Clique para ver os clientes e as conversas"
+                        className="w-full flex items-center justify-between text-sm py-1.5 border-b text-left hover:opacity-80"
+                        style={{ borderColor: "var(--border)" }}
+                      >
                         <span style={{ color: "var(--foreground)" }}>{u?.name ?? "—"} <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>· {ROLE_LABEL[u?.role] ?? u?.role}</span></span>
-                        <span className="text-xs tabular-nums" style={{ color: "var(--muted-foreground)" }}>{b.leads} leads · {b.vendas} vendas · {cv.toFixed(0)}%</span>
-                      </div>
+                        <span className="text-xs tabular-nums" style={{ color: "var(--muted-foreground)" }}>{b.leads} leads · {b.vendas} vendas · {cv.toFixed(0)}% ›</span>
+                      </button>
                     );
                   })}
                   {membrosTime.length === 0 && <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>Este gestor não tem equipe cadastrada abaixo.</div>}
@@ -238,6 +307,17 @@ export default function FeedbackPage() {
           </>
         )}
       </div>
+      {gaveta && (
+        <ListaCard
+          tipo={gaveta.tipo}
+          titulo={gaveta.titulo}
+          year={year}
+          month={month || undefined}
+          fonte={fonte}
+          onFechar={() => setGaveta(null)}
+          onAbrirLead={abrirConversa}
+        />
+      )}
     </div>
   );
 }

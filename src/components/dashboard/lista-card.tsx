@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, MessageCircle } from "lucide-react";
-import { useCardLista } from "@/hooks/use-dashboard";
+import { useCardLista, type CardListaItem } from "@/hooks/use-dashboard";
 
 const STATUS: Record<string, string> = {
   novo_lead: "Novo lead",
@@ -24,6 +24,13 @@ function dataCurta(iso: string | null) {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 }
 
+function tempoDesde(iso: string) {
+  const min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (min < 60) return `${min} min`;
+  if (min < 1440) return `${Math.round(min / 60)} h`;
+  return `${Math.round(min / 1440)} d`;
+}
+
 /**
  * Gaveta lateral que abre ao clicar num card do painel: mostra os leads que o
  * número conta. Clicar no lead abre a conversa dele.
@@ -33,6 +40,7 @@ export function ListaCard({
   titulo,
   year,
   month,
+  fonte,
   onFechar,
   onAbrirLead,
 }: {
@@ -40,10 +48,13 @@ export function ListaCard({
   titulo: string;
   year: number;
   month?: number;
+  // Lista já buscada por fora (1-on-1); sem ela, busca pelo tipo do card do painel.
+  fonte?: { data?: { total: number; items: CardListaItem[] }; isLoading: boolean; isError: boolean };
   onFechar: () => void;
   onAbrirLead: (l: { leadId: string; phone: string }) => void;
 }) {
-  const { data, isLoading, isError } = useCardLista(tipo, year, month);
+  const proprio = useCardLista(fonte ? null : tipo, year, month);
+  const { data, isLoading, isError } = fonte ?? proprio;
 
   useEffect(() => {
     const esc = (e: KeyboardEvent) => e.key === "Escape" && onFechar();
@@ -102,9 +113,21 @@ export function ListaCard({
                 <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>
                   {STATUS[l.status] ?? l.status} · {l.responsavel ?? "sem responsável"}
                 </div>
+                {l.ultimaMsg && (
+                  <div className="text-xs truncate mt-0.5" style={{ color: l.ultimaDirecao === "in" ? "#facc15" : "var(--muted-foreground)" }}>
+                    {l.ultimaDirecao === "in" ? "Cliente: " : "Equipe: "}
+                    {l.ultimaMsg}
+                  </div>
+                )}
               </div>
-              <span className="text-xs whitespace-nowrap" style={{ color: "var(--muted-foreground)" }}>
-                {mostraContato ? `contato ${dataCurta(l.lastContactAt)}` : dataCurta(l.createdAt)}
+              <span className="text-xs whitespace-nowrap" style={{ color: l.ultimaDirecao === "in" && tipo === "esperando" ? "#f87171" : "var(--muted-foreground)" }}>
+                {tipo === "esperando" && l.ultimaEm
+                  ? `esperando ${tempoDesde(l.ultimaEm)}`
+                  : l.ultimaEm
+                    ? dataCurta(l.ultimaEm)
+                    : mostraContato
+                      ? `contato ${dataCurta(l.lastContactAt)}`
+                      : dataCurta(l.createdAt)}
               </span>
               <MessageCircle size={16} style={{ color: "#25d366" }} />
             </button>
