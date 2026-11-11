@@ -288,7 +288,9 @@ function ColumnEditor({
 }
 
 export default function KanbanPage() {
-  const { data: board, isLoading, isError } = useKanbanBoard();
+  // Kanban SWAT (11/11): leads SWAT ficam num quadro separado.
+  const [quadro, setQuadro] = useState<"normal" | "swat">("normal");
+  const { data: board, isLoading, isError } = useKanbanBoard(quadro);
   const { data: pendentes } = usePendentes();
   const dueByLead = new Map((pendentes ?? []).map((p) => [p.leadId, p.dueAt]));
   // Avisos do sino (já filtrados pela equipe de quem está logado).
@@ -403,7 +405,28 @@ export default function KanbanPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <Header title="Kanban" subtitle="Fluxo comercial de leads" />
+      <Header title={quadro === "swat" ? "Kanban SWAT" : "Kanban"} subtitle={quadro === "swat" ? "Leads qualificados da fila SWAT" : "Fluxo comercial de leads"} />
+
+      <div className="px-6 pt-3 flex items-center gap-1">
+        {(["normal", "swat"] as const).map((q) => (
+          <button
+            key={q}
+            onClick={() => {
+              setQuadro(q);
+              setLimite({});
+            }}
+            aria-pressed={quadro === q}
+            className="px-4 py-1.5 rounded-lg text-sm font-semibold border"
+            style={
+              quadro === q
+                ? { background: q === "swat" ? "#facc15" : "var(--primary)", color: q === "swat" ? "#0a0a0a" : "white", borderColor: "transparent" }
+                : { background: "var(--card)", color: "var(--muted-foreground)", borderColor: "var(--border)" }
+            }
+          >
+            {q === "swat" ? "🛡️ Kanban SWAT" : "Kanban"}
+          </button>
+        ))}
+      </div>
 
       <div className="px-6 pt-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl border w-full max-w-sm" style={{ background: "var(--card)", borderColor: "var(--border)" }}>

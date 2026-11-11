@@ -4,11 +4,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { KanbanColumn } from "@/types";
 
-export function useKanbanBoard() {
+// fila: "normal" (Kanban sem os SWAT), "swat" (Kanban SWAT) ou vazio = todos (painéis).
+export function useKanbanBoard(fila?: "normal" | "swat") {
   return useQuery({
-    queryKey: ["kanban", "board"],
+    queryKey: ["kanban", "board", fila ?? "todos"],
     queryFn: async () => {
-      const { data } = await api.get<KanbanColumn[]>("/kanban/board");
+      const { data } = await api.get<KanbanColumn[]>("/kanban/board", { params: fila ? { fila } : {} });
       return data;
     },
   });
