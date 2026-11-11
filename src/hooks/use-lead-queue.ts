@@ -9,6 +9,7 @@ export interface QueueSettings {
   slaMinutes: number;
   memberIds: string[];
   pointer: number;
+  swatMemberIds?: string[];
 }
 
 export interface QueueBoard {
@@ -24,6 +25,8 @@ export interface QueueOrdem {
   ordem: { userId: string; nome: string; proximo: boolean }[];
   aguardando: number;
   aguardandoLeads?: { nome: string; phone: string; agendadoPara?: string }[];
+  swat?: { userId: string; nome: string; proximo: boolean }[];
+  swatEsperando?: number;
 }
 
 // Ordem do rodízio agora (todos os cargos VEEM, só leitura).
@@ -45,7 +48,7 @@ export function useQueueSettings() {
 export function useUpdateQueue() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (dto: Partial<Pick<QueueSettings, "enabled" | "slaMinutes" | "memberIds">>) =>
+    mutationFn: async (dto: Partial<Pick<QueueSettings, "enabled" | "slaMinutes" | "memberIds" | "swatMemberIds">>) =>
       (await api.put<QueueSettings>("/lead-queue/settings", dto)).data,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["lead-queue"] }),
   });

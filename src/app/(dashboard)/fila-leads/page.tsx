@@ -10,6 +10,7 @@ import { getStoredUser } from "@/lib/auth";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { Mail } from "lucide-react";
 import { FilaEquipe } from "@/components/fila/fila-equipe";
+import { FilaSwat } from "@/components/fila/fila-swat";
 
 const roleLabels: Record<string, string> = {
   diretor: "Diretor",
@@ -131,6 +132,8 @@ export default function FilaLeadsPage() {
       )}
 
       <FilaEquipe />
+
+      <FilaSwat isDiretor={isDiretor} />
 
       {/* Configuração — só o Diretor mexe */}
       {isDiretor && (

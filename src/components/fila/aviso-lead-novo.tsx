@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
 
-type Meu = { id: string; leadId: string; nome: string; empreendimento: string | null; dueAt: string | null; transferido?: boolean; anuncio?: boolean; qtd?: number };
+type Meu = { id: string; leadId: string; nome: string; empreendimento: string | null; dueAt: string | null; transferido?: boolean; anuncio?: boolean; qtd?: number; swat?: boolean };
 const CHAVE = "kayser-leads-avisados";
 const CHAVE_T = "kayser-transf-visto-ate";
 
@@ -156,6 +156,11 @@ export function AvisoLeadNovo() {
           <div className="text-white text-2xl">#BORA</div>
           <div className="text-white text-2xl">VENDER 📈</div>
         </div>
+        {lead.swat && (
+          <div className="mt-3 inline-block px-3 py-1 rounded-md text-sm font-extrabold" style={{ background: "#0a0a0a", color: "#facc15", border: "1px solid #facc15" }}>
+            🛡️ SWAT · lead qualificado
+          </div>
+        )}
         {lead.anuncio && (
           <div className="text-sm mt-3 font-semibold" style={{ color: "#86efac" }}>📣 Veio do anúncio: cliente quente, acabou de pedir informação. Chame agora!</div>
         )}
