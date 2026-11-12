@@ -5,7 +5,7 @@ window.VITRINE = {
   // WhatsApp central (só dígitos, com 55 + DDD). O botão "WhatsApp" abre conversa com ele.
   whatsapp: "",
   // CRECI da imobiliária/corretor responsável (obrigatório em anúncio de imóvel).
-  creci: "",
+  creci: "81540",
   // Preço de Black Friday por imóvel (aparece "de R$ X por R$ Y"). Tirar daqui quando acabar.
   blackFriday: {
     "stillo-barra": { preco: 386000, unidade: "2 quartos" },
