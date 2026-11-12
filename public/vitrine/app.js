@@ -25,6 +25,15 @@
     if (C.googleAdsId && rotulo && window.gtag) gtag("event", "conversion", { send_to: `${C.googleAdsId}/${rotulo}` });
   };
 
+  // De onde veio: anúncio do Google (gclid / utm_campaign) — vai pra ficha do lead no K1.
+  const campanha = () => {
+    const q = new URLSearchParams(location.search);
+    const c = q.get("utm_campaign") || "";
+    return q.get("gclid") || q.get("gbraid") || q.get("wbraid") || /google/i.test(q.get("utm_source") || "")
+      ? `Google Ads${c ? ` — ${c}` : ""}`
+      : c;
+  };
+
   /* WhatsApp */
   const abrirZap = (imovel) => {
     conversao(C.conversaoWhatsapp);
@@ -217,7 +226,7 @@
       const r = await fetch(C.api || "https://kayser-one-backend-production.up.railway.app/api/v1/meta/vitrine-lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...d, imovel: atual || "", fila: C.fila || "swat" }),
+        body: JSON.stringify({ ...d, imovel: atual || "", fila: C.fila || "swat", campanha: campanha() }),
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j.ok) throw new Error(j.erro || "Não conseguimos enviar agora. Tente pelo WhatsApp.");
@@ -272,6 +281,12 @@
       const menor = Math.min(...imoveis.map((p) => p.preco || Infinity));
       if (isFinite(menor)) $("#menor-preco").textContent = moeda(menor);
       pilha(imoveis.filter((p) => p.status !== "Pronto para morar").concat(imoveis));
+      // Link do anúncio: ?regiao=Barra Olímpica já filtra; ?imovel=stillo-barra abre o imóvel.
+      const q = new URLSearchParams(location.search);
+      const regiao = bairros.find((b) => b.toLowerCase() === String(q.get("regiao") || "").toLowerCase());
+      if (regiao) $("#f-regiao").value = regiao;
       desenhar();
+      if (regiao || q.get("imovel")) $("#imoveis").scrollIntoView();
+      if (q.get("imovel")) verDetalhe(q.get("imovel"));
     });
 })();
