@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Apartamentos na planta e prontos no Rio | Kayser</title>
+  <meta name="description" content="Apartamentos na planta, em obras e prontos para morar no Rio de Janeiro e Baixada. Veja preços, plantas e condições e fale com um especialista no WhatsApp." />
+  <meta name="theme-color" content="#0b0a08" />
+  <meta property="og:title" content="Apartamentos no Rio | Kayser" />
+  <meta property="og:description" content="Lançamentos, obras e prontos para morar. Condições direto no WhatsApp." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="estilo.css" />
+  <script src="config.js"></script>
+</head>
+<body>
+  <div class="faixa-bf" role="note">
+    <div class="faixa-trilho">
+      <span><b>BLACK FRIDAY KAYSER</b> condições especiais por tempo limitado</span>
+      <span>entrada facilitada e parcelas que cabem no bolso</span>
+      <span><b>BLACK FRIDAY KAYSER</b> as melhores unidades saem primeiro</span>
+      <span>simulação grátis em minutos pelo WhatsApp</span>
+      <span aria-hidden="true"><b>BLACK FRIDAY KAYSER</b> condições especiais por tempo limitado</span>
+      <span aria-hidden="true">entrada facilitada e parcelas que cabem no bolso</span>
+      <span aria-hidden="true"><b>BLACK FRIDAY KAYSER</b> as melhores unidades saem primeiro</span>
+      <span aria-hidden="true">simulação grátis em minutos pelo WhatsApp</span>
+    </div>
+  </div>
+  <header class="topo">
+    <a class="marca" href="/" aria-label="Kayser — início"><span class="marca-k">K</span>Kayser <em>imóveis</em></a>
+    <nav>
+      <a href="#imoveis">Imóveis</a>
+      <button class="btn-zap pequeno" data-zap="">WhatsApp</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-texto">
+        <p class="hero-bf"><span>Black Friday</span> está valendo</p>
+        <h1>Pare de pagar aluguel. Comece a pagar o que é seu.</h1>
+        <p>Apartamentos na planta, em obras e prontos para morar na Barra, Recreio, Centro e Baixada — com <strong>condições de Black Friday</strong> que não voltam depois. Descubra em minutos quanto fica a sua entrada.</p>
+        <div class="hero-acoes">
+          <button class="btn-ouro" data-form="">Quero minha condição de Black Friday</button>
+          <a class="btn-linha" href="#imoveis">Ver os imóveis</a>
+        </div>
+        <ul class="hero-fatos">
+          <li><strong id="qtd-imoveis">13</strong> empreendimentos</li>
+          <li>a partir de <strong id="menor-preco">R$ 298 mil</strong></li>
+          <li>atendimento <strong>todos os dias</strong></li>
+        </ul>
+      </div>
+      <div class="hero-pilha" id="pilha" aria-hidden="true"></div>
+    </section>
+
+    <section id="imoveis" class="vitrine">
+      <div class="vitrine-cabeca">
+        <div>
+          <h2>Escolha o seu antes que alguém escolha</h2>
+          <p class="sub">Unidades com condição de Black Friday são limitadas. Toque no imóvel e receba valores no WhatsApp.</p>
+        </div>
+        <div class="filtros" role="group" aria-label="Filtrar imóveis">
+          <select id="f-regiao" aria-label="Região"><option value="">Todas as regiões</option></select>
+          <select id="f-status" aria-label="Fase da obra">
+            <option value="">Qualquer fase</option>
+            <option>Lançamento</option>
+            <option>Em obras</option>
+            <option>Pronto para morar</option>
+          </select>
+          <select id="f-preco" aria-label="Preço até">
+            <option value="">Qualquer preço</option>
+            <option value="350000">até R$ 350 mil</option>
+            <option value="450000">até R$ 450 mil</option>
+            <option value="550000">até R$ 550 mil</option>
+          </select>
+        </div>
+      </div>
+      <div id="grade" class="grade"></div>
+      <p id="vazio" class="vazio" hidden>Nenhum imóvel com esses filtros. <button class="link" id="limpar">Limpar filtros</button></p>
+    </section>
+
+    <section class="passos">
+      <h2>Da conversa à chave, em 3 passos</h2>
+      <ol>
+        <li><strong>Você escolhe</strong> o imóvel e conta sua renda e se é para morar ou investir.</li>
+        <li><strong>Recebe no WhatsApp</strong> valores, plantas, fotos e a simulação da entrada.</li>
+        <li><strong>Visita o stand</strong> com um especialista no dia e horário que preferir.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <p>Kayser imóveis · Rio de Janeiro <span id="creci"></span></p>
+    <p>Imagens meramente ilustrativas. Valores e condições sujeitos a alteração e à disponibilidade de unidades.</p>
+    <p><a href="privacidade">Política de Privacidade</a></p>
+  </footer>
+
+  <button class="zap-flutuante" data-zap="" aria-label="Falar no WhatsApp">
+    <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M16 3a13 13 0 0 0-11.2 19.6L3 29l6.6-1.7A13 13 0 1 0 16 3zm0 23.6c-2 0-3.9-.5-5.6-1.5l-.4-.2-3.9 1 1-3.8-.3-.4A10.6 10.6 0 1 1 16 26.6zm5.8-7.9c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1a8.7 8.7 0 0 1-4.3-3.8c-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4a3.3 3.3 0 0 0-1 2.4c0 1.4 1 2.8 1.2 3 .1.2 2 3.1 4.9 4.3 1.8.8 2.5.8 3.4.7.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4l-.6-.3z"/></svg>
+  </button>
+
+  <!-- Detalhe do imóvel -->
+  <dialog id="detalhe" class="janela janela-larga" aria-labelledby="d-nome">
+    <button class="fechar" data-fechar aria-label="Fechar">×</button>
+    <div id="d-conteudo"></div>
+  </dialog>
+
+  <!-- Formulário (mesmas etapas do formulário do Facebook) -->
+  <dialog id="form" class="janela" aria-labelledby="f-titulo">
+    <button class="fechar" data-fechar aria-label="Fechar">×</button>
+    <form id="f" novalidate>
+      <div class="f-topo">
+        <p class="f-imovel" id="f-imovel"></p>
+        <h3 id="f-titulo">Sua condição de Black Friday</h3>
+        <div class="f-barra"><span id="f-progresso"></span></div>
+      </div>
+
+      <fieldset class="etapa" data-etapa="1">
+        <legend>Renda bruta familiar</legend>
+        <label class="opcao"><input type="radio" name="renda" value="Até R$ 5 mil" /> <span>Até R$ 5 mil</span></label>
+        <label class="opcao"><input type="radio" name="renda" value="R$ 5 mil a R$ 10 mil" /> <span>R$ 5 mil a R$ 10 mil</span></label>
+        <label class="opcao"><input type="radio" name="renda" value="R$ 10 mil a R$ 30 mil" /> <span>R$ 10 mil a R$ 30 mil</span></label>
+        <label class="opcao"><input type="radio" name="renda" value="Acima de R$ 30 mil" /> <span>Acima de R$ 30 mil</span></label>
+      </fieldset>
+
+      <fieldset class="etapa" data-etapa="2" hidden>
+        <legend>Para morar ou investir?</legend>
+        <label class="opcao"><input type="radio" name="objetivo" value="Morar" /> <span>Morar</span></label>
+        <label class="opcao"><input type="radio" name="objetivo" value="Investimento" /> <span>Investimento</span></label>
+      </fieldset>
+
+      <fieldset class="etapa" data-etapa="3" hidden>
+        <legend>Informações de contato</legend>
+        <label class="campo">Nome completo <input name="nome" autocomplete="name" required /></label>
+        <label class="campo">Telefone com DDD <input name="telefone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(21) 99999-9999" required /></label>
+        <label class="campo">E-mail <input name="email" type="email" autocomplete="email" /></label>
+        <input class="isca" name="site" tabindex="-1" autocomplete="off" aria-hidden="true" />
+        <p class="miudo">Um especialista da Kayser pode entrar em contato com você por WhatsApp e e-mail para acompanhamento.</p>
+      </fieldset>
+
+      <fieldset class="etapa" data-etapa="4" hidden>
+        <legend>Política de Privacidade</legend>
+        <p class="miudo">Ao clicar em Enviar, você concorda em enviar suas informações para a Kayser, que vai usá-las conforme a <a href="privacidade" target="_blank">Política de Privacidade</a> (LGPD), só para falar com você sobre imóveis.</p>
+        <label class="opcao check"><input type="checkbox" name="zap" checked /> <span>Abrir o WhatsApp da Kayser depois de enviar</span></label>
+      </fieldset>
+
+      <div class="etapa pronto" data-etapa="5" hidden>
+        <div class="selo-ok">✓</div>
+        <h4>Pronto.</h4>
+        <p>Recebemos suas respostas. Em instantes você recebe as condições no WhatsApp.</p>
+        <button type="button" class="btn-zap" id="f-zap">Conversar no WhatsApp</button>
+      </div>
+
+      <p class="erro" id="f-erro" role="alert"></p>
+      <div class="f-acoes" id="f-acoes">
+        <button type="button" class="btn-linha" id="f-voltar">Voltar</button>
+        <button type="button" class="btn-ouro" id="f-continuar">Continuar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

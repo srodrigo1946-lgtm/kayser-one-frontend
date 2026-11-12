@@ -1,0 +1,257 @@
+[
+ {
+  "id": "ilha-stay-home-resort",
+  "nome": "Ilha stay home Resort",
+  "status": "Lançamento",
+  "bairro": "Barra Olímpica",
+  "cidade": "Rio de Janeiro",
+  "preco": 308000,
+  "areaMin": 28,
+  "areaMax": 70,
+  "quartos": null,
+  "vagas": null,
+  "entrega": "2030-12",
+  "descricao": "Ilha Stay Home Resort: para morar, se hospedar e investir.\nLazer completo de resort, rooftop com vista 360° para lagoa e montanha, e um mall integrado na porta de casa. As opções de plantas incluem sala e quarto de 28m², double suítes de 47m², gardens de 40 a 48m² e gardens double suítes de 70m².\nLocalizado no melhor ponto da Barra Olímpica, a apenas 10 minutos da praia, em frente ao Parque Ilha Pura e próximo ao Shopping Metropolitano, Parque Olímpico e ao comércio da região. Fácil acesso com ciclovias, BRTs, ônibus, metrô e vias expressas.",
+  "comodidades": [],
+  "fotos": [
+   "fotos/ilha-stay-home-resort-1.jpg"
+  ]
+ },
+ {
+  "id": "apogeu",
+  "nome": "Apogeu",
+  "status": "Pronto para morar",
+  "bairro": "Jacarepaguá",
+  "cidade": "Rio de Janeiro",
+  "preco": 350000,
+  "areaMin": 41,
+  "areaMax": 41,
+  "quartos": 2,
+  "vagas": null,
+  "entrega": null,
+  "descricao": "",
+  "comodidades": [],
+  "fotos": [
+   "fotos/apogeu-1.jpg"
+  ]
+ },
+ {
+  "id": "renascenca",
+  "nome": "Renascença",
+  "status": "Lançamento",
+  "bairro": "Andaraí",
+  "cidade": "Rio de Janeiro",
+  "preco": null,
+  "areaMin": null,
+  "areaMax": null,
+  "quartos": null,
+  "vagas": null,
+  "entrega": "2029-12",
+  "descricao": "",
+  "comodidades": [],
+  "fotos": [
+   "fotos/renascenca-1.jpg"
+  ]
+ },
+ {
+  "id": "oceanside",
+  "nome": "Oceanside",
+  "status": "Em obras",
+  "bairro": "Recreio dos Bandeirantes",
+  "cidade": "Rio de Janeiro",
+  "preco": 440000,
+  "areaMin": 50,
+  "areaMax": null,
+  "quartos": null,
+  "vagas": null,
+  "entrega": "2027-04",
+  "descricao": "",
+  "comodidades": [],
+  "fotos": [
+   "fotos/oceanside-1.jpg"
+  ]
+ },
+ {
+  "id": "sky-mario-guimaraes",
+  "nome": "Sky Mário Guimarães",
+  "status": "Lançamento",
+  "bairro": "Centro",
+  "cidade": "Nova Iguaçu",
+  "preco": 485531,
+  "areaMin": 54,
+  "areaMax": 54.58,
+  "quartos": 2,
+  "vagas": 1,
+  "entrega": "2029-07",
+  "descricao": "O Sky Mário Guimarães é a união perfeita entre elegância, conforto e localização privilegiada. Um refúgio urbano que transforma o dia a dia em experiências únicas, pensado para quem valoriza qualidade de vida e bem-estar em cada detalhe.\nCom apartamentos de 2 e 3 quartos com suíte, varanda gourmet e uma área de lazer prime, o empreendimento oferece um novo padrão de moradia em Nova Iguaçu — na principal avenida da cidade, onde tudo acontece.\nAqui, viver é estar cercado de facilidades, mobilidade, segurança e sofisticação. Um projeto moderno, completo e pronto para acolher seus melhores momentos. Seja para morar ou investir, o Sky é o seu lugar no alto.",
+  "comodidades": [],
+  "fotos": [
+   "fotos/sky-mario-guimaraes-1.jpg"
+  ]
+ },
+ {
+  "id": "villa-sante",
+  "nome": "Villa Santé",
+  "status": "Em obras",
+  "bairro": "Pechincha",
+  "cidade": "Rio de Janeiro",
+  "preco": 350000,
+  "areaMin": 50,
+  "areaMax": 50.06,
+  "quartos": 2,
+  "vagas": null,
+  "entrega": "2027-12",
+  "descricao": "Seja bem-vindo ao seu novo lar.\nComo um vinhedo em meio ao cenário urbano o Villa Santé é um chamado para experimentar o novo. Seu lar, seu espaço para desenvolver seus hábitos, no lugar que você queria.\nO melhor do Pechincha para você! Próximo de onde você quiser, com muito comércio e conveniência ao redor, um empreendimento com DNA a incorporadora, em um ponto ideal na Rua Samueal das Neves.\nAqui tudo será uma celebração, desde aproveitar oconforto do seu apartamento a viver momentos únicos nos espaços de lazer,que foram pensados para completar o seu estilo de vida.\nO seu novo ponto de partida chegou: vamos fazer um brinde a sua felicidade, à sua nova vida!o redor.",
+  "comodidades": [],
+  "fotos": [
+   "fotos/villa-sante-1.jpg"
+  ]
+ },
+ {
+  "id": "origem-porto-imperial",
+  "nome": "Origem Porto Imperial",
+  "status": "Em obras",
+  "bairro": "São Cristóvão",
+  "cidade": "Rio de Janeiro",
+  "preco": 563750,
+  "areaMin": 52,
+  "areaMax": 52.89,
+  "quartos": 2,
+  "vagas": 1,
+  "entrega": "2027-12",
+  "descricao": "São Cristóvão vai ficar ainda melhor!\nORIGINADOS NA TRADIÇÃO, EVOLUINDO COM A MODERNIDADE!\nSomos São Cristóvão, o berço da tradição carioca, a essência do Rio de Janeiro em constante evolução. Somos a vanguarda da transformação urbana, preservamos nossa rica cultura enquanto abraçamos o futuro. Somos o coração do Porto Maravilha: aqui o antigo e o novo se unem, celebrando a vida em cada esquina.\nSeu novo lar espera por você, onde passado e amanhã se entrelaçam.",
+  "comodidades": [],
+  "fotos": [
+   "fotos/origem-porto-imperial-1.jpg"
+  ]
+ },
+ {
+  "id": "beon-porto",
+  "nome": "Beon Porto",
+  "status": "Em obras",
+  "bairro": "São Cristóvão",
+  "cidade": "Rio de Janeiro",
+  "preco": 298434,
+  "areaMin": 31,
+  "areaMax": 32,
+  "quartos": 1,
+  "vagas": null,
+  "entrega": "2027-02",
+  "descricao": "Em um bairro que une história e modernidade, a a incorporadora escolheu um dos melhores pontos do Rio de Janeiro. \nNo Porto Maravilha, você se reconecta com a história da cidade, vive a cultura do país inteiro, aproveita espaços de lazer únicos e acompanha de perto todo o desenvolvimento dessa região em constante transformação. \nMais do que um endereço estratégico, estar no Porto Maravilha significa começar um novo futuro sem perder as raízes que fazem desse lugar um dos mais autênticos do Rio. \nCom localização privilegiada, você terá fácil acesso à Avenida Brasil, Linha Vermelha e às principais vias da cidade. Um bairro vibrante, que evolui a cada dia e se prepara para ser um dos grandes centros do Rio de Janeiro. \nPrepare-se para viver o melhor do tradicional e do moderno em um só lugar.",
+  "comodidades": [],
+  "fotos": [
+   "fotos/beon-porto-1.jpg",
+   "fotos/beon-porto-2.jpg",
+   "fotos/beon-porto-3.jpg",
+   "fotos/beon-porto-4.jpg",
+   "fotos/beon-porto-5.jpg"
+  ]
+ },
+ {
+  "id": "vibe-sunset",
+  "nome": "Vibe Sunset",
+  "status": "Pronto para morar",
+  "bairro": "Recreio dos Bandeirantes",
+  "cidade": "Rio de Janeiro",
+  "preco": 521000,
+  "areaMin": 56,
+  "areaMax": 56.89,
+  "quartos": 3,
+  "vagas": 2,
+  "entrega": "2026-05",
+  "descricao": "",
+  "comodidades": [],
+  "fotos": [
+   "fotos/vibe-sunset-1.jpg"
+  ]
+ },
+ {
+  "id": "ilhamar",
+  "nome": "Ilhamar",
+  "status": "Lançamento",
+  "bairro": "Barra Olímpica",
+  "cidade": "Rio de Janeiro",
+  "preco": 509800,
+  "areaMin": 55,
+  "areaMax": 55.16,
+  "quartos": 2,
+  "vagas": 1,
+  "entrega": "2029-07",
+  "descricao": "Morar em um apartamento na Barra Olímpica, RJ, é aproveitar uma localização privilegiada, a poucos minutos da praia e ao lado do Parque Ilha Pura. A região foi planejada para ampliar a sua experiência de vida, com infraestrutura completa, segurança, natureza integrada e conexão rápida com toda a cidade.\nPara quem deseja comprar um apartamento de 2 e 3 quartos na Barra Olímpica, o empreendimento oferece uma combinação que eleva o dia a dia, com suíte, varanda gourmet e plantas inteligentes. \nO projeto arquitetônico, assinado pela Feu Arquitetura, inclui lazer completo na Barra Olímpica, com atmosfera praiana, espaços modernos e áreas que valorizam o bem-estar. A fachada reforça a proposta contemporânea e sofisticada de um endereço pensado para proporcionar qualidade de vida.",
+  "comodidades": [],
+  "fotos": [
+   "fotos/ilhamar-1.jpg",
+   "fotos/ilhamar-2.jpg",
+   "fotos/ilhamar-3.jpg",
+   "fotos/ilhamar-4.jpg"
+  ]
+ },
+ {
+  "id": "marine-barra",
+  "nome": "Marine Barra",
+  "status": "Em obras",
+  "bairro": "Barra Olímpica",
+  "cidade": "Rio de Janeiro",
+  "preco": 531600,
+  "areaMin": 51,
+  "areaMax": 51.81,
+  "quartos": 2,
+  "vagas": 1,
+  "entrega": "2027-06",
+  "descricao": "O empreendimento é um oásis residencial — um lugar onde o cotidiano se transforma em leveza e cada detalhe proporciona bem-estar absoluto. \nCom apartamentos de 2 e 3 quartos, varanda gourmet e uma estrutura completa de lazer, este lançamento é a sua chance de viver (ou investir) no endereço mais promissor da Zona Oeste do Rio.",
+  "comodidades": [],
+  "fotos": [
+   "fotos/marine-barra-1.jpg"
+  ]
+ },
+ {
+  "id": "duet-barra",
+  "nome": "Duet Barra",
+  "status": "Pronto para morar",
+  "bairro": "Barra Olímpica",
+  "cidade": "Rio de Janeiro",
+  "preco": 454900,
+  "areaMin": 52,
+  "areaMax": 60.01,
+  "quartos": 3,
+  "vagas": 1,
+  "entrega": "2025-12",
+  "descricao": "Lazer Completo\nEstacionamento para Bicicletas\nEspaço Gourmet\nLocalização Privilegiada\nVaranda\nSuíte\nCondomínio Fechado\nSegurança 24 HRS\nQualidade de Vida\nEspaço Fitness\nEspaço Verde e Contato com a Natureza",
+  "comodidades": [],
+  "fotos": [
+   "fotos/duet-barra-1.jpg"
+  ]
+ },
+ {
+  "id": "stillo-barra",
+  "nome": "Stillo Barra",
+  "status": "Pronto para morar",
+  "bairro": "Barra Olímpica",
+  "cidade": "Rio de Janeiro",
+  "preco": 507900,
+  "areaMin": 50,
+  "areaMax": 65.16,
+  "quartos": 3,
+  "vagas": 1,
+  "entrega": "2025-08",
+  "descricao": "Nenhuma pessoa é igual a outra, todas tem característica próprias, o que diferencia mesmo é o estilo com que cada um leva a vida. E a compra do imóvel é um momento decisivo.\nPor isso, o Stillo Barra foi pensado para quem deseja mais. Em uma das regiões mais desejadas da cidade, você vai ter muito conforto e lazer dentro e fora de casa. Há 10 minutos da praia, das conveniências e do que a Barra oferece de bom. Tudo com muita modernidade e sofisticação. Do jeito que você sempre quis.",
+  "comodidades": [
+   "Salão de Festas",
+   "Brinquedoteca",
+   "Piscina com raia de 20m e deck molhado",
+   "Solarium",
+   "Sauna",
+   "Playground",
+   "Fitness interno e externo",
+   "Central de Delivery",
+   "Churrasqueiras",
+   "Pomar e horta",
+   "Pet place com wetpet",
+   "Salão de Jogos",
+   "Piscina infantil com cascata icon diferenciais"
+  ],
+  "fotos": [
+   "fotos/stillo-barra-1.jpg"
+  ]
+ }
+]
