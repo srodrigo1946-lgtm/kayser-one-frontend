@@ -15,7 +15,9 @@
   "comodidades": [],
   "fotos": [
    "fotos/ilha-stay-home-resort-1.jpg"
-  ]
+  ],
+  "stand": "Avenida Carlos Lima – Barra Olímpica, Rio de Janeiro – RJ",
+  "book": "books/ilha-stay-home-resort.pdf"
  },
  {
   "id": "apogeu",
@@ -33,7 +35,9 @@
   "comodidades": [],
   "fotos": [
    "fotos/apogeu-1.jpg"
-  ]
+  ],
+  "stand": null,
+  "book": "books/apogeu.pdf"
  },
  {
   "id": "renascenca",
@@ -51,7 +55,9 @@
   "comodidades": [],
   "fotos": [
    "fotos/renascenca-1.jpg"
-  ]
+  ],
+  "stand": "Rua Barão de São Francisco, 177 – Andaraí, Rio de Janeiro – RJ",
+  "book": null
  },
  {
   "id": "oceanside",
@@ -69,7 +75,9 @@
   "comodidades": [],
   "fotos": [
    "fotos/oceanside-1.jpg"
-  ]
+  ],
+  "stand": "Av. das Américas, 18500 – Recreio dos Bandeirantes, Rio de Janeiro – RJ",
+  "book": "books/oceanside.pdf"
  },
  {
   "id": "sky-mario-guimaraes",
@@ -87,7 +95,9 @@
   "comodidades": [],
   "fotos": [
    "fotos/sky-mario-guimaraes-1.jpg"
-  ]
+  ],
+  "stand": "Av. Mário Guimarães, 517 – Centro, Nova Iguaçu – RJ",
+  "book": null
  },
  {
   "id": "villa-sante",
@@ -105,7 +115,9 @@
   "comodidades": [],
   "fotos": [
    "fotos/villa-sante-1.jpg"
-  ]
+  ],
+  "stand": "R. Lopo Saraiva, 179, Loja A – Pechincha, Rio de Janeiro – RJ",
+  "book": null
  },
  {
   "id": "origem-porto-imperial",
@@ -123,7 +135,9 @@
   "comodidades": [],
   "fotos": [
    "fotos/origem-porto-imperial-1.jpg"
-  ]
+  ],
+  "stand": "R. São Cristóvão, 356 – São Cristóvão, Rio de Janeiro – RJ",
+  "book": "books/origem-porto-imperial.pdf"
  },
  {
   "id": "beon-porto",
@@ -145,7 +159,9 @@
    "fotos/beon-porto-3.jpg",
    "fotos/beon-porto-4.jpg",
    "fotos/beon-porto-5.jpg"
-  ]
+  ],
+  "stand": "R. São Cristóvão, 356 – São Cristóvão, Rio de Janeiro – RJ",
+  "book": "books/beon-porto.pdf"
  },
  {
   "id": "vibe-sunset",
@@ -163,7 +179,9 @@
   "comodidades": [],
   "fotos": [
    "fotos/vibe-sunset-1.jpg"
-  ]
+  ],
+  "stand": "Av. Salvador Allende, 5500 – Recreio dos Bandeirantes, Rio de Janeiro – RJ",
+  "book": null
  },
  {
   "id": "ilhamar",
@@ -184,7 +202,9 @@
    "fotos/ilhamar-2.jpg",
    "fotos/ilhamar-3.jpg",
    "fotos/ilhamar-4.jpg"
-  ]
+  ],
+  "stand": "Avenida Carlos Lima – Barra Olímpica, Rio de Janeiro – RJ",
+  "book": null
  },
  {
   "id": "marine-barra",
@@ -202,7 +222,9 @@
   "comodidades": [],
   "fotos": [
    "fotos/marine-barra-1.jpg"
-  ]
+  ],
+  "stand": "Avenida Carlos Lima – Barra Olímpica, Rio de Janeiro – RJ",
+  "book": "books/marine-barra.pdf"
  },
  {
   "id": "duet-barra",
@@ -220,7 +242,9 @@
   "comodidades": [],
   "fotos": [
    "fotos/duet-barra-1.jpg"
-  ]
+  ],
+  "stand": "Avenida Carlos Lima – Barra Olímpica, Rio de Janeiro – RJ",
+  "book": null
  },
  {
   "id": "stillo-barra",
@@ -252,6 +276,8 @@
   ],
   "fotos": [
    "fotos/stillo-barra-1.jpg"
-  ]
+  ],
+  "stand": "Avenida Carlos Lima – Barra Olímpica, Rio de Janeiro – RJ",
+  "book": "books/stillo-barra.pdf"
  }
 ]

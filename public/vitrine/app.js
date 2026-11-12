@@ -75,7 +75,10 @@
           <button class="btn-ouro" data-form="${esc(p.nome)}">Ver condição Black Friday</button>
           <button class="btn-zap" data-zap="${esc(p.nome)}" aria-label="WhatsApp sobre o ${esc(p.nome)}">WhatsApp</button>
         </div>
-        <button class="ver-mais" data-ver="${esc(p.id)}">Ver detalhes</button>
+        <div class="cartao-rodape">
+          <button class="ver-mais" data-ver="${esc(p.id)}">Ver detalhes</button>
+          ${p.book ? `<button class="ver-mais book" data-book="${esc(p.id)}">📘 Receber o book</button>` : ""}
+        </div>
       </div>
     </article>`;
 
@@ -152,8 +155,10 @@
         <ul class="ficha">${ficha(p)}</ul>
         ${p.descricao ? `<p class="d-texto">${esc(p.descricao)}</p>` : ""}
         ${p.comodidades.length ? `<ul class="d-comod">${p.comodidades.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>` : ""}
+        ${p.stand ? `<p class="d-stand">📍 <strong>Stand de vendas:</strong> ${esc(p.stand)}</p>` : ""}
         <div class="d-acoes">
           <button class="btn-ouro" data-form="${esc(p.nome)}">Quero receber condições</button>
+          ${p.book ? `<button class="btn-linha" data-book="${esc(p.id)}">📘 Receber o book</button>` : ""}
           <button class="btn-zap" data-zap="${esc(p.nome)}">Falar no WhatsApp</button>
         </div>
       </div>`;
@@ -173,11 +178,15 @@
     $(".f-topo", form).hidden = n === 5;
     $("#f-erro").textContent = "";
   };
-  const abrirForm = (imovel) => {
+  let bookAtual = null; // book liberado depois de enviar
+  const abrirForm = (imovel, book) => {
     atual = imovel || null;
+    bookAtual = book || null;
     form.reset();
     $("#f-imovel").textContent = atual ? atual : "";
-    $("#f-titulo").textContent = atual ? "Sua condição de Black Friday" : "Encontre o imóvel ideal para você";
+    $("#f-titulo").textContent = book ? "Receba o book completo" : atual ? "Sua condição de Black Friday" : "Encontre o imóvel ideal para você";
+    $("#f-book").hidden = !book;
+    if (book) $("#f-book").href = book;
     mostrarEtapa(1);
     if ($("#detalhe").open) $("#detalhe").close();
     $("#form").showModal();
@@ -214,7 +223,9 @@
       if (!r.ok || !j.ok) throw new Error(j.erro || "Não conseguimos enviar agora. Tente pelo WhatsApp.");
       conversao(C.conversaoFormulario);
       mostrarEtapa(5);
-      if (d.zap) setTimeout(() => abrirZap(atual), 900);
+      // Pediu o book: o book é a recompensa (abre o PDF); o WhatsApp fica no botão.
+      if (bookAtual) window.open(bookAtual, "_blank", "noopener");
+      else if (d.zap) setTimeout(() => abrirZap(atual), 900);
     } catch (e) {
       $("#f-erro").textContent = e.message;
     } finally {
@@ -230,9 +241,12 @@
 
   /* Cliques */
   document.addEventListener("click", (e) => {
-    const t = e.target.closest("[data-form],[data-zap],[data-ver],[data-fechar],#limpar");
+    const t = e.target.closest("[data-form],[data-zap],[data-ver],[data-book],[data-fechar],#limpar");
     if (!t) return;
-    if (t.matches("[data-form]")) abrirForm(t.dataset.form);
+    if (t.matches("[data-book]")) {
+      const p = imoveis.find((x) => x.id === t.dataset.book);
+      if (p) abrirForm(p.nome, p.book);
+    } else if (t.matches("[data-form]")) abrirForm(t.dataset.form);
     else if (t.matches("[data-zap]")) abrirZap(t.dataset.zap);
     else if (t.matches("[data-ver]")) verDetalhe(t.dataset.ver);
     else if (t.matches("[data-fechar]")) t.closest("dialog").close();

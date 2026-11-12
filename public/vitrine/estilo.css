@@ -165,6 +165,10 @@ button { font: inherit; cursor: pointer; }
 .cartao-acoes .btn-zap { padding: 12px 16px; font-size: 15px; }
 .ver-mais { background: none; border: 0; color: var(--cinza); font-size: 14px; font-weight: 600; padding: 12px 0 0; text-decoration: underline; text-underline-offset: 3px; }
 .ver-mais:hover { color: var(--marfim); }
+.cartao-rodape { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.ver-mais.book { color: var(--ouro-claro); }
+.d-stand { color: #d6ccb9; font-size: 14px; margin: 0 0 18px; }
+.pronto .btn-ouro, .pronto .btn-zap { display: flex; width: 100%; }
 .vazio { color: var(--cinza); text-align: center; padding: 40px 0; }
 
 /* Passos */
