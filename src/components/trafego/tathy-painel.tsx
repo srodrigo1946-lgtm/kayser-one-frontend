@@ -108,6 +108,33 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
     }
   };
 
+  // Relatório de segunda (PDF + planilha): enviar agora por e-mail ou baixar.
+  const enviarRelatorio = async () => {
+    setMsg("Montando a apresentação e a planilha e enviando por e-mail...");
+    try {
+      const { data: r } = await api.post(`/investimento/tathy/relatorio/enviar`);
+      setMsg(r.ok ? `✅ Relatório enviado para ${r.para}.` : `Não enviou: ${r.erro}`);
+    } catch (err) {
+      setMsg(getApiErrorMessage(err, "Não consegui enviar o relatório."));
+    }
+  };
+  const baixar = async (tipo: "pdf" | "xlsx") => {
+    setMsg(tipo === "pdf" ? "Gerando a apresentação..." : "Gerando a planilha...");
+    try {
+      const r = await api.get(`/investimento/tathy/relatorio/arquivo`, { params: { tipo }, responseType: "blob" });
+      const nome = /filename="([^"]+)"/.exec(String(r.headers["content-disposition"] ?? ""))?.[1] ?? `relatorio-tathy.${tipo}`;
+      const url = URL.createObjectURL(r.data as Blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = nome;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      setMsg(`✅ ${nome} baixado.`);
+    } catch (err) {
+      setMsg(getApiErrorMessage(err, "Não consegui gerar o arquivo."));
+    }
+  };
+
   const card = { background: "var(--card)", borderColor: "var(--border)" };
   const hora = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
 
@@ -124,6 +151,9 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
           </div>
         </div>
         <button onClick={puxar} className="text-xs px-3 py-1.5 rounded-lg border" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>Puxar anúncios do Meta agora</button>
+        <button onClick={() => baixar("pdf")} className="text-xs px-3 py-1.5 rounded-lg border" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>Baixar apresentação</button>
+        <button onClick={() => baixar("xlsx")} className="text-xs px-3 py-1.5 rounded-lg border" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>Baixar planilha</button>
+        <button onClick={enviarRelatorio} className="text-xs px-3 py-1.5 rounded-lg font-semibold" style={{ background: "#facc15", color: "#0a0a0a" }}>Enviar relatório agora</button>
       </div>
       {msg && <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>{msg}</div>}
       {isLoading && <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>A Tathy está lendo os números...</div>}
