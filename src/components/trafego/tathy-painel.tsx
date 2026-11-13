@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, getApiErrorMessage } from "@/lib/api";
+import { useUsers } from "@/hooks/use-users";
+import { useDistribuirLead } from "@/hooks/use-lead-queue";
 
 /**
  * Tathy — gestora de tráfego (Rodrigo 13/11). Fica DENTRO da aba Custo por Lead, em tempo real
@@ -42,10 +44,50 @@ const SCRIPT_GOOGLE = `function main() {
     encodeURIComponent(TOKEN), { method: 'post', contentType: 'application/json', payload: JSON.stringify({ linhas: linhas }) });
 }`;
 
+/** Gaveta: seção que abre e fecha (Rodrigo 13/11). */
+function Gaveta({ titulo, aberta, destaque, children }: { titulo: string; aberta?: boolean; destaque?: boolean; children: ReactNode }) {
+  return (
+    <details open={aberta} className="rounded-xl border group" style={{ borderColor: destaque ? "#f59e0b" : "var(--border)" }}>
+      <summary className="cursor-pointer select-none px-4 py-3 font-medium text-sm flex items-center gap-2" style={{ color: "var(--foreground)" }}>
+        <span className="transition-transform group-open:rotate-90">▸</span>
+        {titulo}
+      </summary>
+      <div className="px-4 pb-4">{children}</div>
+    </details>
+  );
+}
+
 export function TathyPainel({ year, month }: { year: number; month: number }) {
   const qc = useQueryClient();
-  const [aba, setAba] = useState<"funil" | "parados" | "anuncios" | "perdas">("funil");
   const [canalFunil, setCanalFunil] = useState<Canal>("meta");
+  const [canalAnuncio, setCanalAnuncio] = useState<Canal>("meta");
+  const [acaoMsg, setAcaoMsg] = useState<Record<string, string>>({});
+  const { data: users = [] } = useUsers();
+  const distribuir = useDistribuirLead();
+  const corretores = (users as any[])
+    .filter((u) => u.role === "corretor" && !u.empresaId && u.active !== false)
+    .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  const avisa = (id: string, t: string) => setAcaoMsg((m) => ({ ...m, [id]: t }));
+  const distribuirFila = async (p: any) => {
+    avisa(p.id, "Mandando para a fila do plantão...");
+    try {
+      const r: any = await distribuir.mutateAsync(p.id);
+      avisa(p.id, r.status === "distribuido" ? "✅ Distribuído para o corretor de plantão." : r.status === "aguardando" ? "⏳ Na fila: vai para o próximo corretor que fizer check-in." : `Fila: ${r.status}`);
+      qc.invalidateQueries({ queryKey: ["tathy"] });
+    } catch (err) {
+      avisa(p.id, getApiErrorMessage(err, "Não consegui distribuir."));
+    }
+  };
+  const passarPara = async (p: any, userId: string) => {
+    const nome = corretores.find((u: any) => u.id === userId)?.name ?? "corretor";
+    try {
+      await api.put(`/leads/${p.id}`, { responsavelId: userId });
+      avisa(p.id, `✅ Passado para ${nome}.`);
+      qc.invalidateQueries({ queryKey: ["tathy"] });
+    } catch (err) {
+      avisa(p.id, getApiErrorMessage(err, "Não consegui passar o lead."));
+    }
+  };
   const [msg, setMsg] = useState("");
   const [verScript, setVerScript] = useState(false);
   const { data, isLoading, dataUpdatedAt, error } = useQuery({
@@ -99,6 +141,14 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
             ))}
           </div>
 
+          {/* Investimento total = Meta + Google Ads */}
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+            <span className="text-sm" style={{ color: "var(--muted-foreground)" }}>Investimento total no mês</span>
+            <span className="text-2xl font-bold tabular-nums" style={{ color: "var(--foreground)" }}>{brl(data.canais.meta.gasto + data.canais.google.gasto)}</span>
+            <span className="text-sm tabular-nums" style={{ color: COR.meta }}>Meta {brl(data.canais.meta.gasto)}</span>
+            <span className="text-sm tabular-nums" style={{ color: COR.google }}>Google Ads {brl(data.canais.google.gasto)}</span>
+          </div>
+
           {/* Google Ads x Meta */}
           <div className="grid gap-3 md:grid-cols-2">
             {(["meta", "google"] as Canal[]).map((c) => {
@@ -110,7 +160,7 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
                 ["Vendas", `${k.vendas}${k.vgv ? ` · ${brl(k.vgv)}` : ""}`],
                 ["Custo por venda", brl(k.custoVenda)],
                 ["Sem interesse no mês", String(k.semInteresse)],
-                ["Hoje", `${brl(k.gastoHoje)} · ${k.leadsHoje} lead(s)`],
+                ...(data.mesAtual ? [["Hoje", `${brl(k.gastoHoje)} · ${k.leadsHoje} lead(s)`]] : []),
               ];
               return (
                 <div key={c} className="rounded-xl border p-4" style={{ borderColor: `${COR[c]}66`, background: `${COR[c]}0d` }}>
@@ -128,19 +178,35 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
             })}
           </div>
 
-          {/* Abas de detalhe */}
-          <div className="flex gap-2 flex-wrap">
-            {([
-              ["funil", "Funil e tempo parado"],
-              ["parados", `Mais parados (${data.parados.length})`],
-              ["anuncios", "Anúncios Meta x Google"],
-              ["perdas", `Sem interesse (${data.semInteresse.length})`],
-            ] as const).map(([k, t]) => (
-              <button key={k} onClick={() => setAba(k)} className="text-sm px-3 py-1.5 rounded-lg border" style={{ borderColor: aba === k ? "#facc15" : "var(--border)", background: aba === k ? "#facc1522" : "transparent", color: "var(--foreground)" }}>{t}</button>
-            ))}
-          </div>
+          {/* Gavetas (abrem e fecham) */}
+          <Gaveta titulo={`Leads para distribuir — parados com gerente/Diretor ou sem dono (${data.paraDistribuir.length})`} aberta={data.paraDistribuir.length > 0} destaque={data.paraDistribuir.length > 0}>
+            <div className="space-y-1.5">
+              {data.paraDistribuir.map((p: any) => (
+                <div key={p.id} className="text-sm flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 rounded-lg" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>
+                  <span className="font-medium">{p.nome}</span>
+                  <span style={{ color: COR[p.canal as Canal] }}>{p.canal === "google" ? "Google" : "Meta"}</span>
+                  <span style={{ color: "var(--muted-foreground)" }}>{p.etapa} · parado há {dias(p.dias)}</span>
+                  <span style={{ color: "#f59e0b" }}>{p.responsavel ? `com ${p.responsavel} (${CARGO[p.cargo] ?? p.cargo})` : "sem dono"}</span>
+                  <span className="ml-auto flex items-center gap-2">
+                    <button onClick={() => distribuirFila(p)} className="text-xs px-2.5 py-1 rounded-lg font-semibold" style={{ background: "#facc15", color: "#0a0a0a" }}>Fila do plantão</button>
+                    <select
+                      value=""
+                      onChange={(e) => e.target.value && passarPara(p, e.target.value)}
+                      className="text-xs px-2 py-1 rounded-lg border outline-none"
+                      style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+                    >
+                      <option value="">Passar para...</option>
+                      {corretores.map((u: any) => <option key={u.id} value={u.id}>{u.name}</option>)}
+                    </select>
+                  </span>
+                  {acaoMsg[p.id] && <span className="w-full text-xs" style={{ color: "var(--muted-foreground)" }}>{acaoMsg[p.id]}</span>}
+                </div>
+              ))}
+              {!data.paraDistribuir.length && <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>Nenhum lead de anúncio parado com gerente. 👏</div>}
+            </div>
+          </Gaveta>
 
-          {aba === "funil" && (
+          <Gaveta titulo="Funil e tempo parado na esteira" aberta>{(
             <div className="space-y-2">
               <div className="flex gap-2">
                 {(["meta", "google"] as Canal[]).map((c) => (
@@ -174,9 +240,9 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
                 </table>
               </div>
             </div>
-          )}
+          )}</Gaveta>
 
-          {aba === "parados" && (
+          <Gaveta titulo={`Mais parados (${data.parados.length})`}>{(
             <div className="space-y-1.5">
               {data.parados.map((p: any) => (
                 <div key={p.id} className="text-sm flex flex-wrap gap-x-3 gap-y-0.5 px-3 py-2 rounded-lg" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>
@@ -189,18 +255,18 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
               ))}
               {!data.parados.length && <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>Nenhum lead de anúncio aberto.</div>}
             </div>
-          )}
+          )}</Gaveta>
 
-          {aba === "anuncios" && (
+          <Gaveta titulo="Anúncios — Meta x Google Ads (nota da Tathy)">{(
             <div className="space-y-2">
               <div className="flex gap-2">
                 {(["meta", "google"] as Canal[]).map((c) => (
-                  <button key={c} onClick={() => setCanalFunil(c)} className="text-xs px-3 py-1 rounded-full" style={{ background: canalFunil === c ? COR[c] : "var(--secondary)", color: canalFunil === c ? "#fff" : "var(--foreground)" }}>
+                  <button key={c} onClick={() => setCanalAnuncio(c)} className="text-xs px-3 py-1 rounded-full" style={{ background: canalAnuncio === c ? COR[c] : "var(--secondary)", color: canalAnuncio === c ? "#fff" : "var(--foreground)" }}>
                     {NOME[c]} ({data.anuncios.filter((a: any) => a.canal === c).length})
                   </button>
                 ))}
               </div>
-              {data.anuncios.filter((a: any) => a.canal === canalFunil).map((a: any) => {
+              {data.anuncios.filter((a: any) => a.canal === canalAnuncio).map((a: any) => {
                 const n = NOTA[a.nota] ?? NOTA.sem_veredito;
                 return (
                   <div key={a.canal + a.anuncio} className="rounded-lg border p-3 space-y-1" style={{ borderColor: "var(--border)" }}>
@@ -217,9 +283,9 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
                   </div>
                 );
               })}
-              {!data.anuncios.some((a: any) => a.canal === canalFunil) && (
+              {!data.anuncios.some((a: any) => a.canal === canalAnuncio) && (
                 <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-                  {canalFunil === "meta"
+                  {canalAnuncio === "meta"
                     ? 'Ainda sem números por anúncio do Meta. Clique em "Puxar anúncios do Meta agora".'
                     : "Ainda sem números do Google Ads. Conecte o script abaixo (uma vez só)."}
                 </div>
@@ -234,9 +300,9 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
                 </div>
               )}
             </div>
-          )}
+          )}</Gaveta>
 
-          {aba === "perdas" && (
+          <Gaveta titulo={`Sem interesse — motivos e quem marcou (${data.semInteresse.length})`}>{(
             <div className="space-y-3">
               {data.ranking.length > 0 && (
                 <div className="flex flex-wrap gap-2">
@@ -260,7 +326,7 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
               ))}
               {!data.semInteresse.length && <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>Nenhum lead de anúncio marcado como sem interesse neste mês.</div>}
             </div>
-          )}
+          )}</Gaveta>
         </>
       )}
     </div>
