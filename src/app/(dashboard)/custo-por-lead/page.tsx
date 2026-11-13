@@ -215,7 +215,7 @@ export default function CustoPorLeadPage() {
         {/* Entrada do investimento (Diretor) */}
         <div className="rounded-2xl border p-5" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
           <div className="flex items-start justify-between gap-3 flex-wrap mb-1">
-            <div className="font-semibold text-lg" style={{ color: "var(--foreground)" }}>Investimento em anúncio · {periodo}</div>
+            <div className="font-semibold text-lg" style={{ color: "var(--foreground)" }}>Investimento em anúncio Meta · {periodo}</div>
             {isDiretor && month && (
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>Meta: automático de hora em hora</span>

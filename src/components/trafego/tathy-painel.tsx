@@ -133,7 +133,7 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
             {([
               ["funil", "Funil e tempo parado"],
               ["parados", `Mais parados (${data.parados.length})`],
-              ["anuncios", `Anúncios (${data.anuncios.length})`],
+              ["anuncios", "Anúncios Meta x Google"],
               ["perdas", `Sem interesse (${data.semInteresse.length})`],
             ] as const).map(([k, t]) => (
               <button key={k} onClick={() => setAba(k)} className="text-sm px-3 py-1.5 rounded-lg border" style={{ borderColor: aba === k ? "#facc15" : "var(--border)", background: aba === k ? "#facc1522" : "transparent", color: "var(--foreground)" }}>{t}</button>
@@ -193,7 +193,14 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
 
           {aba === "anuncios" && (
             <div className="space-y-2">
-              {data.anuncios.map((a: any) => {
+              <div className="flex gap-2">
+                {(["meta", "google"] as Canal[]).map((c) => (
+                  <button key={c} onClick={() => setCanalFunil(c)} className="text-xs px-3 py-1 rounded-full" style={{ background: canalFunil === c ? COR[c] : "var(--secondary)", color: canalFunil === c ? "#fff" : "var(--foreground)" }}>
+                    {NOME[c]} ({data.anuncios.filter((a: any) => a.canal === c).length})
+                  </button>
+                ))}
+              </div>
+              {data.anuncios.filter((a: any) => a.canal === canalFunil).map((a: any) => {
                 const n = NOTA[a.nota] ?? NOTA.sem_veredito;
                 return (
                   <div key={a.canal + a.anuncio} className="rounded-lg border p-3 space-y-1" style={{ borderColor: "var(--border)" }}>
@@ -210,9 +217,11 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
                   </div>
                 );
               })}
-              {!data.anuncios.length && (
+              {!data.anuncios.some((a: any) => a.canal === canalFunil) && (
                 <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-                  Ainda sem números por anúncio. Meta: clique em "Puxar anúncios do Meta agora". Google: conecte o script abaixo.
+                  {canalFunil === "meta"
+                    ? 'Ainda sem números por anúncio do Meta. Clique em "Puxar anúncios do Meta agora".'
+                    : "Ainda sem números do Google Ads. Conecte o script abaixo (uma vez só)."}
                 </div>
               )}
               <button onClick={() => setVerScript((v) => !v)} className="text-xs underline" style={{ color: "var(--muted-foreground)" }}>
