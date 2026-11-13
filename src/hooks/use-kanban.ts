@@ -48,6 +48,23 @@ export function perguntarDataAgendamento(nome: string): string | null {
   return quando.toISOString();
 }
 
+/**
+ * "Sem interesse" (Rodrigo 13/11): pede a justificativa. Só o Diretor vê o que foi escrito.
+ * Devolve o texto, ou null se cancelou / escreveu menos de 5 letras — aí o card NÃO muda.
+ */
+export function perguntarMotivoPerda(nome: string): string | null {
+  const resp = window.prompt(
+    `Por que ${nome} está sem interesse?\nEscreva a justificativa (obrigatório — só o Diretor vê).`
+  );
+  if (resp == null) return null;
+  const m = resp.trim();
+  if (m.length < 5) {
+    alert("Escreva o motivo com pelo menos 5 letras. Ex.: comprou com outra construtora, renda não aprova, desistiu de comprar.");
+    return null;
+  }
+  return m;
+}
+
 export function useMoveCard() {
   const qc = useQueryClient();
   return useMutation({
@@ -56,13 +73,15 @@ export function useMoveCard() {
       status,
       order,
       dataAgendamento,
+      motivo,
     }: {
       leadId: string;
       status: string;
       order: number;
       dataAgendamento?: string;
+      motivo?: string;
     }) => {
-      const { data } = await api.put(`/kanban/move/${leadId}`, { status, order, dataAgendamento });
+      const { data } = await api.put(`/kanban/move/${leadId}`, { status, order, dataAgendamento, motivo });
       return data;
     },
     onSuccess: () => {

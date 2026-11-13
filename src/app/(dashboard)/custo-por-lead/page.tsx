@@ -10,6 +10,7 @@ import { useBreakdown, useDaily } from "@/hooks/use-dashboard";
 import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useInvestimento, useSetInvestimento, useInvestDays, useSetInvestDays, useClearInvestDays } from "@/hooks/use-investimento";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
+import { TathyPainel } from "@/components/trafego/tathy-painel";
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -207,6 +208,9 @@ export default function CustoPorLeadPage() {
           </select>
           </div>
         </div>
+
+        {/* Tathy — gestora de tráfego, ao vivo (só Diretor, só leads de anúncio) */}
+        {isDiretor && month > 0 && <TathyPainel year={year} month={month} />}
 
         {/* Entrada do investimento (Diretor) */}
         <div className="rounded-2xl border p-5" style={{ background: "var(--card)", borderColor: "var(--border)" }}>

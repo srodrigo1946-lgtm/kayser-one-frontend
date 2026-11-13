@@ -9,6 +9,7 @@ import {
   useKanbanBoard,
   useMoveCard,
   perguntarDataAgendamento,
+  perguntarMotivoPerda,
   useCreateColumn,
   useUpdateColumn,
   useDeleteColumn,
@@ -383,6 +384,14 @@ export default function KanbanPage() {
           return;
         }
         moveCard.mutate({ leadId: dragging.id, status, order: 0, dataAgendamento });
+      } else if (status === "venda_perdida") {
+        // Sem interesse: justificativa obrigatória (só o Diretor vê). Cancelou → não move.
+        const motivo = perguntarMotivoPerda(dragging.name);
+        if (!motivo) {
+          setDragging(null);
+          return;
+        }
+        moveCard.mutate({ leadId: dragging.id, status, order: 0, motivo });
       } else {
         moveCard.mutate({ leadId: dragging.id, status, order: 0 });
       }
