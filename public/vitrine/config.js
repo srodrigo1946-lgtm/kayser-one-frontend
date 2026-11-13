@@ -11,7 +11,7 @@ window.VITRINE = {
     "stillo-barra": { preco: 386000, unidade: "2 quartos" },
   },
   // Google Ads: ID da conta (AW-XXXXXXXXX) e rótulos das conversões.
-  googleAdsId: "",
-  conversaoFormulario: "", // rótulo da conversão "Enviou formulário"
+  googleAdsId: "AW-18483705669",
+  conversaoFormulario: "xvJeCKqvk4sdEMXu2-1E", // rótulo da conversão "Enviar formulário de lead"
   conversaoWhatsapp: "", // rótulo da conversão "Clicou no WhatsApp"
 };
