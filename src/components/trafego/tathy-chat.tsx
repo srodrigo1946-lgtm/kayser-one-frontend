@@ -51,9 +51,24 @@ export function TathyChat() {
     try {
       await updateSettings.mutateAsync({ tathyClaudeKey: chave.trim() } as any);
       setChave("");
-      setChaveMsg("✅ Chave salva. Pode perguntar à Tathy.");
+      setChaveMsg("Chave salva. Testando...");
+      await testarChave();
     } catch (err) {
       setChaveMsg(getApiErrorMessage(err, "Não consegui salvar a chave."));
+    }
+  };
+  // Mostra só o começo e o tamanho da chave salva e se a Claude aceita.
+  const testarChave = async () => {
+    try {
+      const { data: r } = await api.get("/investimento/tathy/testar-chave");
+      if (!r.salva) return setChaveMsg("Nenhuma chave da Tathy salva ainda.");
+      setChaveMsg(
+        r.ok
+          ? `✅ A Claude aceitou a chave (${r.inicio}, ${r.tamanho} caracteres). Pode perguntar à Tathy.`
+          : `❌ A Claude recusou a chave salva (${r.inicio}, ${r.tamanho} caracteres): ${r.erro}. Uma chave da Claude começa com sk-ant-api03- e tem uns 108 caracteres.`
+      );
+    } catch (err) {
+      setChaveMsg(getApiErrorMessage(err, "Não consegui testar a chave."));
     }
   };
 
@@ -137,6 +152,9 @@ export function TathyChat() {
           />
           <button onClick={salvarChave} disabled={!chave.trim() || updateSettings.isPending} className="text-sm px-4 py-2 rounded-lg font-semibold disabled:opacity-50" style={{ background: "#facc15", color: "#0a0a0a" }}>
             Salvar chave
+          </button>
+          <button onClick={testarChave} className="text-sm px-4 py-2 rounded-lg border" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>
+            Testar chave
           </button>
           <span className="w-full text-xs" style={{ color: "var(--muted-foreground)" }}>
             {chaveMsg || "Fica guardada e escondida; só a Tathy usa. Pegue em console.anthropic.com → API Keys."}
