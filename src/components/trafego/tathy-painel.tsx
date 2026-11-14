@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { useUsers } from "@/hooks/use-users";
 import { useDistribuirLead } from "@/hooks/use-lead-queue";
+import { TathyChat } from "./tathy-chat";
 
 /**
  * Tathy — gestora de tráfego (Rodrigo 13/11). Fica DENTRO da aba Custo por Lead, em tempo real
@@ -142,7 +143,7 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
     <div className="rounded-2xl border p-5 space-y-4" style={{ ...card, borderColor: "#facc15aa" }}>
       {/* Cabeçalho da Tathy */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="w-11 h-11 rounded-full grid place-items-center font-bold text-lg" style={{ background: "linear-gradient(135deg,#facc15,#d97706)", color: "#0a0a0a" }}>T</div>
+        <img src="/tathy.jpg" alt="Tathy, gestora de tráfego" className="w-12 h-12 rounded-full object-cover border-2" style={{ borderColor: "#facc15" }} />
         <div className="flex-1 min-w-[200px]">
           <div className="font-semibold" style={{ color: "var(--foreground)" }}>Tathy · gestora de tráfego</div>
           <div className="text-xs flex items-center gap-1.5" style={{ color: "var(--muted-foreground)" }}>
@@ -156,6 +157,7 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
         <button onClick={enviarRelatorio} className="text-xs px-3 py-1.5 rounded-lg font-semibold" style={{ background: "#facc15", color: "#0a0a0a" }}>Enviar relatório agora</button>
       </div>
       {msg && <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>{msg}</div>}
+      <TathyChat />
       {isLoading && <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>A Tathy está lendo os números...</div>}
       {error && <div className="text-sm" style={{ color: "#ef4444" }}>{getApiErrorMessage(error, "Não consegui carregar a análise.")}</div>}
 
