@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, getApiErrorMessage } from "@/lib/api";
+import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 
 /**
  * Pergunte à Tathy (Rodrigo 14/11): conversa ao vivo com os números do painel, imagem
@@ -41,6 +42,20 @@ export function TathyChat() {
   const [pensando, setPensando] = useState(false);
   const [erro, setErro] = useState("");
   const lista = useRef<HTMLDivElement>(null);
+  const { data: settings } = useSettings();
+  const updateSettings = useUpdateSettings();
+  const [verChave, setVerChave] = useState(false);
+  const [chave, setChave] = useState("");
+  const [chaveMsg, setChaveMsg] = useState("");
+  const salvarChave = async () => {
+    try {
+      await updateSettings.mutateAsync({ tathyClaudeKey: chave.trim() } as any);
+      setChave("");
+      setChaveMsg("✅ Chave salva. Pode perguntar à Tathy.");
+    } catch (err) {
+      setChaveMsg(getApiErrorMessage(err, "Não consegui salvar a chave."));
+    }
+  };
 
   useEffect(() => setMsgs(historico), [historico]);
   useEffect(() => {
@@ -100,10 +115,34 @@ export function TathyChat() {
       <div className="flex items-center gap-2">
         <span className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>Pergunte à Tathy</span>
         <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>texto, imagem do criativo ou link — ela responde com os números ao vivo</span>
-        {msgs.length > 0 && (
-          <button onClick={limpar} className="ml-auto text-xs underline" style={{ color: "var(--muted-foreground)" }}>Apagar conversa</button>
-        )}
+        <span className="ml-auto flex gap-3">
+          <button onClick={() => setVerChave((v) => !v)} className="text-xs underline" style={{ color: (settings as any)?.hasTathyClaudeKey ? "var(--muted-foreground)" : "#f59e0b" }}>
+            {(settings as any)?.hasTathyClaudeKey ? "Chave da Tathy ✓" : "Colocar chave da Tathy"}
+          </button>
+          {msgs.length > 0 && (
+            <button onClick={limpar} className="text-xs underline" style={{ color: "var(--muted-foreground)" }}>Apagar conversa</button>
+          )}
+        </span>
       </div>
+      {verChave && (
+        <div className="flex gap-2 items-center flex-wrap">
+          <input
+            type="password"
+            value={chave}
+            onChange={(e) => setChave(e.target.value)}
+            placeholder="Cole aqui a chave da Claude (sk-ant-...)"
+            autoComplete="off"
+            className="flex-1 min-w-[220px] text-sm px-3 py-2 rounded-lg border outline-none"
+            style={{ background: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+          />
+          <button onClick={salvarChave} disabled={!chave.trim() || updateSettings.isPending} className="text-sm px-4 py-2 rounded-lg font-semibold disabled:opacity-50" style={{ background: "#facc15", color: "#0a0a0a" }}>
+            Salvar chave
+          </button>
+          <span className="w-full text-xs" style={{ color: "var(--muted-foreground)" }}>
+            {chaveMsg || "Fica guardada e escondida; só a Tathy usa. Pegue em console.anthropic.com → API Keys."}
+          </span>
+        </div>
+      )}
 
       <div ref={lista} className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
         {!msgs.length && (
