@@ -30,6 +30,26 @@ async function prepararImagem(f: File): Promise<Img> {
   return { mime: "image/jpeg", base64: dataUrl.split(",")[1], url };
 }
 
+// Mostra o texto da Tathy com **negrito** de verdade (sem innerHTML: só elementos React).
+function TextoTathy({ texto }: { texto: string }) {
+  const linhas = texto.replace(/^#{1,6}\s*/gm, "").split("\n");
+  return (
+    <>
+      {linhas.map((linha, i) => {
+        const partes = linha.split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
+        const lista = /^\s*([-•]|\d+\.)\s+/.test(linha);
+        return (
+          <div key={i} className={lista ? "pl-3" : ""} style={{ minHeight: linha.trim() ? undefined : "0.6em" }}>
+            {partes.map((p, j) =>
+              p.startsWith("**") && p.endsWith("**") ? <strong key={j}>{p.slice(2, -2)}</strong> : <span key={j}>{p}</span>
+            )}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 export function TathyChat() {
   const qc = useQueryClient();
   const { data: historico = [] } = useQuery<Msg[]>({
@@ -174,10 +194,10 @@ export function TathyChat() {
           <div key={i} className={`flex gap-2 items-start ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             {m.role === "assistant" && <img src="/tathy.jpg" alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />}
             <div
-              className="max-w-[85%] text-sm px-3 py-2 rounded-xl whitespace-pre-wrap break-words"
+              className={`max-w-[85%] text-sm px-3 py-2 rounded-xl break-words ${m.role === "user" ? "whitespace-pre-wrap" : "leading-relaxed"}`}
               style={m.role === "user" ? { background: "#facc15", color: "#0a0a0a" } : { background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)" }}
             >
-              {m.texto}
+              {m.role === "assistant" ? <TextoTathy texto={m.texto} /> : m.texto}
               {!!m.imagens && <div className="text-xs mt-1 opacity-70">📎 {m.imagens} imagem(ns)</div>}
             </div>
           </div>
