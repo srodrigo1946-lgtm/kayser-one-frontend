@@ -32,6 +32,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Coruja } from "@/components/icons/coruja";
+import { TathyFoto } from "@/components/icons/tathy-foto";
 import { cn, getInitials } from "@/lib/utils";
 import { getStoredUser, logout } from "@/lib/auth";
 import { avatarUrl } from "@/hooks/use-profile";
@@ -48,6 +49,7 @@ const navItems = [
   { href: "/whatsapp", label: "Conversas ao vivo", icon: MessageSquare },
   { href: "/fila-leads", label: "Fila de Leads", icon: Megaphone },
   { href: "/corujao", label: "Corujão (repique)", icon: Coruja },
+  { href: "/tathy", label: "Tathy · Tráfego", icon: TathyFoto, diretorOnly: true },
   { href: "/custo-por-lead", label: "Custo por Lead", icon: Wallet, unlockKey: "custoLeadVisivel" },
   { href: "/feedback", label: "1-on-1 / Feedback", icon: MessagesSquare, roles: ["diretor", "superintendente", "gerente_geral", "gerente"] },
   { href: "/escala", label: "Escala de Atendimento", icon: CalendarClock },

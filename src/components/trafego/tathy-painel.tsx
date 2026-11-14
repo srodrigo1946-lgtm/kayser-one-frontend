@@ -25,25 +25,36 @@ const CARGO: Record<string, string> = { corretor: "Corretor", gerente: "Gerente"
 const brl = (v?: number | null) => (v == null ? "—" : v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }));
 const dias = (d: number) => (d < 1 ? `${Math.round(d * 24)}h` : `${d.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} dia(s)`);
 
-const SCRIPT_GOOGLE = `function main() {
-  var TOKEN = 'COLE_AQUI_O_VERIFY_TOKEN_DO_K1';
-  var q = "SELECT segments.date, campaign.name, ad_group.name, ad_group_ad.ad.id, " +
-    "ad_group_ad.ad.responsive_search_ad.headlines, metrics.cost_micros, metrics.clicks, " +
-    "metrics.impressions, metrics.conversions FROM ad_group_ad WHERE segments.date DURING THIS_MONTH";
-  var it = AdsApp.search(q), linhas = [];
-  while (it.hasNext()) {
-    var r = it.next(), ad = r.adGroupAd.ad;
-    var h = (ad.responsiveSearchAd && ad.responsiveSearchAd.headlines) || [];
-    linhas.push({
-      data: r.segments.date, campanha: r.campaign.name,
-      anuncio: r.adGroup.name + ' · ' + (h.length ? h[0].text : 'Anúncio ' + ad.id),
-      gasto: Number(r.metrics.costMicros) / 1e6, cliques: Number(r.metrics.clicks),
-      impressoes: Number(r.metrics.impressions), conversoes: Number(r.metrics.conversions)
-    });
-  }
-  UrlFetchApp.fetch('https://kayser-one-backend-production.up.railway.app/api/v1/investimento/google-direct?token=' +
-    encodeURIComponent(TOKEN), { method: 'post', contentType: 'application/json', payload: JSON.stringify({ linhas: linhas }) });
-}`;
+/** Copia o script do Google Ads JÁ com a chave (vem do servidor, só Diretor) — é só colar no Google Ads. */
+function BotaoScriptGoogle() {
+  const [msg, setMsg] = useState("");
+  const [texto, setTexto] = useState("");
+  const copiar = async () => {
+    setMsg("Gerando o script...");
+    try {
+      const { data } = await api.get<{ script: string; temChave: boolean }>("/investimento/tathy/script-google");
+      if (!data.temChave) return setMsg("Falta o Verify Token em Configurações → Integrações. Cole lá primeiro.");
+      setTexto(data.script);
+      try {
+        await navigator.clipboard.writeText(data.script);
+        setMsg("✅ Script copiado (já com a chave). Agora cole no Google Ads → Ferramentas → Ações em massa → Scripts → +.");
+      } catch {
+        setMsg("Selecione o texto abaixo e copie com Ctrl+C.");
+      }
+    } catch (err) {
+      setMsg(getApiErrorMessage(err, "Não consegui gerar o script."));
+    }
+  };
+  return (
+    <div className="space-y-2">
+      <button onClick={copiar} className="text-xs px-3 py-1.5 rounded-lg font-semibold" style={{ background: "#22c55e", color: "#04140a" }}>
+        Copiar script do Google Ads (já com a chave)
+      </button>
+      {msg && <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>{msg}</div>}
+      {texto && <textarea readOnly value={texto} onFocus={(e) => e.target.select()} rows={6} className="w-full text-xs p-2 rounded-lg border font-mono" style={{ background: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }} />}
+    </div>
+  );
+}
 
 /** Gaveta: seção que abre e fecha (Rodrigo 13/11). */
 function Gaveta({ titulo, aberta, destaque, children }: { titulo: string; aberta?: boolean; destaque?: boolean; children: ReactNode }) {
@@ -90,7 +101,6 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
     }
   };
   const [msg, setMsg] = useState("");
-  const [verScript, setVerScript] = useState(false);
   const { data, isLoading, dataUpdatedAt, error } = useQuery({
     queryKey: ["tathy", year, month],
     queryFn: async () => (await api.get(`/investimento/tathy`, { params: { year, month } })).data,
@@ -322,15 +332,7 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
                     : "Ainda sem números do Google Ads. Conecte o script abaixo (uma vez só)."}
                 </div>
               )}
-              <button onClick={() => setVerScript((v) => !v)} className="text-xs underline" style={{ color: "var(--muted-foreground)" }}>
-                {verScript ? "Esconder" : "Conectar o Google Ads (script)"}
-              </button>
-              {verScript && (
-                <div className="space-y-2 text-sm" style={{ color: "var(--foreground)" }}>
-                  <p>No Google Ads: <b>Ferramentas → Ações em massa → Scripts → +</b>. Cole o código, troque <b>COLE_AQUI_O_VERIFY_TOKEN_DO_K1</b> pelo Verify Token (Configurações → Integrações), salve e programe para rodar <b>a cada hora</b>.</p>
-                  <pre className="text-xs p-3 rounded-lg overflow-x-auto" style={{ background: "var(--secondary)" }}>{SCRIPT_GOOGLE}</pre>
-                </div>
-              )}
+              <BotaoScriptGoogle />
             </div>
           )}</Gaveta>
 
