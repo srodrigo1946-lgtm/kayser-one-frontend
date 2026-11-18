@@ -92,6 +92,20 @@ export function PainelPlantao() {
     }
   };
 
+  // Raio maior (1500 m) enquanto o stand não está calibrado; "Recalibrar" volta pro padrão sozinho.
+  const trocarRaio = async (propertyId: string, nome: string, calibrando: boolean) => {
+    setOcupado(propertyId);
+    try {
+      await api.post(`/plantao/stand/${propertyId}/raio`, { raio: calibrando ? null : 1500 });
+      setMsg(calibrando ? `✅ ${nome}: raio voltou pro padrão (${p?.raio ?? 500} m).` : `✅ ${nome}: raio de 1500 m até calibrar pelos check-ins.`);
+      recarregar();
+    } catch (err) {
+      setMsg(getApiErrorMessage(err, "Falha ao trocar o raio."));
+    } finally {
+      setOcupado(null);
+    }
+  };
+
   const liberar = async (userId: string, turnoId: string, nome: string, hora: string) => {
     if (!window.confirm(`Liberar ${nome} no plantão das ${hora} sem check-in pelo GPS?`)) return;
     setOcupado(userId + turnoId);
@@ -225,6 +239,8 @@ export function PainelPlantao() {
                 <div className="font-medium truncate" style={{ color: "var(--foreground)" }}>{s.nome}</div>
                 <div className="text-xs truncate" style={{ color: "var(--muted-foreground)" }}>
                   {s.endereco}
+                  {" · raio "}
+                  {s.raio ?? p.raio} m
                   {s.localizado && s.lat != null && (
                     <>
                       {" · "}
@@ -233,6 +249,15 @@ export function PainelPlantao() {
                   )}
                 </div>
               </div>
+              <button
+                onClick={() => trocarRaio(s.propertyId, s.nome, (s.raio ?? p.raio) > p.raio)}
+                disabled={!!ocupado}
+                className="text-xs px-2.5 py-1.5 rounded-lg flex-shrink-0 disabled:opacity-60"
+                style={{ background: "var(--card)", color: "var(--foreground)" }}
+                title="Raio maior enquanto o stand não está calibrado"
+              >
+                {(s.raio ?? p.raio) > p.raio ? "↩️ Raio padrão" : "📏 1500 m p/ calibrar"}
+              </button>
               <button onClick={() => colar(s.propertyId, s.nome)} disabled={!!ocupado} className="text-xs px-2.5 py-1.5 rounded-lg flex-shrink-0 disabled:opacity-60" style={{ background: "var(--card)", color: "var(--foreground)" }} title="Colar coordenada/link do Google Maps">
                 🗺️ Colar do Maps
               </button>

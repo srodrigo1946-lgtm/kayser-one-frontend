@@ -25,7 +25,7 @@ export interface PlantaoPainel {
   regraAtiva: boolean;
   faltamLocalizar?: number;
   turnoAtivo: { id: string; horaInicio: string; horaFim: string; atendentes: number } | null;
-  stands: { propertyId: string; nome: string; endereco: string; localizado: boolean; lat: number | null; lng: number | null }[];
+  stands: { propertyId: string; nome: string; endereco: string; localizado: boolean; lat: number | null; lng: number | null; raio?: number }[];
   modoLivre?: boolean;
   plantaoLivreDesde?: string | null;
   corretores?: { id: string; nome: string }[];

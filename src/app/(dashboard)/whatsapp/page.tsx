@@ -581,6 +581,26 @@ export default function WhatsAppPage() {
                       <p className="text-sm leading-relaxed whitespace-pre-line">{msg.content}</p>
                     )}
                     <p className="text-xs mt-1 opacity-60 text-right">
+                      {msg.direction === "out" && !msg.hasMedia && Date.now() - new Date(msg.createdAt).getTime() < 15 * 60_000 && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const novo = window.prompt("Editar mensagem (o cliente vê o texto novo no WhatsApp):", msg.content);
+                            if (novo == null || !novo.trim() || novo.trim() === msg.content.trim()) return;
+                            try {
+                              await api.post("/whatsapp/edit", { messageId: msg.id, text: novo.trim() });
+                              await qc.invalidateQueries({ queryKey: ["conversations", selected.id, "messages"] });
+                            } catch (e) {
+                              alert(getApiErrorMessage(e));
+                            }
+                          }}
+                          className="underline mr-2"
+                          title="Editar (até 15 min depois de enviar)"
+                        >
+                          ✏️ Editar
+                        </button>
+                      )}
+                      {msg.editadaEm && <span className="mr-1">editada ·</span>}
                       {new Date(msg.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>

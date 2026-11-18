@@ -32,6 +32,8 @@ export interface ChatMessageItem {
   hasMedia?: boolean;
   /** Cartão do anúncio que trouxe o cliente (JSON: titulo, texto, imagem, link, video, plataforma). */
   adPreview?: string | null;
+  /** Editada pela tela (Conversas ao vivo). */
+  editadaEm?: string | null;
   createdAt: string;
 }
 

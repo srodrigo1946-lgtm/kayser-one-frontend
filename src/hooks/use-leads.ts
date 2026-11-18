@@ -136,7 +136,7 @@ export function useImportLeads() {
       if (status) form.append("status", status);
       if (lotes) form.append("lotes", lotes);
       if (filaEquipe) form.append("filaEquipe", "1"); // Fila da Equipe: o K1 chama e o "sim" vai pros corretores do gestor
-      const { data } = await api.post<{ imported: number; duplicates: number; semTelefone?: number; total: number; porLote?: number[]; restante?: number }>(
+      const { data } = await api.post<{ imported: number; duplicates: number; semTelefone?: number; semWhatsapp?: number; total: number; porLote?: number[]; restante?: number }>(
         "/leads/import/excel",
         form,
         { headers: { "Content-Type": "multipart/form-data" } }
