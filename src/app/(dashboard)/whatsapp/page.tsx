@@ -199,6 +199,8 @@ export default function WhatsAppPage() {
   const [qr, setQr] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
 
+  const qc = qcNaoLead;
+  const iniciando = useRef(false);
   // Deep-link vindo do card do lead (/whatsapp?lead=<id>&phone=<tel>): abre a conversa.
   useEffect(() => {
     if (selectedId || !conversations) return;
@@ -212,6 +214,17 @@ export default function WhatsAppPage() {
       conv = conversations.find((c) => (c.remoteJid || "").replace(/\D/g, "").includes(tail));
     }
     if (conv) setSelectedId(conv.id);
+    // Lead ainda sem conversa (a IA não mandou nada): cria e abre, pro corretor mandar a 1ª mensagem.
+    else if (leadP && !iniciando.current) {
+      iniciando.current = true;
+      api
+        .post<{ id: string }>("/conversations/iniciar", { leadId: leadP })
+        .then(async ({ data }) => {
+          await qc.invalidateQueries({ queryKey: ["conversations"] });
+          setSelectedId(data.id);
+        })
+        .catch((err) => alert(getApiErrorMessage(err, "Não consegui iniciar a conversa com esse lead.")));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversations]);
 
