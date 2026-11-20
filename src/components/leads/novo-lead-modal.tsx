@@ -37,6 +37,8 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
     if (!f.name.trim()) return setErro("Escreva o nome do lead.");
     if (f.phone.replace(/\D/g, "").length < 10) return setErro("Telefone com DDD (ex.: 21999998888).");
     if (!isDiretor && !f.origem) return setErro("Escolha o time de origem.");
+    // Lead que vai pra fila precisa do empreendimento (o corretor e a IA sabem do que falar).
+    if (isDiretor && f.destino !== "comigo" && !f.propertyId) return setErro("Escolha o empreendimento antes de mandar pra fila.");
     const ato = lerValor(f.ato), renda = lerValor(f.renda), fgts = lerValor(f.fgts);
     const imovel = (imoveis ?? []).find((p) => p.id === f.propertyId);
     // A IA lê esse bloco e não pergunta de novo o que já sabemos.
@@ -109,9 +111,9 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
           <label className={rot} style={corRot}>Telefone com DDD *<input value={f.phone} onChange={muda("phone")} inputMode="tel" placeholder="21999998888" className={campo} style={box} /></label>
           <label className={rot} style={corRot}>E-mail<input value={f.email} onChange={muda("email")} type="email" className={campo} style={box} /></label>
           <label className={rot} style={corRot}>
-            Empreendimento
+            Empreendimento {isDiretor && f.destino !== "comigo" ? "*" : ""}
             <select value={f.propertyId} onChange={muda("propertyId")} className={campo} style={box}>
-              <option value="">— Não sei / vários —</option>
+              <option value="">— Escolha —</option>
               {(imoveis ?? []).filter((p) => p.active !== false).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </label>
