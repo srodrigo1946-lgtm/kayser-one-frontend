@@ -17,7 +17,7 @@ import {
   exportLeads,
 } from "@/hooks/use-leads";
 import { useUsers } from "@/hooks/use-users";
-import { useDistribuirLead } from "@/hooks/use-lead-queue";
+import { NovoLeadModal } from "@/components/leads/novo-lead-modal";
 import type { Lead } from "@/types";
 import { LeadDetailDrawer } from "@/components/leads/lead-detail-drawer";
 import { ImportModal } from "@/components/leads/import-modal";
@@ -164,7 +164,6 @@ export default function LeadsPage() {
     }
   };
   const createLead = useCreateLead();
-  const distribuirLead = useDistribuirLead();
   const { data: settingsTimes } = useSettings();
   const origensTimes = settingsTimes?.leadOrigens?.length
     ? settingsTimes.leadOrigens
@@ -204,61 +203,11 @@ export default function LeadsPage() {
     setArquivoImport(file);
   };
 
-  const handleNewLead = async () => {
-    const name = window.prompt("Nome do lead:");
-    if (!name) return;
-    const phone = window.prompt("Telefone (somente números):");
-    if (!phone) return;
-    // Cargos: time de origem obrigatório (não mistura com anúncio nem com os do Diretor).
-    let origem: string | undefined;
-    if (!isDiretor) {
-      const lista = origensTimes.map((t, i) => `${i + 1} - ${t}`).join("\n");
-      const r = window.prompt(`Time de origem (digite o número ou o nome):\n${lista}`, "");
-      if (!r || !r.trim()) {
-        setFeedback("Cadastro cancelado: informe o time de origem (ex.: Time Isaac).");
-        return;
-      }
-      const n = Number(r.trim());
-      origem = Number.isInteger(n) && n >= 1 && n <= origensTimes.length ? origensTimes[n - 1] : r.trim();
-    }
-    // Diretor escolhe pra onde o lead vai: fila normal, fila SWAT ou fica com ele.
-    let fila: "normal" | "swat" | null = null;
-    if (isDiretor) {
-      const r = window.prompt("Para onde vai o lead?\n1 - Fila normal (plantão)\n2 - Fila SWAT\n3 - Fica comigo (sem fila)", "1");
-      if (r === null) return;
-      fila = r.trim() === "1" ? "normal" : r.trim() === "2" ? "swat" : null;
-    }
+  // Novo lead abre o formulário (informações + destino da fila).
+  const [novoAberto, setNovoAberto] = useState(false);
+  const handleNewLead = () => {
     setFeedback("");
-    try {
-      const novo = await createLead.mutateAsync({ name, phone, ...(origem ? { origem } : {}) });
-      if (fila && novo?.id) {
-        const nomeFila = fila === "swat" ? "fila SWAT" : "fila normal";
-        try {
-          const d = await distribuirLead.mutateAsync({ leadId: novo.id, swat: fila === "swat" });
-          setFeedback(
-            d.status === "distribuido"
-              ? `Lead criado e enviado pra ${nomeFila}: já está com o corretor da vez.`
-              : d.status === "aguardando"
-                ? `Lead criado na ${nomeFila}: está aguardando ${fila === "swat" ? "um SWAT com check-in" : "o plantão abrir"}.`
-                : d.status === "fila_desligada"
-                  ? "Lead criado, mas a fila está desligada — ficou com você."
-                  : d.status === "sem_telefone"
-                    ? "Lead criado, mas sem telefone válido — não entrou na fila."
-                    : `Lead criado (já estava na ${nomeFila}).`
-          );
-        } catch (err) {
-          setFeedback(`Lead criado, mas não entrou na ${nomeFila}: ${getApiErrorMessage(err, "erro")}`);
-        }
-        return;
-      }
-      setFeedback(
-        origem
-          ? `Lead criado no ${origem}. Não entra na fila, nem no painel, nem no Custo por Lead.`
-          : "Lead criado (manual). Ficou com você, fora da fila."
-      );
-    } catch (err) {
-      setFeedback(getApiErrorMessage(err, "Falha ao criar o lead."));
-    }
+    setNovoAberto(true);
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -631,6 +580,9 @@ export default function LeadsPage() {
           onClose={() => setVerImportacoes(false)}
           onDone={(msg) => setFeedback(msg)}
         />
+      )}
+      {novoAberto && (
+        <NovoLeadModal isDiretor={isDiretor} origens={origensTimes} onClose={() => setNovoAberto(false)} onPronto={setFeedback} />
       )}
       {arquivoImport && (
         <ImportModal
