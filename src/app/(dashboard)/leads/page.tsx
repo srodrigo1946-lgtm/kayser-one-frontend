@@ -475,10 +475,19 @@ export default function LeadsPage() {
                     <td className="px-4 py-3">
                       {(() => {
                         const oi = origemInfo(lead);
+                        // Selo da fila (SWAT / Bolsão): só o Diretor vê (Rodrigo 20/11).
+                        const fila = !isDiretor ? null : (lead as any).bolsao ? { t: "📥 Bolsão", c: "#f59e0b" } : (lead as any).swat ? { t: "🛡️ SWAT", c: "#ef4444" } : null;
                         return (
-                          <span className="text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap" style={{ background: `${oi.fg}22`, color: oi.fg }}>
-                            {oi.emoji ? `${oi.emoji} ` : ""}{oi.label}
-                          </span>
+                          <div className="flex flex-col items-start gap-1">
+                            {fila && (
+                              <span className="text-xs px-2 py-1 rounded-full font-bold whitespace-nowrap" style={{ background: `${fila.c}22`, color: fila.c }}>
+                                {fila.t}
+                              </span>
+                            )}
+                            <span className="text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap" style={{ background: `${oi.fg}22`, color: oi.fg }}>
+                              {oi.emoji ? `${oi.emoji} ` : ""}{oi.label}
+                            </span>
+                          </div>
                         );
                       })()}
                     </td>
@@ -488,6 +497,9 @@ export default function LeadsPage() {
                       <div className="text-sm" style={{ color: "var(--foreground)" }}>
                         {lead.empreendimento || lead.campanha || "—"}
                       </div>
+                      {lead.empreendimento && lead.campanha && (
+                        <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>Campanha: {lead.campanha}</div>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="text-sm" style={{ color: "var(--foreground)" }}>{lead.responsavel?.name || "—"}</div>
