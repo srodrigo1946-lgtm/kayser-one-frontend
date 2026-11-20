@@ -63,8 +63,10 @@ export interface DistribuirResult {
 export function useDistribuirLead() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (leadId: string) =>
-      (await api.post<DistribuirResult>(`/lead-queue/distribuir/${leadId}`)).data,
+    mutationFn: async (arg: string | { leadId: string; swat?: boolean }) => {
+      const { leadId, swat } = typeof arg === "string" ? { leadId: arg, swat: false } : arg;
+      return (await api.post<DistribuirResult>(`/lead-queue/distribuir/${leadId}`, swat ? { swat: true } : {})).data;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["lead-queue", "board"] });
       qc.invalidateQueries({ queryKey: ["leads"] });

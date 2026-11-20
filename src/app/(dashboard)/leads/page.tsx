@@ -17,6 +17,7 @@ import {
   exportLeads,
 } from "@/hooks/use-leads";
 import { useUsers } from "@/hooks/use-users";
+import { useDistribuirLead } from "@/hooks/use-lead-queue";
 import type { Lead } from "@/types";
 import { LeadDetailDrawer } from "@/components/leads/lead-detail-drawer";
 import { ImportModal } from "@/components/leads/import-modal";
@@ -163,6 +164,7 @@ export default function LeadsPage() {
     }
   };
   const createLead = useCreateLead();
+  const distribuirLead = useDistribuirLead();
   const { data: settingsTimes } = useSettings();
   const origensTimes = settingsTimes?.leadOrigens?.length
     ? settingsTimes.leadOrigens
@@ -219,13 +221,40 @@ export default function LeadsPage() {
       const n = Number(r.trim());
       origem = Number.isInteger(n) && n >= 1 && n <= origensTimes.length ? origensTimes[n - 1] : r.trim();
     }
+    // Diretor escolhe pra onde o lead vai: fila normal, fila SWAT ou fica com ele.
+    let fila: "normal" | "swat" | null = null;
+    if (isDiretor) {
+      const r = window.prompt("Para onde vai o lead?\n1 - Fila normal (plantão)\n2 - Fila SWAT\n3 - Fica comigo (sem fila)", "1");
+      if (r === null) return;
+      fila = r.trim() === "1" ? "normal" : r.trim() === "2" ? "swat" : null;
+    }
     setFeedback("");
     try {
-      await createLead.mutateAsync({ name, phone, ...(origem ? { origem } : {}) });
+      const novo = await createLead.mutateAsync({ name, phone, ...(origem ? { origem } : {}) });
+      if (fila && novo?.id) {
+        const nomeFila = fila === "swat" ? "fila SWAT" : "fila normal";
+        try {
+          const d = await distribuirLead.mutateAsync({ leadId: novo.id, swat: fila === "swat" });
+          setFeedback(
+            d.status === "distribuido"
+              ? `Lead criado e enviado pra ${nomeFila}: já está com o corretor da vez.`
+              : d.status === "aguardando"
+                ? `Lead criado na ${nomeFila}: está aguardando ${fila === "swat" ? "um SWAT com check-in" : "o plantão abrir"}.`
+                : d.status === "fila_desligada"
+                  ? "Lead criado, mas a fila está desligada — ficou com você."
+                  : d.status === "sem_telefone"
+                    ? "Lead criado, mas sem telefone válido — não entrou na fila."
+                    : `Lead criado (já estava na ${nomeFila}).`
+          );
+        } catch (err) {
+          setFeedback(`Lead criado, mas não entrou na ${nomeFila}: ${getApiErrorMessage(err, "erro")}`);
+        }
+        return;
+      }
       setFeedback(
         origem
           ? `Lead criado no ${origem}. Não entra na fila, nem no painel, nem no Custo por Lead.`
-          : "Lead criado (manual). Não entra na fila nem conta no Custo por Lead."
+          : "Lead criado (manual). Ficou com você, fora da fila."
       );
     } catch (err) {
       setFeedback(getApiErrorMessage(err, "Falha ao criar o lead."));
