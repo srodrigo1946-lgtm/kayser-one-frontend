@@ -47,6 +47,7 @@ function origemInfo(lead: { origem?: string | null; source?: string | null }): {
   if (p) return p;
   const src = (lead.source || "").toLowerCase();
   const o = (lead.origem || "").toLowerCase();
+  if (o === "google_ads") return { label: "Google Ads", emoji: "🔎", fg: "#ea4335" };
   if (src === "anuncio" || o === "anuncio") return { label: "Anúncio", emoji: "🎯", fg: "#8b5cf6" };
   if (src === "formulario_meta" || o.includes("formul") || o.includes("meta")) return { label: "Formulário Meta", emoji: "📝", fg: "#0ea5e9" };
   if (src === "whatsapp" || o === "whatsapp") return { label: "WhatsApp", emoji: "💬", fg: "#22c55e" };

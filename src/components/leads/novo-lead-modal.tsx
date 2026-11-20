@@ -27,7 +27,7 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
   const criar = useCreateLead();
   const distribuir = useDistribuirLead();
   const { data: imoveis } = useProperties();
-  const [f, setF] = useState({ name: "", phone: "", email: "", propertyId: "", ato: "", renda: "", fgts: "", objetivo: "", obs: "", origem: "", destino: "normal" });
+  const [f, setF] = useState({ name: "", phone: "", email: "", propertyId: "", ato: "", renda: "", fgts: "", objetivo: "", obs: "", origem: "", destino: "normal", canal: "", campanha: "" });
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
   const muda = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
@@ -62,6 +62,10 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
         ...(fgts ? { fgts } : {}),
         ...(linhas.length ? { observacoes: `📋 Respostas do formulário:\n${linhas.join("\n")}` } : {}),
         ...(!isDiretor ? { origem: f.origem } : {}),
+        // Diretor: origem do lead (Formulário Meta / anúncio contam no tráfego; Google Ads também).
+        ...(isDiretor && f.canal ? { origem: f.canal } : {}),
+        ...(isDiretor && (f.canal === "formulario_meta" || f.canal === "anuncio") ? { source: f.canal } : {}),
+        ...(f.campanha.trim() ? { campanha: f.campanha.trim() } : {}),
       } as any);
       if (isDiretor && f.destino !== "comigo" && novo?.id) {
         const swat = f.destino === "swat";
@@ -129,6 +133,21 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
             </select>
           </label>
         </div>
+        {isDiretor && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+            <label className={rot} style={corRot}>
+              Origem do lead
+              <select value={f.canal} onChange={muda("canal")} className={campo} style={box}>
+                <option value="">✋ Manual</option>
+                <option value="formulario_meta">📝 Formulário Meta</option>
+                <option value="anuncio">🎯 Anúncio Meta (WhatsApp)</option>
+                <option value="google_ads">🔎 Google Ads</option>
+                <option value="Indicação">🤝 Indicação</option>
+              </select>
+            </label>
+            <label className={rot} style={corRot}>Campanha / anúncio<input value={f.campanha} onChange={muda("campanha")} placeholder="ex.: Black Friday Stillo" className={campo} style={box} /></label>
+          </div>
+        )}
         <label className={rot + " block mt-3"} style={corRot}>
           Observações (o corretor e a IA leem)
           <textarea value={f.obs} onChange={muda("obs")} rows={3} placeholder="ex.: quer 2 quartos, visita no sábado" className={campo} style={box} />
