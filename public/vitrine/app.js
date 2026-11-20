@@ -34,6 +34,13 @@
       : c;
   };
 
+  // Imóvel do link do anúncio (?imovel=stillo-barra): vale mesmo no formulário geral.
+  const doLink = () => {
+    const id = new URLSearchParams(location.search).get("imovel");
+    const p = id && imoveis.find((x) => x.id === id);
+    return p ? p.nome : "";
+  };
+
   /* WhatsApp */
   const abrirZap = (imovel) => {
     conversao(C.conversaoWhatsapp);
@@ -226,7 +233,7 @@
       const r = await fetch(C.api || "https://kayser-one-backend-production.up.railway.app/api/v1/meta/vitrine-lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...d, imovel: atual || "", fila: C.fila || "swat", campanha: campanha() }),
+        body: JSON.stringify({ ...d, imovel: atual || doLink(), fila: C.fila || "swat", campanha: campanha() }),
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j.ok) throw new Error(j.erro || "Não conseguimos enviar agora. Tente pelo WhatsApp.");
