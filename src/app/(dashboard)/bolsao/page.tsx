@@ -65,7 +65,7 @@ export default function BolsaoPage() {
         <h1 className="text-xl font-bold" style={{ color: "var(--foreground)" }}>Bolsão de leads</h1>
       </div>
       <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
-        Lead da SWAT cai aqui sozinho quando o relógio da etapa zera: <b>Primeiro Contato 48h</b>, <b>Em Atendimento 72h</b>, <b>Agendamento 7 dias</b>, <b>Visita realizada 15 dias</b>, <b>Pasta 30 dias</b>. <b>Só corretores pegam</b>: o primeiro que clicar leva, e o lead entra em Primeiro Contato com você.
+        Lead da SWAT cai aqui sozinho quando o relógio da etapa zera: <b>Primeiro Contato 48h</b>, <b>Em Atendimento 72h</b>, <b>Agendamento 7 dias</b>, <b>Visita realizada 15 dias</b>, <b>Documentação 18 dias</b>, <b>Pasta, Aprovação e Reprovação 30 dias</b>. <b>Só corretores pegam</b>: o primeiro que clicar leva, e o lead entra em Primeiro Contato com você.
       </p>
 
       {isDiretor && (
