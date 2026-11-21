@@ -36,6 +36,29 @@ const limiteSemContato = (status: string) =>
   ["agendamento", "visita_agendada"].includes(status) ? 7 : ["visita_realizada", "simulacao", "subida_pasta", "aprovacao", "reprovacao"].includes(status) ? 15 : 3;
 
 // Relógio de contagem regressiva do SLA (tempo pra atender antes de passar pro próximo).
+/** SWAT: contagem regressiva até o lead cair no Bolsão (1º contato 48h, agendamento 7d, visita 15d, pasta 30d). */
+function RelogioBolsao({ prazo }: { prazo: string }) {
+  const [agora, setAgora] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setAgora(Date.now()), 60_000);
+    return () => clearInterval(t);
+  }, []);
+  const ms = new Date(prazo).getTime() - agora;
+  const h = Math.floor(Math.max(ms, 0) / 3_600_000);
+  const min = Math.floor((Math.max(ms, 0) % 3_600_000) / 60_000);
+  const texto = ms <= 0 ? "Tempo esgotado — indo pro Bolsão" : h >= 24 ? `${Math.floor(h / 24)}d ${h % 24}h para o Bolsão` : `${h}h ${min}min para o Bolsão`;
+  const cor = ms <= 12 * 3_600_000 ? "#ef4444" : ms <= 48 * 3_600_000 ? "#f59e0b" : "#22c55e";
+  return (
+    <div
+      className="text-xs mb-2 px-2 py-1 rounded-lg font-semibold inline-flex items-center gap-1"
+      style={{ background: `${cor}1f`, color: cor }}
+      title={`Cai no Bolsão em ${new Date(prazo).toLocaleString("pt-BR")} se não avançar de etapa`}
+    >
+      ⏳ {texto}
+    </div>
+  );
+}
+
 function Countdown({ dueAt }: { dueAt: string }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -177,6 +200,8 @@ function LeadCard({
           <span className="hidden group-hover:block whitespace-pre-wrap">📝 {lead.observacoes}</span>
         </div>
       )}
+
+      {(lead as any).prazoBolsao && <RelogioBolsao prazo={(lead as any).prazoBolsao} />}
 
       {desde && (
         <div className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }} title={`Nesta etapa desde ${desde.toLocaleString("pt-BR")}`}>

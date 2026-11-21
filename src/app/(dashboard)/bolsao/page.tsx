@@ -16,7 +16,7 @@ const tempo = (iso: string | null) => {
   return h < 1 ? "agora" : h < 24 ? `há ${h} h` : `há ${Math.floor(h / 24)} d`;
 };
 
-/** Bolsão: lead SWAT parado 48h na 1ª etapa — qualquer um do K1 pega (o 1º que clicar leva). */
+/** Bolsão: lead SWAT com o relógio da etapa zerado — só corretor pega (o 1º que clicar leva). */
 export default function BolsaoPage() {
   const isDiretor = getStoredUser()?.role === "diretor";
   const router = useRouter();
@@ -65,7 +65,7 @@ export default function BolsaoPage() {
         <h1 className="text-xl font-bold" style={{ color: "var(--foreground)" }}>Bolsão de leads</h1>
       </div>
       <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
-        Lead da SWAT que ficou <b>{data?.horas ?? 48} h parado</b> em Novo Lead ou Primeiro Contato cai aqui sozinho. <b>Qualquer um do K1 pode pegar</b>: o primeiro que clicar leva, e o lead entra em Primeiro Contato com você.
+        Lead da SWAT cai aqui sozinho quando o relógio da etapa zera: <b>Primeiro Contato 48h</b>, <b>Agendamento 7 dias</b>, <b>Visita realizada 15 dias</b>, <b>Pasta 30 dias</b>. <b>Só corretores pegam</b>: o primeiro que clicar leva, e o lead entra em Primeiro Contato com você.
       </p>
 
       {isDiretor && (
@@ -85,7 +85,7 @@ export default function BolsaoPage() {
         <Loader2 className="animate-spin" />
       ) : leads.length === 0 ? (
         <p className="text-sm py-10 text-center rounded-xl border" style={{ color: "var(--muted-foreground)", borderColor: "var(--border)" }}>
-          O Bolsão está vazio agora. Quando um lead da SWAT ficar parado {data?.horas ?? 48} h, ele aparece aqui.
+          O Bolsão está vazio agora. Quando o relógio de um lead da SWAT zerar, ele aparece aqui.
         </p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
