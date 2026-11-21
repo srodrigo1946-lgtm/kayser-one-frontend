@@ -6,6 +6,7 @@ import { getApiErrorMessage } from "@/lib/api";
 import { useCreateLead } from "@/hooks/use-leads";
 import { useDistribuirLead } from "@/hooks/use-lead-queue";
 import { useProperties } from "@/hooks/use-properties";
+import { RANKINGS, rankingDoScore, consultarSerasa } from "@/components/leads/ranking-badge";
 
 /** "50k", "50.000", "R$ 50.000,00" → 50000. Vazio/inválido → undefined. */
 export function lerValor(t: string): number | undefined {
@@ -142,13 +143,31 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
           <label className={rot} style={corRot}>
             CPF do cliente
-            <input value={f.cpf} onChange={muda("cpf")} inputMode="numeric" placeholder="000.000.000-00" className={campo} style={box} />
+            <div className="flex gap-2">
+              <input value={f.cpf} onChange={muda("cpf")} inputMode="numeric" placeholder="000.000.000-00" className={campo} style={box} />
+              <button type="button" onClick={() => consultarSerasa(f.cpf)} className="mt-1 px-3 rounded-lg border text-xs whitespace-nowrap" style={{ borderColor: "var(--border)", color: "var(--foreground)" }} title="Copia o CPF e abre o Serasa">
+                🔎 Consultar no Serasa
+              </button>
+            </div>
           </label>
           <label className={rot} style={corRot}>
-            Ranking do cliente * <span className="opacity-70">(consulte o CPF no Serasa ou outra plataforma)</span>
+            Score Serasa (0 a 1000) <span className="opacity-70">— preenche o ranking sozinho</span>
+            <input
+              inputMode="numeric"
+              placeholder="ex.: 742"
+              onChange={(e) => {
+                const r = rankingDoScore(e.target.value);
+                if (r) setF((x) => ({ ...x, ranking: r }));
+              }}
+              className={campo}
+              style={box}
+            />
+          </label>
+          <label className={rot + " md:col-span-2"} style={corRot}>
+            Ranking do cliente * <span className="opacity-70">(pelo score ou escolha; sem consulta → “Informação não disponível”)</span>
             <select value={f.ranking} onChange={muda("ranking")} className={campo} style={box}>
               <option value="">— Escolha —</option>
-              {["Diamante💎", "Ouro🥇", "Prata🥈", "Bronze🥉", "Aço🔘", "Não elegível❌", "Informação não disponível⛔"].map((r) => (
+              {(f.ranking && !RANKINGS.includes(f.ranking) ? [f.ranking, ...RANKINGS] : RANKINGS).map((r) => (
                 <option key={r} value={r}>{r}</option>
               ))}
             </select>

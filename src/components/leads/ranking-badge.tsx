@@ -1,3 +1,23 @@
+export const RANKINGS = ["Diamante💎", "Ouro🥇", "Prata🥈", "Bronze🥉", "Aço🔘", "Não elegível❌", "Informação não disponível⛔"];
+
+/**
+ * Score Serasa (0 a 1000) → ranking do K1. Faixas: 801+ Diamante, 701–800 Ouro,
+ * 501–700 Prata, 301–500 Bronze, 0–300 Aço. Vazio/ inválido → "".
+ */
+export function rankingDoScore(score: string | number): string {
+  const n = Number(String(score).replace(/\D/g, ""));
+  if (!String(score).trim() || !isFinite(n) || n > 1000) return "";
+  const r = n >= 801 ? "Diamante💎" : n >= 701 ? "Ouro🥇" : n >= 501 ? "Prata🥈" : n >= 301 ? "Bronze🥉" : "Aço🔘";
+  return `${r} (Serasa ${n})`;
+}
+
+/** Copia o CPF e abre o site da Serasa Experian pra consultar. */
+export function consultarSerasa(cpf: string) {
+  const c = (cpf || "").replace(/\D/g, "");
+  if (c && navigator.clipboard) navigator.clipboard.writeText(c).catch(() => {});
+  window.open("https://www.serasaexperian.com.br/", "_blank", "noopener");
+}
+
 /** Selo do ranking do cliente (vem da planilha): Diamante 💎, Ouro 🥇, Prata 🥈, Bronze 🥉, Aço 🔘… */
 export function RankingBadge({ ranking }: { ranking?: string | null }) {
   const r = (ranking || "").trim();

@@ -12,6 +12,7 @@ import { useProperties } from "@/hooks/use-properties";
 import { useUsers } from "@/hooks/use-users";
 import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 import type { Lead } from "@/types";
+import { RANKINGS, rankingDoScore, consultarSerasa } from "@/components/leads/ranking-badge";
 
 // Times (captação/oferta do corretor). Marcados na origem do lead — não contam
 // no Custo por Lead (source "manual"), só identificam de qual time veio o lead.
@@ -690,14 +691,33 @@ function LeadEditForm({
           <Field label="CPF"><input value={form.cpf} onChange={(e) => set("cpf", e.target.value)} placeholder="000.000.000-00" className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
           <Field label="Nascimento"><input type="date" value={form.dataNascimento} onChange={(e) => set("dataNascimento", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
         </div>
-        <Field label="Ranking do cliente (consulte o CPF no Serasa ou outra plataforma)">
-          <select value={form.ranking} onChange={(e) => set("ranking", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle}>
-            <option value="">—</option>
-            {["Diamante💎", "Ouro🥇", "Prata🥈", "Bronze🥉", "Aço🔘", "Não elegível❌", "Informação não disponível⛔"].map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
-        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Score Serasa (preenche o ranking)">
+            <div className="flex gap-2">
+              <input
+                inputMode="numeric"
+                placeholder="ex.: 742"
+                onChange={(e) => {
+                  const r = rankingDoScore(e.target.value);
+                  if (r) set("ranking", r);
+                }}
+                className="w-full px-3 py-2 rounded-lg border text-sm outline-none"
+                style={inputStyle}
+              />
+              <button type="button" onClick={() => consultarSerasa(form.cpf)} className="px-2 rounded-lg border text-xs whitespace-nowrap" style={{ borderColor: "var(--border)", color: "var(--foreground)" }} title="Copia o CPF e abre o Serasa">
+                🔎 Serasa
+              </button>
+            </div>
+          </Field>
+          <Field label="Ranking do cliente">
+            <select value={form.ranking} onChange={(e) => set("ranking", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle}>
+              <option value="">—</option>
+              {(form.ranking && !RANKINGS.includes(form.ranking) ? [form.ranking, ...RANKINGS] : RANKINGS).map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </Field>
+        </div>
         <Field label="Estado civil">
           <select value={form.estadoCivil} onChange={(e) => set("estadoCivil", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle}>
             <option value="">—</option>
