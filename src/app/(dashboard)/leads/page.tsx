@@ -18,6 +18,7 @@ import {
 } from "@/hooks/use-leads";
 import { useUsers } from "@/hooks/use-users";
 import { NovoLeadModal } from "@/components/leads/novo-lead-modal";
+import { RankingBadge } from "@/components/leads/ranking-badge";
 import type { Lead } from "@/types";
 import { LeadDetailDrawer } from "@/components/leads/lead-detail-drawer";
 import { ImportModal } from "@/components/leads/import-modal";
@@ -464,6 +465,7 @@ export default function LeadsPage() {
                           {lead.cidade && (
                             <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>{lead.cidade}</div>
                           )}
+                          {(lead as any).ranking && <div className="mt-1"><RankingBadge ranking={(lead as any).ranking} /></div>}
                         </div>
                       </div>
                     </td>

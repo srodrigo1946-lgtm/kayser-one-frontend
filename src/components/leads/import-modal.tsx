@@ -70,6 +70,7 @@ export function ImportModal({ file, onClose, onDone }: { file: File; onClose: ()
         `${res.duplicates} já existiam (não duplicados)`,
         res.semTelefone ? `${res.semTelefone} sem telefone (ignorados)` : "",
         res.semWhatsapp ? `${res.semWhatsapp} sem WhatsApp (não entraram)` : "",
+        (res as any).rankingAtualizado ? `${(res as any).rankingAtualizado} que já estavam no K1 ganharam o ranking` : "",
       ].filter(Boolean);
       const lotesTxt = (res.porLote ?? []).length
         ? ` Lotes: ${(res.porLote ?? []).map((n, i) => `${i + 1}º = ${n}`).join(", ")}; resto na coluna padrão = ${res.restante ?? 0}.`

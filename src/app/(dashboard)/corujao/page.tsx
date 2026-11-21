@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, Check, Send, Phone, Rocket } from "lucide-react";
 import { Coruja } from "@/components/icons/coruja";
+import { RankingBadge } from "@/components/leads/ranking-badge";
 import { getStoredUser } from "@/lib/auth";
 import { getApiErrorMessage } from "@/lib/api";
 import {
@@ -227,6 +228,7 @@ export default function CorujaoPage() {
                     </div>
                   )}
                   <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                    <RankingBadge ranking={(l as any).ranking} />
                     {l.empreendimento && (
                       <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${cor}26`, color: cor }}>🏢 {l.empreendimento}</span>
                     )}

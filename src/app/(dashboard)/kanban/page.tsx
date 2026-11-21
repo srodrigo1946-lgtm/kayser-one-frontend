@@ -22,6 +22,7 @@ import { api, getApiErrorMessage } from "@/lib/api";
 import { useAlerts } from "@/hooks/use-alerts";
 import { LeadDetailDrawer } from "@/components/leads/lead-detail-drawer";
 import { useInclina } from "@/components/dashboard/stats-cards";
+import { RankingBadge } from "@/components/leads/ranking-badge";
 
 // Dias sem contato que acendem o alerta, por etapa (regra do Rodrigo, 13/10/2026).
 const CARGO: Record<string, string> = {
@@ -187,6 +188,10 @@ function LeadCard({
           📅 Agendado: {new Date(lead.dataAgendamento).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" })} às{" "}
           {new Date(lead.dataAgendamento).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
         </div>
+      )}
+
+      {(lead as any).ranking && (
+        <div className="mb-2"><RankingBadge ranking={(lead as any).ranking} /></div>
       )}
 
       {lead.empreendimento && (
