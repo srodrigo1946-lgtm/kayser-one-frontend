@@ -135,6 +135,18 @@ function plataforma(origem?: string | null): { label: string; emoji: string; fg:
   return null;
 }
 
+/** Selo da fila do lead: 🛡️ SWAT ou 📥 Bolsão (Rodrigo 21/11). */
+function SeloFila({ lead }: { lead?: any }) {
+  if (!lead) return null;
+  const s = lead.bolsao ? { t: "📥 Bolsão", c: "#f59e0b" } : lead.swat ? { t: "🛡️ SWAT", c: "#ef4444" } : null;
+  if (!s) return null;
+  return (
+    <span className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 font-bold" style={{ background: `${s.c}22`, color: s.c, border: `1px solid ${s.c}55` }} title="Fila do lead">
+      {s.t}
+    </span>
+  );
+}
+
 export default function WhatsAppPage() {
   const { data: conversations } = useConversations();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -391,6 +403,7 @@ export default function WhatsAppPage() {
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate flex items-center gap-1.5" style={{ color: "var(--foreground)" }}>
                     <span className="truncate">{displayName(conv)}</span>
+                    <SeloFila lead={conv.lead} />
                     {conv.fromAd && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: "var(--primary)", color: "white" }} title="Lead de anúncio">🎯 Anúncio</span>
                     )}
@@ -464,6 +477,7 @@ export default function WhatsAppPage() {
                       );
                     })()
                   )}
+                  <SeloFila lead={selected.lead} />
                   {selected.lead?.empreendimento && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded-full truncate max-w-[220px]" style={{ background: "var(--secondary)", color: "var(--foreground)", border: "1px solid var(--border)" }} title={`Empreendimento: ${selected.lead.empreendimento}`}>
                       🏢 {selected.lead.empreendimento}
