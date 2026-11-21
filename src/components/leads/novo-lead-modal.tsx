@@ -27,7 +27,7 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
   const criar = useCreateLead();
   const distribuir = useDistribuirLead();
   const { data: imoveis } = useProperties();
-  const [f, setF] = useState({ name: "", phone: "", email: "", propertyId: "", ato: "", renda: "", fgts: "", objetivo: "", obs: "", origem: "", destino: "normal", canal: "", campanha: "" });
+  const [f, setF] = useState({ name: "", phone: "", email: "", propertyId: "", ato: "", renda: "", fgts: "", objetivo: "", obs: "", origem: "", destino: "normal", canal: "", campanha: "", cpf: "", ranking: "" });
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
   const muda = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
@@ -37,6 +37,10 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
     if (!f.name.trim()) return setErro("Escreva o nome do lead.");
     if (f.phone.replace(/\D/g, "").length < 10) return setErro("Telefone com DDD (ex.: 21999998888).");
     if (!isDiretor && !f.origem) return setErro("Escolha o time de origem.");
+    const cpf = f.cpf.replace(/\D/g, "");
+    if (cpf && cpf.length !== 11) return setErro("CPF tem 11 números.");
+    // Não esquecer: consultar o CPF (Serasa ou outra plataforma) e marcar o ranking.
+    if (!f.ranking) return setErro("Escolha o ranking do cliente (consulte o CPF). Sem como consultar? Marque “Informação não disponível”.");
     // Lead que vai pra fila precisa do empreendimento (o corretor e a IA sabem do que falar).
     if (isDiretor && f.destino !== "comigo" && !f.propertyId) return setErro("Escolha o empreendimento antes de mandar pra fila.");
     const ato = lerValor(f.ato), renda = lerValor(f.renda), fgts = lerValor(f.fgts);
@@ -66,6 +70,8 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
         ...(isDiretor && f.canal ? { origem: f.canal } : {}),
         ...(isDiretor && (f.canal === "formulario_meta" || f.canal === "anuncio") ? { source: f.canal } : {}),
         ...(f.campanha.trim() ? { campanha: f.campanha.trim() } : {}),
+        ...(cpf ? { cpf } : {}),
+        ranking: f.ranking,
       } as any);
       if (isDiretor && f.destino !== "comigo" && novo?.id) {
         const swat = f.destino === "swat";
@@ -133,6 +139,22 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
             </select>
           </label>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+          <label className={rot} style={corRot}>
+            CPF do cliente
+            <input value={f.cpf} onChange={muda("cpf")} inputMode="numeric" placeholder="000.000.000-00" className={campo} style={box} />
+          </label>
+          <label className={rot} style={corRot}>
+            Ranking do cliente * <span className="opacity-70">(consulte o CPF no Serasa ou outra plataforma)</span>
+            <select value={f.ranking} onChange={muda("ranking")} className={campo} style={box}>
+              <option value="">— Escolha —</option>
+              {["Diamante💎", "Ouro🥇", "Prata🥈", "Bronze🥉", "Aço🔘", "Não elegível❌", "Informação não disponível⛔"].map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+
         {isDiretor && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
             <label className={rot} style={corRot}>

@@ -54,6 +54,8 @@ export interface Lead {
   dataVenda?: string;
   stageSince?: string; // quando entrou na coluna/etapa atual (Kanban)
   cpf?: string;
+  /** Ranking do cliente (Diamante/Ouro/Prata/Bronze/Aço…). */
+  ranking?: string | null;
   dataNascimento?: string;
   estadoCivil?: string;
   cep?: string;

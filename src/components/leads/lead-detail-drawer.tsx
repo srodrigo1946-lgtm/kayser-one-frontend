@@ -206,6 +206,7 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
               <Detail label="Valor da venda" value={current.valorVenda ? formatCurrency(current.valorVenda) : "—"} />
               <Detail label="Data da venda" value={current.dataVenda ? new Date(String(current.dataVenda).slice(0, 10) + "T00:00:00").toLocaleDateString("pt-BR") : "—"} />
               <Detail label="CPF" value={current.cpf || "—"} />
+              <Detail label="Ranking" value={(current as any).ranking || "—"} />
               <Detail label="Estado civil" value={current.estadoCivil || "—"} />
               <Detail label="Endereço" value={[current.logradouro, current.numero, current.bairro, current.cidade, current.estado].filter(Boolean).join(", ") || "—"} />
             </div>
@@ -345,6 +346,7 @@ function LeadEditForm({
     valorVenda: lead.valorVenda != null ? String(lead.valorVenda) : "",
     dataVenda: lead.dataVenda ? String(lead.dataVenda).slice(0, 10) : "",
     cpf: lead.cpf ?? "",
+    ranking: (lead as any).ranking ?? "",
     dataNascimento: lead.dataNascimento ?? "",
     estadoCivil: lead.estadoCivil ?? "",
     cep: lead.cep ?? "",
@@ -423,6 +425,7 @@ function LeadEditForm({
       valorVenda: form.valorVenda !== "" ? Number(form.valorVenda) : undefined,
       dataVenda: form.dataVenda || undefined,
       cpf: form.cpf.trim() || undefined,
+      ranking: form.ranking || undefined,
       dataNascimento: form.dataNascimento || undefined,
       estadoCivil: form.estadoCivil || undefined,
       cep: form.cep.trim() || undefined,
@@ -687,6 +690,14 @@ function LeadEditForm({
           <Field label="CPF"><input value={form.cpf} onChange={(e) => set("cpf", e.target.value)} placeholder="000.000.000-00" className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
           <Field label="Nascimento"><input type="date" value={form.dataNascimento} onChange={(e) => set("dataNascimento", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle} /></Field>
         </div>
+        <Field label="Ranking do cliente (consulte o CPF no Serasa ou outra plataforma)">
+          <select value={form.ranking} onChange={(e) => set("ranking", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle}>
+            <option value="">—</option>
+            {["Diamante💎", "Ouro🥇", "Prata🥈", "Bronze🥉", "Aço🔘", "Não elegível❌", "Informação não disponível⛔"].map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+        </Field>
         <Field label="Estado civil">
           <select value={form.estadoCivil} onChange={(e) => set("estadoCivil", e.target.value)} className="w-full px-3 py-2 rounded-lg border text-sm outline-none" style={inputStyle}>
             <option value="">—</option>
