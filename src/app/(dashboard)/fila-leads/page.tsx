@@ -303,24 +303,35 @@ export default function FilaLeadsPage() {
       {isDiretor && (
         <div className="rounded-2xl border p-4" style={card}>
           <div className="font-medium mb-3" style={{ color: "var(--foreground)" }}>Hoje</div>
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <Metric label="Recebidos" value={board?.recebidos ?? 0} color="var(--foreground)" />
-            <Metric label="Atendidos" value={board?.atendidos ?? 0} color="var(--success, #22c55e)" />
-            <Metric label="Estouraram o tempo" value={board?.expirados ?? 0} color="var(--warning, #f59e0b)" />
-          </div>
-          <div className="text-xs font-medium mb-1" style={{ color: "var(--muted-foreground)" }}>Leads atendidos por corretor:</div>
-          <div className="space-y-1">
-            {Object.entries(board?.porCargo ?? {})
-              .filter(([id]) => !!id)
-              .map(([id, n]) => (
-                <div key={id} className="flex justify-between text-sm">
-                  <span style={{ color: "var(--muted-foreground)" }}>
-                    {(byId.get(id) as any)?.name ?? "Usuário removido"}
-                  </span>
-                  <span style={{ color: "var(--foreground)" }}>{n as number}</span>
-                </div>
-              ))}
-          </div>
+          {[
+            { titulo: "📥 Fila normal", m: board },
+            { titulo: "🛡️ Fila SWAT", m: (board as any)?.swat },
+          ].map(({ titulo, m }, i) => (
+            <div key={titulo} className={i > 0 ? "mt-5 pt-4 border-t" : ""} style={{ borderColor: "var(--border)" }}>
+              <div className="text-sm font-medium mb-2" style={{ color: "var(--foreground)" }}>{titulo}</div>
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                <Metric label="Recebidos" value={m?.recebidos ?? 0} color="var(--foreground)" />
+                <Metric label="Atendidos" value={m?.atendidos ?? 0} color="var(--success, #22c55e)" />
+                <Metric label="Estouraram o tempo" value={m?.expirados ?? 0} color="var(--warning, #f59e0b)" />
+              </div>
+              <div className="text-xs font-medium mb-1" style={{ color: "var(--muted-foreground)" }}>Leads atendidos por corretor:</div>
+              <div className="space-y-1">
+                {Object.entries(m?.porCargo ?? {})
+                  .filter(([id]) => !!id)
+                  .map(([id, n]) => (
+                    <div key={id} className="flex justify-between text-sm">
+                      <span style={{ color: "var(--muted-foreground)" }}>
+                        {(byId.get(id) as any)?.name ?? "Usuário removido"}
+                      </span>
+                      <span style={{ color: "var(--foreground)" }}>{n as number}</span>
+                    </div>
+                  ))}
+                {Object.keys(m?.porCargo ?? {}).length === 0 && (
+                  <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>Nenhum ainda.</div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
