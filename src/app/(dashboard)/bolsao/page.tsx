@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Inbox } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { BolsaoIcone } from "@/components/icons/bolsao-icone";
+import { BolsaTransbordando } from "@/components/bolsao/bolsa-transbordando";
+import { BloqueioBolsao } from "@/components/bolsao/bloqueio-bolsao";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { getStoredUser } from "@/lib/auth";
@@ -61,11 +64,11 @@ export default function BolsaoPage() {
   return (
     <div className="p-4 lg:p-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-2 mb-1">
-        <Inbox size={22} style={{ color: "var(--primary)" }} />
+        <BolsaoIcone size={22} />
         <h1 className="text-xl font-bold" style={{ color: "var(--foreground)" }}>Bolsão de leads</h1>
       </div>
       <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
-        Lead da SWAT cai aqui sozinho quando o relógio da etapa zera: <b>Primeiro Contato 48h</b>, <b>Em Atendimento 72h</b>, <b>Agendamento 7 dias</b>, <b>Visita realizada 15 dias</b>, <b>Documentação 18 dias</b>, <b>Pasta, Aprovação e Reprovação 30 dias</b>. <b>Só corretores pegam</b>: o primeiro que clicar leva, e o lead entra em Primeiro Contato com você.
+        Lead da SWAT cai aqui sozinho quando o relógio da etapa zera: <b>Primeiro Contato 48h</b>, <b>Em Atendimento 72h</b>, <b>Agendamento 7 dias</b>, <b>Visita realizada 15 dias</b>, <b>Documentação 18 dias</b>, <b>Pasta, Aprovação e Reprovação 30 dias</b>. <b>Todos os corretores do K1 podem pegar</b>: o primeiro que clicar leva, e o lead entra em Primeiro Contato com você.
       </p>
 
       {isDiretor && (
@@ -81,13 +84,18 @@ export default function BolsaoPage() {
       )}
       {msg && <p className="text-sm mb-3" style={{ color: "var(--foreground)" }}>{msg}</p>}
 
+      {!isLoading && <BolsaTransbordando qtd={leads.length} />}
+      {!isLoading && (
+        <p className="text-center text-sm font-semibold mb-5" style={{ color: leads.length ? "#f87171" : "var(--muted-foreground)" }}>
+          {leads.length
+            ? `${leads.length} ${leads.length === 1 ? "lead transbordou" : "leads transbordaram"} — o primeiro corretor que pegar leva.`
+            : "Bolsão fechado: nenhum lead parado agora. Quando o relógio de um lead da SWAT zerar, ele cai aqui."}
+        </p>
+      )}
+
       {isLoading ? (
         <Loader2 className="animate-spin" />
-      ) : leads.length === 0 ? (
-        <p className="text-sm py-10 text-center rounded-xl border" style={{ color: "var(--muted-foreground)", borderColor: "var(--border)" }}>
-          O Bolsão está vazio agora. Quando o relógio de um lead da SWAT zerar, ele aparece aqui.
-        </p>
-      ) : (
+      ) : leads.length === 0 ? null : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {leads.map((l) => (
             <div key={l.id} className="p-4 rounded-2xl border flex flex-col" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
@@ -113,6 +121,8 @@ export default function BolsaoPage() {
           ))}
         </div>
       )}
+
+      {isDiretor && <BloqueioBolsao />}
     </div>
   );
 }

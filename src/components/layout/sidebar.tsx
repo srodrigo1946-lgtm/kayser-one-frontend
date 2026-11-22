@@ -30,8 +30,8 @@ import {
   Wallet,
   MessagesSquare,
   Sparkles,
-  Inbox,
 } from "lucide-react";
+import { BolsaoIcone } from "@/components/icons/bolsao-icone";
 import { Coruja } from "@/components/icons/coruja";
 import { TathyFoto } from "@/components/icons/tathy-foto";
 import { cn, getInitials } from "@/lib/utils";
@@ -50,7 +50,7 @@ const navItems = [
   { href: "/whatsapp", label: "Conversas ao vivo", icon: MessageSquare },
   { href: "/fila-leads", label: "Fila de Leads", icon: Megaphone },
   { href: "/corujao", label: "Corujão (repique)", icon: Coruja },
-  { href: "/bolsao", label: "Bolsão", icon: Inbox },
+  { href: "/bolsao", label: "Bolsão", icon: BolsaoIcone },
   { href: "/tathy", label: "Tathy · Tráfego", icon: TathyFoto, diretorOnly: true },
   { href: "/custo-por-lead", label: "Custo por Lead", icon: Wallet, unlockKey: "custoLeadVisivel" },
   { href: "/feedback", label: "1-on-1 / Feedback", icon: MessagesSquare, roles: ["diretor", "superintendente", "gerente_geral", "gerente"] },
