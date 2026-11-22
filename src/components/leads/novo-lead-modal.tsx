@@ -6,6 +6,7 @@ import { getApiErrorMessage } from "@/lib/api";
 import { useCreateLead } from "@/hooks/use-leads";
 import { useDistribuirLead } from "@/hooks/use-lead-queue";
 import { useProperties } from "@/hooks/use-properties";
+import { useUsers } from "@/hooks/use-users";
 import { RANKINGS, rankingDoScore, consultarSerasa } from "@/components/leads/ranking-badge";
 
 /** "50k", "50.000", "R$ 50.000,00" → 50000. Vazio/inválido → undefined. */
@@ -28,7 +29,14 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
   const criar = useCreateLead();
   const distribuir = useDistribuirLead();
   const { data: imoveis } = useProperties();
-  const [f, setF] = useState({ name: "", phone: "", email: "", propertyId: "", ato: "", renda: "", fgts: "", objetivo: "", obs: "", origem: "", destino: "normal", canal: "", campanha: "", cpf: "", ranking: "" });
+  const { data: usuarios } = useUsers();
+  // Times dos gerentes (Rodrigo 22/11): o lead vai pro gestor, que passa pro time dele.
+  const CARGO: Record<string, string> = { superintendente: "Superintendente", gerente_geral: "Gerente geral", gerente: "Gerente" };
+  const gestores = (usuarios ?? [])
+    .filter((u) => u.active && CARGO[u.role] && !(u as any).empresaId)
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const [f, setF] = useState({ name: "", phone: "", email: "", propertyId: "", ato: "", renda: "", fgts: "", objetivo: "", obs: "", origem: "", destino: "normal", gerenteId: "", canal: "", campanha: "", cpf: "", ranking: "" });
+  const vaiPraFila = isDiretor && (f.destino === "normal" || f.destino === "swat");
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
   const muda = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
@@ -44,6 +52,8 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
     if (!f.ranking) return setErro("Escolha o ranking do cliente (consulte o CPF). Sem como consultar? Marque “Informação não disponível”.");
     // Lead que vai pra fila precisa do empreendimento (o corretor e a IA sabem do que falar).
     if (isDiretor && f.destino !== "comigo" && !f.propertyId) return setErro("Escolha o empreendimento antes de mandar pra fila.");
+    if (isDiretor && f.destino === "time" && !f.gerenteId) return setErro("Escolha o gerente do time.");
+    const gestor = f.destino === "time" ? gestores.find((g) => g.id === f.gerenteId) : undefined;
     const ato = lerValor(f.ato), renda = lerValor(f.renda), fgts = lerValor(f.fgts);
     const imovel = (imoveis ?? []).find((p) => p.id === f.propertyId);
     // A IA lê esse bloco e não pergunta de novo o que já sabemos.
@@ -73,8 +83,11 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
         ...(f.campanha.trim() ? { campanha: f.campanha.trim() } : {}),
         ...(cpf ? { cpf } : {}),
         ranking: f.ranking,
+        ...(isDiretor && gestor ? { responsavelId: gestor.id } : {}),
       } as any);
-      if (isDiretor && f.destino !== "comigo" && novo?.id) {
+      if (isDiretor && gestor) {
+        onPronto(`Lead criado e enviado pro time de ${gestor.name}: está com o gestor pra passar pro corretor.`);
+      } else if (vaiPraFila && novo?.id) {
         const swat = f.destino === "swat";
         const nomeFila = swat ? "fila SWAT" : "fila normal";
         try {
@@ -197,10 +210,11 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
         {isDiretor ? (
           <div className="mt-4">
             <div className={rot + " mb-1"} style={corRot}>Para onde vai o lead?</div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {[
                 ["normal", "Fila normal", "Corretor da vez no plantão"],
                 ["swat", "Fila SWAT 🛡️", "Só os SWAT com check-in"],
+                ["time", "Time de um gerente 👥", "Vai pro gestor passar pro time"],
                 ["comigo", "Fica comigo", "Sem fila"],
               ].map(([v, t, d]) => (
                 <label key={v} className="p-3 rounded-xl border cursor-pointer text-sm" style={{ borderColor: f.destino === v ? "var(--primary)" : "var(--border)", color: "var(--foreground)" }}>
@@ -210,6 +224,15 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
                 </label>
               ))}
             </div>
+            {f.destino === "time" && (
+              <label className={rot + " block mt-3"} style={corRot}>
+                Time de qual gerente? *
+                <select value={f.gerenteId} onChange={muda("gerenteId")} className={campo} style={box}>
+                  <option value="">— Escolha o gerente —</option>
+                  {gestores.map((g) => <option key={g.id} value={g.id}>{g.name} ({CARGO[g.role]})</option>)}
+                </select>
+              </label>
+            )}
           </div>
         ) : (
           <label className={rot + " block mt-3"} style={corRot}>
@@ -226,7 +249,7 @@ export function NovoLeadModal({ isDiretor, origens, onClose, onPronto }: { isDir
           <button onClick={onClose} className="px-4 py-2 rounded-xl border text-sm" style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>Cancelar</button>
           <button onClick={salvar} disabled={salvando} className="px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-60" style={{ background: "var(--primary)", color: "white" }}>
             {salvando && <Loader2 size={14} className="animate-spin" />}
-            {isDiretor && f.destino !== "comigo" ? "Salvar e enviar pra fila" : "Salvar lead"}
+            {vaiPraFila ? "Salvar e enviar pra fila" : f.destino === "time" && isDiretor ? "Salvar e enviar pro time" : "Salvar lead"}
           </button>
         </div>
       </div>
