@@ -42,7 +42,7 @@ export default function BolsaoPage() {
   const moverAgora = useMutation({
     mutationFn: async () => (await api.post<{ movidos: number }>("/bolsao/mover-agora")).data,
     onSuccess: (r) => {
-      setMsg(`✅ ${r.movidos} lead(s) SWAT parados foram pro Bolsão agora.`);
+      setMsg(`✅ ${r.movidos} lead(s) parados foram pro Bolsão agora.`);
       qc.invalidateQueries({ queryKey: ["bolsao"] });
     },
   });
@@ -68,7 +68,7 @@ export default function BolsaoPage() {
         <h1 className="text-xl font-bold" style={{ color: "var(--foreground)" }}>Bolsão de leads</h1>
       </div>
       <p className="text-sm mb-4" style={{ color: "var(--muted-foreground)" }}>
-        Lead da SWAT cai aqui sozinho quando o relógio da etapa zera: <b>Primeiro Contato 48h</b>, <b>Em Atendimento 72h</b>, <b>Agendamento 7 dias</b>, <b>Visita realizada 15 dias</b>, <b>Documentação 18 dias</b>, <b>Pasta, Aprovação e Reprovação 30 dias</b>. <b>Todos os corretores do K1 podem pegar</b>: o primeiro que clicar leva, e o lead entra em Primeiro Contato com você.
+        Lead da SWAT e da fila normal cai aqui sozinho quando o relógio da etapa zera: <b>Primeiro Contato 48h</b>, <b>Em Atendimento 72h</b>, <b>Agendamento 7 dias</b>, <b>Visita realizada 15 dias</b>, <b>Documentação 18 dias</b>, <b>Pasta, Aprovação e Reprovação 30 dias</b>. <b>Todos os corretores do K1 podem pegar</b>: o primeiro que clicar leva, e o lead entra em Primeiro Contato com você.
       </p>
 
       {isDiretor && (
@@ -89,7 +89,7 @@ export default function BolsaoPage() {
         <p className="text-center text-sm font-semibold mb-5" style={{ color: leads.length ? "#f87171" : "var(--muted-foreground)" }}>
           {leads.length
             ? `${leads.length} ${leads.length === 1 ? "lead transbordou" : "leads transbordaram"} — o primeiro corretor que pegar leva.`
-            : "Bolsão fechado: nenhum lead parado agora. Quando o relógio de um lead da SWAT zerar, ele cai aqui."}
+            : "Bolsão fechado: nenhum lead parado agora. Quando o relógio de um lead da SWAT ou da fila normal zerar, ele cai aqui."}
         </p>
       )}
 
