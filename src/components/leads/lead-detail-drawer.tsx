@@ -69,13 +69,13 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
     }
   };
 
-  const handleDistribuir = async () => {
+  const handleDistribuir = async (swat = false) => {
     setFilaMsg("");
     try {
-      const r = await distribuir.mutateAsync(current.id);
+      const r = await distribuir.mutateAsync({ leadId: current.id, swat });
       if (r.status === "distribuido") {
         const u = (allUsers ?? []).find((x) => x.id === r.assignedToId);
-        setFilaMsg(`Distribuído para ${u?.name ?? "corretor de plantão"}.`);
+        setFilaMsg(`Distribuído${swat ? " na SWAT" : ""} para ${u?.name ?? "corretor de plantão"}.`);
         setCurrent((c) => ({
           ...c,
           responsavelId: r.assignedToId,
@@ -215,13 +215,23 @@ export function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () =>
             {isDiretor && (
               <div className="mb-6 p-3 rounded-xl border" style={{ borderColor: "var(--border)", background: "var(--secondary)" }}>
                 <button
-                  onClick={handleDistribuir}
+                  onClick={() => handleDistribuir(false)}
                   disabled={distribuir.isPending}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium disabled:opacity-60"
                   style={{ background: "var(--primary)", color: "white" }}
                 >
                   {distribuir.isPending ? <Loader2 size={16} className="animate-spin" /> : <Shuffle size={16} />}
                   Distribuir pela fila (rodízio de plantão)
+                </button>
+                <button
+                  onClick={() => handleDistribuir(true)}
+                  disabled={distribuir.isPending}
+                  className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium disabled:opacity-60"
+                  style={{ background: "#dc2626", color: "white" }}
+                  title="Cai no rodízio só entre os SWAT de plantão (prazo de 15 min)"
+                >
+                  {distribuir.isPending ? <Loader2 size={16} className="animate-spin" /> : <Shuffle size={16} />}
+                  Distribuir pela SWAT
                 </button>
 
                 <div className="mt-3 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
