@@ -101,6 +101,8 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
     }
   };
   const [msg, setMsg] = useState("");
+  // Clicou no corretor do "Sem interesse": mostra só os clientes dele (clica de novo pra voltar).
+  const [corretorSel, setCorretorSel] = useState<string | null>(null);
   const { data, isLoading, dataUpdatedAt, error } = useQuery({
     queryKey: ["tathy", year, month],
     queryFn: async () => (await api.get(`/investimento/tathy`, { params: { year, month } })).data,
@@ -341,13 +343,30 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
               {data.ranking.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {data.ranking.map((r: any) => (
-                    <span key={r.nome} className="text-xs px-2.5 py-1 rounded-lg" style={{ background: "#ef444418", color: "var(--foreground)" }}>
+                    <button
+                      key={r.nome}
+                      onClick={() => setCorretorSel(corretorSel === r.nome ? null : r.nome)}
+                      className="text-xs px-2.5 py-1 rounded-lg"
+                      style={{
+                        background: corretorSel === r.nome ? "#ef4444" : "#ef444418",
+                        color: corretorSel === r.nome ? "white" : "var(--foreground)",
+                      }}
+                      title={corretorSel === r.nome ? "Mostrar todos" : `Ver só os clientes de ${r.nome}`}
+                    >
                       {r.nome}: <b>{r.total}</b>{r.semMotivo ? ` (${r.semMotivo} sem motivo)` : ""}
-                    </span>
+                    </button>
                   ))}
                 </div>
               )}
-              {data.semInteresse.map((s: any) => (
+              {corretorSel && (
+                <div className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+                  Clientes de <b>{corretorSel}</b>, do mais recente pro mais antigo ·{" "}
+                  <button className="underline" onClick={() => setCorretorSel(null)}>mostrar todos</button>
+                </div>
+              )}
+              {data.semInteresse
+                .filter((s: any) => !corretorSel || (s.corretor || "Sem corretor") === corretorSel)
+                .map((s: any) => (
                 <div key={s.id} className="text-sm px-3 py-2 rounded-lg space-y-0.5" style={{ background: "var(--secondary)", color: "var(--foreground)" }}>
                   <div className="flex flex-wrap gap-x-3">
                     <span className="font-medium">{s.nome}</span>
