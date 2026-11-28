@@ -353,7 +353,10 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
                     <span className="font-medium">{s.nome}</span>
                     <span style={{ color: COR[s.canal as Canal] }}>{s.canal === "google" ? "Google" : "Meta"}</span>
                     <span style={{ color: "var(--muted-foreground)" }}>corretor: {s.corretor ?? "—"}{s.marcadoPor && s.marcadoPor !== s.corretor ? ` · marcado por ${s.marcadoPor}` : ""}</span>
-                    <span className="ml-auto text-xs" style={{ color: "var(--muted-foreground)" }}>{new Date(s.em).toLocaleDateString("pt-BR")}</span>
+                    <span className="ml-auto text-xs" style={{ color: "var(--muted-foreground)" }}>
+                      {s.recebidoEm ? `recebeu ${new Date(s.recebidoEm).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })} · ` : ""}
+                      sem interesse {new Date(s.em).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+                    </span>
                   </div>
                   <div style={{ color: s.motivo ? "var(--foreground)" : "#f59e0b" }}>“{s.motivo ?? "sem justificativa (marcado antes da regra)"}”</div>
                 </div>
