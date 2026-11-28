@@ -342,7 +342,7 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
             <div className="space-y-3">
               {data.ranking.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {data.ranking.map((r: any) => (
+                  {data.ranking.map((r: any, i: number) => (
                     <button
                       key={r.nome}
                       onClick={() => setCorretorSel(corretorSel === r.nome ? null : r.nome)}
@@ -353,7 +353,7 @@ export function TathyPainel({ year, month }: { year: number; month: number }) {
                       }}
                       title={corretorSel === r.nome ? "Mostrar todos" : `Ver só os clientes de ${r.nome}`}
                     >
-                      {r.nome}: <b>{r.total}</b>{r.semMotivo ? ` (${r.semMotivo} sem motivo)` : ""}
+                      <b>{i + 1}º</b> {r.nome}: <b>{r.total}</b>{r.semMotivo ? ` (${r.semMotivo} sem motivo)` : ""}
                     </button>
                   ))}
                 </div>
